@@ -1,10 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Menu, X, ArrowUpRight } from 'lucide-react'
 import { toast } from 'sonner'
-import { useScroll } from '../hooks/useScroll'
-import { useMobileMenu } from '../hooks/useMobileMenu'
 
 const NAV_LINKS = [
   { label: 'Home', href: '#home' },
@@ -42,13 +40,21 @@ const COMPONENTS = [
 
 export default function Landing() {
   const navigate = useNavigate()
-  const scrolled = useScroll()
-  const {
-    isOpen: menuOpen,
-    toggle: toggleMenu,
-    close: closeMenu,
-  } = useMobileMenu()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const [email, setEmail] = useState('')
+
+  // Scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const toggleMenu = () => setMenuOpen(!menuOpen)
+  const closeMenu = () => setMenuOpen(false)
 
   const scrollTo = (e, id) => {
     e.preventDefault()
@@ -68,7 +74,9 @@ export default function Landing() {
     <div className="min-h-screen bg-[#f7f7f5]">
       {/* Navbar */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#f7f7f5] shadow-sm' : 'bg-transparent'}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled ? 'bg-[#f7f7f5] shadow-sm' : 'bg-transparent'
+        }`}
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <a
@@ -186,12 +194,12 @@ export default function Landing() {
             style={{
               fontSize: 15,
               fontWeight: 500,
-              maxWidth: 400,
+              maxWidth: 450,
               opacity: 0.6,
             }}
           >
-            Interactive practice for Listening, Reading, Writing & Speaking. Get
-            instant AI feedback.
+            Interactive practice for Listening, Reading, Writing & Speaking.
+            Answer MUET past year papers and get instant AI feedback.
           </p>
           <div className="flex items-center gap-6">
             <Button
@@ -219,7 +227,7 @@ export default function Landing() {
       <section id="features" className="py-8 md:py-16 px-6 max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-10">
           <h2 className="text-2xl md:text-4xl font-black text-[#151313] mb-2">
-            Four components.{' '}
+            Four components.
             <span className="text-[#E9424C]">One platform.</span>
           </h2>
           <p className="text-[#151313] opacity-60 font-medium text-xs md:text-base">
@@ -245,7 +253,7 @@ export default function Landing() {
                   {label}
                 </h3>
                 <p className="text-xs font-semibold opacity-40 mb-2">{time}</p>
-                <p className="text-xs md:text-sm font-medium opacity-60 mb-3">
+                <p className="text-xs md:text-sm font-medium opacity-60 mb-3 whitespace-nowrap">
                   {desc}
                 </p>
                 <Button
@@ -301,7 +309,7 @@ export default function Landing() {
 
           <div className="pt-3 md:pt-4 border-t border-[#f7f7f5]/10 flex flex-col md:flex-row justify-between items-center gap-3">
             <p className="text-xs text-[#f7f7f5] opacity-40">
-              © 2024 BandUp. All rights reserved.
+              © 2026 BandUp. All rights reserved.
             </p>
             <a
               href="#"

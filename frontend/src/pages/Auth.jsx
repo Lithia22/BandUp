@@ -61,7 +61,7 @@ export default function Auth({ mode = 'login' }) {
             <p className="text-sm font-medium text-[#151313] opacity-50">
               {isLogin
                 ? 'Continue your MUET prep journey'
-                : 'Practise all 4 MUET components for free'}
+                : 'Start practising all 4 MUET components now'}
             </p>
           </div>
 
@@ -138,7 +138,7 @@ export default function Auth({ mode = 'login' }) {
                 className="w-full h-12 text-white font-black text-sm rounded-xl border-2 border-[#151313] mt-1 bg-[#E9424C] shadow-[3px_3px_0px_#151313] disabled:opacity-50"
               >
                 {loading
-                  ? 'Please wait...'
+                  ? 'Please wait'
                   : isLogin
                     ? 'Log in'
                     : 'Create account'}
@@ -153,7 +153,7 @@ export default function Auth({ mode = 'login' }) {
               href={isLogin ? '/signup' : '/login'}
               className="text-[#E9424C] font-black hover:underline opacity-80"
             >
-              {isLogin ? 'Sign up free' : 'Log in'}
+              {isLogin ? 'Sign up' : 'Log in'}
             </a>
           </p>
         </div>
