@@ -71,7 +71,6 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
-      {/* Navbar */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled ? 'bg-[#f7f7f5] shadow-sm' : 'bg-transparent'
@@ -122,7 +121,6 @@ export default function Landing() {
           </button>
         </div>
 
-        {/* Mobile dropdown */}
         {menuOpen && (
           <div className="md:hidden bg-[#f7f7f5] border-t px-6 pb-5 pt-3">
             {NAV_LINKS.map(({ label, href }) => (
@@ -156,7 +154,6 @@ export default function Landing() {
         )}
       </header>
 
-      {/* Hero */}
       <section
         id="home"
         className="relative max-w-6xl mx-auto px-6 flex flex-col justify-center"
@@ -222,7 +219,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Features */}
       <section id="features" className="py-8 md:py-16 px-6 max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-10">
           <h2 className="text-2xl md:text-4xl font-black text-[#151313] mb-2">
@@ -267,7 +263,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer id="footer" className="bg-[#151313]">
         <div className="max-w-6xl mx-auto px-6 py-6 md:py-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 md:mb-6">

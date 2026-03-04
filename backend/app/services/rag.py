@@ -52,13 +52,6 @@ def parse_response_content(content) -> str:
 
 
 def rag_generate_feedback(component: str, performance_summary: str, k: int = 3) -> dict:
-    """
-    Full RAG pipeline:
-    1. Embed student performance summary text
-    2. KNN finds top-k closest MUET band descriptors
-    3. Augment prompt with retrieved descriptors
-    4. LLM generates structured feedback with band estimate
-    """
     # Step 1 — Embed
     query_vector = embed_text(performance_summary)
 
@@ -72,10 +65,10 @@ def rag_generate_feedback(component: str, performance_summary: str, k: int = 3) 
         for m in top_matches
     ])
 
-    # Step 4 — Generate with structured output
-    prompt = f"""You are an official MUET (Malaysian University English Test) examiner and coach.
+    # Step 4 — Generate
+    prompt = f"""You are a friendly MUET Reading coach helping a Malaysian student understand their practice test results.
 
-A student has completed a MUET {component.capitalize()} practice test. Here is their performance summary:
+Here is the student's performance:
 
 {performance_summary}
 
@@ -83,29 +76,35 @@ The following official MUET band descriptors were retrieved as the closest match
 
 {descriptor_context}
 
-Using ONLY the official MUET band descriptors above as your grounding criteria, generate structured feedback in simple, clear English that a Malaysian student can easily understand.
+Using ONLY the official MUET band descriptors above as your grounding criteria, write personalised feedback in simple, friendly English — like a teacher talking directly to the student. Use short sentences. Avoid difficult words. Any student, even a Band 2 student, must be able to understand every sentence.
 
-Format your response EXACTLY as shown below with these exact section headers:
+Rules:
+- Base the estimated band and all feedback strictly on the MUET descriptors above
+- The performance summary contains STRONG, WEAK and HEAVILY SKIPPED labels to guide you — use them to decide what to mention, but NEVER use these words in your response. Instead write naturally e.g. "you struggled with", "you found this challenging", "many questions were left unanswered"
+- Only mention STRONG parts in "What You Did Well". Only mention WEAK or HEAVILY SKIPPED parts in "Where to Focus". Never contradict the labels.
+- Never mention scores, fractions or percentages — describe performance in plain words only
+- If HEAVILY SKIPPED parts exist, mention generally that many questions were skipped and remind the student there is no penalty in MUET so always attempt every question
+- Keep the tone encouraging and kind
+
+Format your response EXACTLY with these section headers:
 
 ESTIMATED BAND: [Band 1 / Band 2 / Band 3 / Band 4 / Band 5 / Band 5+]
 
-WHAT THIS BAND MEANS: [In 2 simple sentences, explain what the official MUET descriptor says this band level means in plain English. Quote the descriptor language directly.]
+YOUR BAND RESULT: [2 simple sentences explaining what this band means for a reading student, based on the descriptor. No jargon.]
 
-STRENGTHS: [2-3 bullet points starting with • about what the student did well based on their correct answers and which parts they performed better in]
+WHAT YOU DID WELL: [2-3 bullet points starting with •. Only mention parts the student did well in and name the reading skill that shows. If no parts stand out, write one honest encouraging bullet instead. e.g. "• You did well in Part 1 and Part 2 — this shows you are good at finding specific facts and understanding main ideas in short everyday texts."]
 
-WEAKNESSES: [2-3 bullet points starting with • about specific parts where the student struggled, with numbers e.g. Part 2: 0/6, and what skill that part tests]
+WHERE TO FOCUS: [2-3 bullet points starting with •. Mention which parts were most challenging and name the skill each tests. If many questions were skipped, add one bullet about always attempting every question. e.g. "• Parts 6 and 7 were the most challenging — these test your ability to understand a writer's tone, purpose and deeper meaning in complex articles." e.g. "• You skipped many questions — remember there is no penalty for a wrong answer in MUET, so always make a guess rather than leaving a question blank."]
 
-WHY THIS BAND: [2-3 simple sentences explaining exactly why this band was chosen based on the student's score pattern and how it matches the descriptor. Use simple English, no jargon.]
+YOUR STUDY PLAN: [3 bullet points starting with •. One tip per weak area from WHERE TO FOCUS. If skipping was a problem, one tip must cover exam technique. Each tip must include a concrete example — a specific website, article type or activity with a short how-to. e.g. "• To improve at Part 5 (how ideas connect): read a short article on BBC Learning English (bbclearningenglish.com), cover the last paragraph and guess what comes next — this trains you to follow the flow of a text." e.g. "• For unanswered questions: practise the elimination method — cross out the option that is clearly wrong, then choose between what remains. An educated guess is always better than no answer." e.g. "• To get better at Parts 6 and 7: read one short opinion piece from The Star or New Straits Times each day and ask yourself — what is the writer trying to say, and are they for or against the topic?"]
 
-HOW TO IMPROVE: [3 bullet points starting with • with concrete, specific and actionable study tips directly related to the student's weak areas and the MUET criteria]
-
-NEXT TARGET: [2 sentences about what the next band level requires and one specific thing the student should focus on to get there]"""
+YOUR NEXT GOAL: [2 sentences. Describe what the next band level looks like based on the descriptors and give one simple first step to get there.]"""
 
     response = get_llm().invoke([HumanMessage(content=prompt)])
     raw = parse_response_content(response.content).strip()
 
     # Parse estimated band
-    estimated_band = "Band 3"  # fallback
+    estimated_band = "Band 3"
     if "ESTIMATED BAND:" in raw:
         band_line = raw.split("ESTIMATED BAND:")[1].split("\n")[0].strip()
         for band in ["Band 5+", "Band 5", "Band 4", "Band 3", "Band 2", "Band 1"]:
@@ -113,7 +112,7 @@ NEXT TARGET: [2 sentences about what the next band level requires and one specif
                 estimated_band = band
                 break
 
-    # Parse each section
+    # Parse sections
     def extract_section(text, header, next_headers):
         if header + ":" not in text:
             return ""
@@ -123,29 +122,29 @@ NEXT TARGET: [2 sentences about what the next band level requires and one specif
                 after = after.split(nh + ":")[0]
         return after.strip()
 
-    all_headers = ["ESTIMATED BAND", "WHAT THIS BAND MEANS", "STRENGTHS",
-                   "WEAKNESSES", "WHY THIS BAND", "HOW TO IMPROVE", "NEXT TARGET"]
+    all_headers = [
+        "ESTIMATED BAND",
+        "YOUR BAND RESULT",
+        "WHAT YOU DID WELL",
+        "WHERE TO FOCUS",
+        "YOUR STUDY PLAN",
+        "YOUR NEXT GOAL",
+    ]
 
     sections = {}
     for i, header in enumerate(all_headers):
-        next_h = all_headers[i+1:]
-        sections[header] = extract_section(raw, header, next_h)
+        sections[header] = extract_section(raw, header, all_headers[i+1:])
 
-    # Build structured feedback object
     structured_feedback = {
-        "what_this_band_means": sections.get("WHAT THIS BAND MEANS", ""),
-        "strengths": sections.get("STRENGTHS", ""),
-        "weaknesses": sections.get("WEAKNESSES", ""),
-        "why_this_band": sections.get("WHY THIS BAND", ""),
-        "how_to_improve": sections.get("HOW TO IMPROVE", ""),
-        "next_target": sections.get("NEXT TARGET", ""),
+        "your_band_result":   sections.get("YOUR BAND RESULT", ""),
+        "what_you_did_well":  sections.get("WHAT YOU DID WELL", ""),
+        "where_to_focus":     sections.get("WHERE TO FOCUS", ""),
+        "your_study_plan":    sections.get("YOUR STUDY PLAN", ""),
+        "your_next_goal":     sections.get("YOUR NEXT GOAL", ""),
     }
 
-    # Also keep full raw text as fallback
-    feedback_text = raw
-
     return {
-        "feedback": feedback_text,
+        "feedback": raw,
         "structured_feedback": structured_feedback,
         "estimated_band": estimated_band,
         "top_descriptor_id": top_matches[0]["id"] if top_matches else None,

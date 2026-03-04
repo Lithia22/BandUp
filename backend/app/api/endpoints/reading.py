@@ -7,6 +7,16 @@ from app.services.rag import rag_generate_feedback
 
 router = APIRouter()
 
+PART_SKILLS = {
+    1: "Scanning short texts for specific facts (ads, notices, signs)",
+    2: "Understanding main ideas and inferencing (emails, blogs, articles)",
+    3: "Inferencing and predicting outcomes (short stories, letters)",
+    4: "Comparing two texts, distinguishing facts vs opinions, author intention",
+    5: "Understanding text structure and cause-effect relationships (gapped text)",
+    6: "Identifying detail, opinion, attitude and writer purpose (complex article)",
+    7: "Recognising implication, exemplification and text organisation (complex article)",
+}
+
 
 @router.get("/sets")
 def get_sets():
@@ -84,69 +94,68 @@ def submit_answers(data: SubmitRequest):
         # 2. Mark answers
         results = []
         correct_count = 0
-        wrong_questions = []
-
         for q in questions:
-            qid = q["id"]
-            student_ans = data.answers.get(qid, None)
-            correct_ans = q["correct_answer"]
-            is_correct = student_ans == correct_ans
+            student_ans = data.answers.get(q["id"], None)
+            is_correct = student_ans == q["correct_answer"]
             if is_correct:
                 correct_count += 1
-            else:
-                wrong_questions.append({
-                    "question_number": q["question_number"],
-                    "part_number": q["part_number"],
-                    "question_text": q["question_text"],
-                    "student_answer": student_ans,
-                    "correct_answer": correct_ans,
-                })
             results.append({
-                "question_id": qid,
+                "question_id": q["id"],
                 "question_number": q["question_number"],
+                "part_number": q["part_number"],
                 "student_answer": student_ans,
-                "correct_answer": correct_ans,
+                "correct_answer": q["correct_answer"],
                 "is_correct": is_correct,
             })
 
         total = len(questions)
-
-        # 3. Build performance summary for RAG
-        wrong_summary = ""
-        for wq in wrong_questions[:10]:
-            wrong_summary += (
-                f"- Q{wq['question_number']} (Part {wq['part_number']}): "
-                f"{wq['question_text']} "
-                f"[Student answered: {wq['student_answer'] or 'No answer'}, "
-                f"Correct: {wq['correct_answer']}]\n"
-            )
-
-        part_errors = {}
-        for wq in wrong_questions:
-            p = wq["part_number"]
-            part_errors[p] = part_errors.get(p, 0) + 1
-        part_error_str = ", ".join([f"Part {p}: {c} wrong" for p, c in sorted(part_errors.items())])
-
         skipped_count = sum(1 for r in results if not r["student_answer"])
 
+        # 3. Build per-part summary with STRONG / WEAK / HEAVILY SKIPPED labels
+        part_scores = {}
+        for r in results:
+            p = r["part_number"]
+            if p not in part_scores:
+                part_scores[p] = {"correct": 0, "total": 0, "skipped": 0}
+            part_scores[p]["total"] += 1
+            if r["is_correct"]:
+                part_scores[p]["correct"] += 1
+            if not r["student_answer"]:
+                part_scores[p]["skipped"] += 1
+
+        strong_parts, weak_parts, skipped_parts = [], [], []
+        part_lines = []
+
+        for p in sorted(part_scores.keys()):
+            s = part_scores[p]
+            pct = s["correct"] / s["total"] if s["total"] > 0 else 0
+            if s["skipped"] >= s["total"] // 2:
+                skipped_parts.append(p)
+            elif pct >= 0.6:
+                strong_parts.append(p)
+            else:
+                weak_parts.append(p)
+            skill = PART_SKILLS.get(p, "Reading comprehension")
+            part_lines.append(f"  Part {p} ({skill}): {s['correct']}/{s['total']} correct, {s['skipped']} skipped")
+
         performance_summary = f"""Student completed MUET Reading practice test (Set {data.set_number}).
-Score: {correct_count} out of {total} questions correct ({round(correct_count/total*100,1)}%).
-Skipped (no answer): {skipped_count} questions.
-Wrong answer distribution by part: {part_error_str if part_error_str else 'None'}.
-Sample wrong questions:
-{wrong_summary if wrong_summary else 'All questions answered correctly.'}
-Identify the student's reading comprehension level according to the MUET band descriptors."""
+Overall score: {correct_count}/{total} correct. Total skipped: {skipped_count}/{total}.
+
+Per-part breakdown:
+{chr(10).join(part_lines)}
+
+STRONG parts (most questions correct): {", ".join(f"Part {p}" for p in strong_parts) or "None"}
+WEAK parts (few or no correct answers): {", ".join(f"Part {p}" for p in weak_parts) or "None"}
+HEAVILY SKIPPED parts (skipped most or all questions): {", ".join(f"Part {p}" for p in skipped_parts) or "None"}
+
+IMPORTANT: Use ONLY these labels. Only mention STRONG parts as positives. Only mention WEAK or HEAVILY SKIPPED parts as areas to improve. Do not contradict them."""
 
         # 4. RAG: embed → KNN → LLM
-        rag_result = rag_generate_feedback(
-            component="reading",
-            performance_summary=performance_summary,
-            k=3,
-        )
-        feedback = rag_result["feedback"]
+        rag_result = rag_generate_feedback(component="reading", performance_summary=performance_summary, k=3)
+        feedback           = rag_result["feedback"]
         structured_feedback = rag_result["structured_feedback"]
-        estimated_band = rag_result["estimated_band"]
-        top_descriptor_id = rag_result["top_descriptor_id"]
+        estimated_band     = rag_result["estimated_band"]
+        top_descriptor_id  = rag_result["top_descriptor_id"]
 
         # 5. Save to DB
         if data.student_id:

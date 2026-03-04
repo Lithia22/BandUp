@@ -53,7 +53,6 @@ export default function Auth({ mode = 'login' }) {
 
       <div className="flex-1 flex items-center justify-center px-6 pb-10">
         <div className="w-full max-w-md">
-          {/* Heading */}
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-black text-[#151313] mb-2">
               {isLogin ? 'Log in' : 'Create account'}
@@ -65,7 +64,6 @@ export default function Auth({ mode = 'login' }) {
             </p>
           </div>
 
-          {/* Card */}
           <div className="bg-white rounded-3xl border-2 border-[#151313] p-8 shadow-[4px_4px_0px_#151313]">
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               {!isLogin && (
@@ -145,8 +143,6 @@ export default function Auth({ mode = 'login' }) {
               </Button>
             </form>
           </div>
-
-          {/* Switch link */}
           <p className="text-center text-sm font-semibold text-[#151313] mt-6">
             {isLogin ? "Don't have an account? " : 'Already have an account? '}
             <a

@@ -228,7 +228,7 @@ export function GappedTextPassage({
               </button>
             </DropdownMenuTrigger>
             {!disabled && (
-              <DropdownMenuContent align="start" className="min-w-[5rem]">
+              <DropdownMenuContent align="start" className="min-w-20">
                 {selected && (
                   <>
                     <DropdownMenuItem

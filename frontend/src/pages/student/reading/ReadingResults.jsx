@@ -5,10 +5,16 @@ import api from '../../../services/api'
 
 const parseBullets = (text) => {
   if (!text) return []
-  return text
+  const cleaned = text.replace(/^\[|\]$/g, '').trim()
+  return cleaned
     .split('\n')
     .map((line) => line.replace(/^[•\-\*]\s*/, '').trim())
     .filter((line) => line.length > 0)
+}
+
+const cleanText = (text) => {
+  if (!text) return ''
+  return text.replace(/^\[|\]$/g, '').trim()
 }
 
 export default function ReadingResults() {
@@ -48,10 +54,10 @@ export default function ReadingResults() {
     structured_feedback,
     feedback,
   } = results
+
   const correct = answerResults.filter((r) => r.is_correct).length
   const wrong = answerResults.filter((r) => !r.is_correct).length
   const skipped = answerResults.filter((r) => !r.student_answer).length
-
   const sf = structured_feedback || {}
 
   const enriched = answerResults.map((r) => {
@@ -79,6 +85,43 @@ export default function ReadingResults() {
     return acc
   }, {})
 
+  const timelineSections = [
+    {
+      num: '01',
+      label: `Your ${estimated_band} Result`,
+      content: cleanText(sf.your_band_result),
+      isList: false,
+      isLast: false,
+    },
+    {
+      num: '02',
+      label: 'What You Did Well',
+      content: cleanText(sf.what_you_did_well),
+      isList: true,
+      isLast: false,
+    },
+    {
+      num: '03',
+      label: 'Where to Focus',
+      content: cleanText(sf.where_to_focus),
+      isList: true,
+      isLast: false,
+    },
+    {
+      num: '04',
+      label: 'How To Improve',
+      content: cleanText(sf.your_study_plan),
+      isList: true,
+      isLast: false,
+    },
+    {
+      num: '05',
+      label: 'Next Target',
+      content: cleanText(sf.your_next_goal),
+      isList: false,
+      isLast: true,
+    },
+  ].filter((s) => s.content)
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
       <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-6 py-3 flex items-center gap-3">
@@ -94,8 +137,13 @@ export default function ReadingResults() {
         <div className="bg-white rounded-2xl border-2 border-[#151313] shadow-[4px_4px_0px_#151313] overflow-hidden">
           <div className="grid grid-cols-2 divide-x-2 divide-[#151313]">
             <div className="p-6 flex flex-col items-center justify-between gap-4">
-              <div className="text-5xl font-black text-[#E9424C] mt-1">
-                {estimated_band || 'Band —'}
+              <div className="text-center">
+                <span className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest block mb-1">
+                  Estimated Band
+                </span>
+                <div className="text-5xl font-black text-[#E9424C]">
+                  {estimated_band || 'Band —'}
+                </div>
               </div>
               <img
                 src="/src/assets/7.svg"
@@ -172,142 +220,52 @@ export default function ReadingResults() {
 
           {showFeedback && (
             <div className="border-t-2 border-[#151313] px-5 py-5">
-              <div className="relative">
-                <div className="absolute left-[11px] top-3 bottom-3 w-px bg-[#151313]/10" />
-
-                <div className="space-y-6">
-                  {sf.what_this_band_means && (
-                    <div className="flex gap-4">
-                      <div className="w-6 h-6 rounded-full bg-[#151313] border-2 border-[#151313] flex items-center justify-center shrink-0 z-10">
-                        <span className="text-[8px] font-black text-white">
-                          01
-                        </span>
-                      </div>
-                      <div className="pb-2">
-                        <p className="text-[10px] font-black text-[#151313] uppercase tracking-widest mb-1.5">
-                          What {estimated_band} Means
-                        </p>
-                        <p className="text-sm font-medium text-[#151313] leading-relaxed">
-                          {sf.what_this_band_means.replace(/^\[|\]$/g, '')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {sf.strengths && (
-                    <div className="flex gap-4">
-                      <div className="w-6 h-6 rounded-full bg-[#151313] border-2 border-[#151313] flex items-center justify-center shrink-0 z-10">
-                        <span className="text-[8px] font-black text-white">
-                          02
-                        </span>
-                      </div>
-                      <div className="pb-2">
-                        <p className="text-[10px] font-black text-[#151313] uppercase tracking-widest mb-2">
-                          Strengths
-                        </p>
-                        <div className="space-y-2">
-                          {parseBullets(sf.strengths).map((pt, i) => (
-                            <p
-                              key={i}
-                              className="text-sm font-medium text-[#151313] leading-relaxed"
-                            >
-                              {pt}
+              {timelineSections.length > 0 ? (
+                <div className="relative">
+                  <div className="absolute left-2.75 top-3 bottom-3 w-px bg-[#151313]/10" />
+                  <div className="space-y-6">
+                    {timelineSections.map((s) => (
+                      <div key={s.num} className="flex gap-4">
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center shrink-0 z-10 ${s.isLast ? 'bg-[#E9424C]' : 'bg-[#151313]'}`}
+                        >
+                          <span className="text-[8px] font-black text-white">
+                            {s.num}
+                          </span>
+                        </div>
+                        <div className={`${s.isLast ? '' : 'pb-2'} flex-1`}>
+                          <p className="text-[10px] font-black text-[#151313] uppercase tracking-widest mb-1.5">
+                            {s.label}
+                          </p>
+                          {s.isList ? (
+                            <ul className="space-y-2">
+                              {parseBullets(s.content).map((pt, i) => (
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-2 text-sm font-medium text-[#151313] leading-relaxed"
+                                >
+                                  <span className="text-[#151313] font-black shrink-0">
+                                    •
+                                  </span>
+                                  <span>{pt}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm font-medium text-[#151313] leading-relaxed">
+                              {cleanText(s.content)}
                             </p>
-                          ))}
+                          )}
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {sf.weaknesses && (
-                    <div className="flex gap-4">
-                      <div className="w-6 h-6 rounded-full bg-[#151313] border-2 border-[#151313] flex items-center justify-center shrink-0 z-10">
-                        <span className="text-[8px] font-black text-white">
-                          03
-                        </span>
-                      </div>
-                      <div className="pb-2">
-                        <p className="text-[10px] font-black text-[#151313] uppercase tracking-widest mb-2">
-                          Weaknesses
-                        </p>
-                        <div className="space-y-2">
-                          {parseBullets(sf.weaknesses).map((pt, i) => (
-                            <p
-                              key={i}
-                              className="text-sm font-medium text-[#151313] leading-relaxed"
-                            >
-                              {pt}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {sf.why_this_band && (
-                    <div className="flex gap-4">
-                      <div className="w-6 h-6 rounded-full bg-[#151313] border-2 border-[#151313] flex items-center justify-center shrink-0 z-10">
-                        <span className="text-[8px] font-black text-white">
-                          04
-                        </span>
-                      </div>
-                      <div className="pb-2">
-                        <p className="text-[10px] font-black text-[#151313] uppercase tracking-widest mb-1.5">
-                          Why This Band
-                        </p>
-                        <p className="text-sm font-medium text-[#151313] leading-relaxed">
-                          {sf.why_this_band.replace(/^\[|\]$/g, '')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {sf.how_to_improve && (
-                    <div className="flex gap-4">
-                      <div className="w-6 h-6 rounded-full bg-[#151313] border-2 border-[#151313] flex items-center justify-center shrink-0 z-10">
-                        <span className="text-[8px] font-black text-white">
-                          05
-                        </span>
-                      </div>
-                      <div className="pb-2">
-                        <p className="text-[10px] font-black text-[#151313] uppercase tracking-widest mb-2">
-                          How to Improve
-                        </p>
-                        <div className="space-y-2">
-                          {parseBullets(sf.how_to_improve).map((pt, i) => (
-                            <div key={i} className="flex gap-2.5">
-                              <span className="text-xs font-black text-[#151313]/25 shrink-0">
-                                {i + 1}.
-                              </span>
-                              <p className="text-sm font-medium text-[#151313] leading-relaxed">
-                                {pt}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {sf.next_target && (
-                    <div className="flex gap-4">
-                      <div className="w-6 h-6 rounded-full bg-[#E9424C] border-2 border-[#151313] flex items-center justify-center shrink-0 z-10">
-                        <span className="text-[8px] font-black text-white">
-                          06
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-[#151313] uppercase tracking-widest mb-1.5">
-                          Next Target
-                        </p>
-                        <p className="text-sm font-semibold text-[#151313] leading-relaxed">
-                          {sf.next_target.replace(/^\[|\]$/g, '')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <p className="text-sm text-[#151313] leading-relaxed">
+                  {feedback}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -353,11 +311,7 @@ function ResultQuestionCard({ r }) {
       >
         <div className="flex items-center gap-3">
           <span
-            className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center text-xs font-black shrink-0 ${
-              r.is_correct
-                ? 'bg-[#22c55e] text-white'
-                : 'bg-[#E9424C] text-white'
-            }`}
+            className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center text-xs font-black shrink-0 ${r.is_correct ? 'bg-[#22c55e] text-white' : 'bg-[#E9424C] text-white'}`}
           >
             {r.question_number}
           </span>
@@ -366,15 +320,11 @@ function ResultQuestionCard({ r }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {r.is_correct ? (
-            <span className="text-[10px] font-black text-[#22c55e]">
-              Correct
-            </span>
-          ) : (
-            <span className="text-[10px] font-black text-[#E9424C]">
-              Incorrect
-            </span>
-          )}
+          <span
+            className={`text-[10px] font-black ${r.is_correct ? 'text-[#22c55e]' : 'text-[#E9424C]'}`}
+          >
+            {r.is_correct ? 'Correct' : 'Incorrect'}
+          </span>
           {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
       </button>
@@ -387,22 +337,17 @@ function ResultQuestionCard({ r }) {
                 const isChosen = r.student_answer === key
                 const isCorrect = r.correct_answer === key
                 const isWrong = isChosen && !isCorrect
-
-                let bgColor = 'bg-white'
-                let borderColor = 'border-[#151313]/20'
-                if (isCorrect) {
-                  bgColor = 'bg-[#22c55e]/5'
-                  borderColor = 'border-[#22c55e]'
-                }
-                if (isWrong) {
-                  bgColor = 'bg-[#E9424C]/5'
-                  borderColor = 'border-[#E9424C]'
-                }
-
                 return (
                   <div
                     key={key}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm ${bgColor} ${borderColor}`}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm
+                    ${
+                      isCorrect
+                        ? 'bg-[#22c55e]/5 border-[#22c55e]'
+                        : isWrong
+                          ? 'bg-[#E9424C]/5 border-[#E9424C]'
+                          : 'bg-white border-[#151313]/20'
+                    }`}
                   >
                     <span className="font-medium">
                       <span className="font-black mr-2">{key}.</span>

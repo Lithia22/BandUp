@@ -37,7 +37,6 @@ export default function ReadingQuiz() {
   const answersRef = useRef({})
   const key = storageKey(setNumber)
 
-  // Load questions + silently restore saved progress
   useEffect(() => {
     const saved = (() => {
       try {
@@ -60,7 +59,6 @@ export default function ReadingQuiz() {
       .finally(() => setLoading(false))
   }, [setNumber, key])
 
-  // Persist answers + timeLeft to localStorage
   useEffect(() => {
     if (loading) return
     answersRef.current = answers
@@ -72,7 +70,6 @@ export default function ReadingQuiz() {
     } catch {}
   }, [answers, timeLeft, loading, key])
 
-  // Warn on browser refresh/tab close
   useEffect(() => {
     const handler = (e) => {
       if (!submittingRef.current && !submitted) {
@@ -180,7 +177,6 @@ export default function ReadingQuiz() {
         onCancel={() => blocker.reset?.()}
       />
 
-      {/* Top bar */}
       <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-8 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3 shrink-0">
           <button
@@ -219,7 +215,6 @@ export default function ReadingQuiz() {
         </Button>
       </div>
 
-      {/* Questions */}
       <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-10">
         {renderGroups.map((item) => {
           if (item.type === 'part4')
