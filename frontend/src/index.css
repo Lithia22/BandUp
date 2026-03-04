@@ -1,14 +1,17 @@
 @import 'tailwindcss';
 @custom-variant dark (&:is(.dark *));
 
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 :root {
-  /* BandUp custom colors */
+  /* BandUp brand colors */
   --bandup-red: #e9424c;
   --bandup-cream: #f7f7f5;
-  --bandup-purple: #be94f5;
-  --bandup-yellow: #fccc42;
   --bandup-dark: #151313;
-  --bandup-dark: #1a1a1a;
+  --bandup-dark2: #1a1a1a;
 
   /* Sidebar variables */
   --sidebar: oklch(0.985 0 0);
@@ -71,8 +74,6 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-
-  /* Dark mode sidebar */
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);

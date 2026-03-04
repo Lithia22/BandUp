@@ -44,7 +44,6 @@ export default function Landing() {
   const [scrolled, setScrolled] = useState(false)
   const [email, setEmail] = useState('')
 
-  // Scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10)
