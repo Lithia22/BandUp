@@ -6,6 +6,7 @@ load_dotenv()
 # Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_STORAGE_URL = os.getenv("SUPABASE_STORAGE_URL")
 
 # API Keys
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

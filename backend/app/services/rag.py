@@ -1,3 +1,4 @@
+# app/services/rag.py
 from app.config import supabase, LLM_MODEL, GEMINI_API_KEY
 from app.services.embedding import embed_text
 from app.services.knn import knn_search
@@ -51,7 +52,21 @@ def parse_response_content(content) -> str:
         return str(content)
 
 
-def rag_generate_feedback(component: str, performance_summary: str, k: int = 3) -> dict:
+# Component-specific resource guidance
+COMPONENT_RESOURCES = {
+    "reading": (
+        "Suggest resources like BBC Learning English (bbclearningenglish.com), "
+        "The Star, or New Straits Times. Tips should involve active reading: summarising, predicting, identifying opinions."
+    ),
+    "listening": (
+        "Suggest resources like BBC Learning English 6 Minute English "
+        "(bbclearningenglish.com/english/features/6-minute-english) or TED-Ed on YouTube. "
+        "Tips should involve active listening: summarising, predicting, identifying the speaker's main idea."
+    ),
+}
+
+
+def rag_generate_feedback(component: str, performance_summary: str, k: int = 3, skipped_note: str = "") -> dict:
     # Step 1 — Embed
     query_vector = embed_text(performance_summary)
 
@@ -66,39 +81,52 @@ def rag_generate_feedback(component: str, performance_summary: str, k: int = 3) 
     ])
 
     # Step 4 — Generate
-    prompt = f"""You are a friendly MUET Reading coach helping a Malaysian student understand their practice test results.
+    component_label = component.capitalize()
+    resource_guidance = COMPONENT_RESOURCES.get(component, COMPONENT_RESOURCES["reading"])
 
-Here is the student's performance:
+    prompt = f"""You are a friendly MUET {component_label} coach giving personalised feedback to a Malaysian student.
 
+Student performance:
 {performance_summary}
 
-The following official MUET band descriptors were retrieved as the closest matches using semantic search:
-
+Official MUET band descriptors (use ONLY these to estimate the band):
 {descriptor_context}
 
-Using ONLY the official MUET band descriptors above as your grounding criteria, write personalised feedback in simple, friendly English — like a teacher talking directly to the student. Use short sentences. Avoid difficult words. Any student, even a Band 2 student, must be able to understand every sentence.
-
 Rules:
-- Base the estimated band and all feedback strictly on the MUET descriptors above
-- The performance summary contains STRONG, WEAK and HEAVILY SKIPPED labels to guide you — use them to decide what to mention, but NEVER use these words in your response. Instead write naturally e.g. "you struggled with", "you found this challenging", "many questions were left unanswered"
-- Only mention STRONG parts in "What You Did Well". Only mention WEAK or HEAVILY SKIPPED parts in "Where to Focus". Never contradict the labels.
-- Never mention scores, fractions or percentages — describe performance in plain words only
-- If HEAVILY SKIPPED parts exist, mention generally that many questions were skipped and remind the student there is no penalty in MUET so always attempt every question
-- Keep the tone encouraging and kind
+- Write in simple, friendly English — like a teacher talking directly to the student. Do NOT use any markdown formatting — no asterisks, no bold, no italics, no symbols
+- Never use the words STRONG, WEAK or HEAVILY SKIPPED — write naturally instead
+- Never mention scores, fractions or percentages
+- Only mention STRONG parts in WHAT YOU DID WELL
+- Only mention WEAK or HEAVILY SKIPPED parts in WHERE TO FOCUS
+- Always include the part number and its skill + text type in every bullet about a specific part
+- WHERE TO FOCUS: explain WHY each part is challenging — no study tips here
+- If two parts test the same text type, combine into one bullet
+- WHAT YOU DID WELL: if no parts stand out, write one honest encouraging bullet about their effort — do NOT mention whether they completed the test or how many questions they answered
 
-Format your response EXACTLY with these section headers:
+Format EXACTLY:
 
 ESTIMATED BAND: [Band 1 / Band 2 / Band 3 / Band 4 / Band 5 / Band 5+]
 
-YOUR BAND RESULT: [2 simple sentences explaining what this band means for a reading student, based on the descriptor. No jargon.]
+YOUR BAND RESULT:
+[2 simple sentences on what this band means for a {component_label} student based on the descriptor]
 
-WHAT YOU DID WELL: [2-3 bullet points starting with •. Only mention parts the student did well in and name the reading skill that shows. If no parts stand out, write one honest encouraging bullet instead. e.g. "• You did well in Part 1 and Part 2 — this shows you are good at finding specific facts and understanding main ideas in short everyday texts."]
+WHAT YOU DID WELL:
+[One • bullet per STRONG part: Part [n] — [skill + text type] — [what doing well shows]]
+[One final short encouraging bullet]
 
-WHERE TO FOCUS: [2-3 bullet points starting with •. Mention which parts were most challenging and name the skill each tests. If many questions were skipped, add one bullet about always attempting every question. e.g. "• Parts 6 and 7 were the most challenging — these test your ability to understand a writer's tone, purpose and deeper meaning in complex articles." e.g. "• You skipped many questions — remember there is no penalty for a wrong answer in MUET, so always make a guess rather than leaving a question blank."]
+WHERE TO FOCUS:
+[One • bullet per WEAK part: Part [n] — [skill + text type] — [why this is challenging]]
+[One final short sentence on what to prioritise]
 
-YOUR STUDY PLAN: [3 bullet points starting with •. One tip per weak area from WHERE TO FOCUS. If skipping was a problem, one tip must cover exam technique. Each tip must include a concrete example — a specific website, article type or activity with a short how-to. e.g. "• To improve at Part 5 (how ideas connect): read a short article on BBC Learning English (bbclearningenglish.com), cover the last paragraph and guess what comes next — this trains you to follow the flow of a text." e.g. "• For unanswered questions: practise the elimination method — cross out the option that is clearly wrong, then choose between what remains. An educated guess is always better than no answer." e.g. "• To get better at Parts 6 and 7: read one short opinion piece from The Star or New Straits Times each day and ask yourself — what is the writer trying to say, and are they for or against the topic?"]
+YOUR STUDY PLAN:
+[One • bullet per weak area — cover ALL of them]
+{skipped_note}
+[If skipping was an issue, add this bullet: • Exam technique — use the elimination method: rule out the clearly wrong option first, then choose between what remains]
+[Each tip: Part [n] — [skill] — [specific activity] using [specific resource]]
+[{resource_guidance}]
 
-YOUR NEXT GOAL: [2 sentences. Describe what the next band level looks like based on the descriptors and give one simple first step to get there.]"""
+YOUR NEXT GOAL:
+[2 sentences on what the next band looks like and one simple first step]"""
 
     response = get_llm().invoke([HumanMessage(content=prompt)])
     raw = parse_response_content(response.content).strip()
@@ -136,11 +164,11 @@ YOUR NEXT GOAL: [2 sentences. Describe what the next band level looks like based
         sections[header] = extract_section(raw, header, all_headers[i+1:])
 
     structured_feedback = {
-        "your_band_result":   sections.get("YOUR BAND RESULT", ""),
-        "what_you_did_well":  sections.get("WHAT YOU DID WELL", ""),
-        "where_to_focus":     sections.get("WHERE TO FOCUS", ""),
-        "your_study_plan":    sections.get("YOUR STUDY PLAN", ""),
-        "your_next_goal":     sections.get("YOUR NEXT GOAL", ""),
+        "your_band_result":  sections.get("YOUR BAND RESULT", ""),
+        "what_you_did_well": sections.get("WHAT YOU DID WELL", ""),
+        "where_to_focus":    sections.get("WHERE TO FOCUS", ""),
+        "your_study_plan":   sections.get("YOUR STUDY PLAN", ""),
+        "your_next_goal":    sections.get("YOUR NEXT GOAL", ""),
     }
 
     return {

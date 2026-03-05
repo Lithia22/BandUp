@@ -1,3 +1,4 @@
+# app/api/endpoints/reading.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -8,13 +9,13 @@ from app.services.rag import rag_generate_feedback
 router = APIRouter()
 
 PART_SKILLS = {
-    1: "Scanning short texts for specific facts (ads, notices, signs)",
-    2: "Understanding main ideas and inferencing (emails, blogs, articles)",
-    3: "Inferencing and predicting outcomes (short stories, letters)",
-    4: "Comparing two texts, distinguishing facts vs opinions, author intention",
-    5: "Understanding text structure and cause-effect relationships (gapped text)",
-    6: "Identifying detail, opinion, attitude and writer purpose (complex article)",
-    7: "Recognising implication, exemplification and text organisation (complex article)",
+    1: "Short texts (advertisements, notices, signs) — scanning for specific facts and details",
+    2: "Email, blog or article — understanding main ideas and making inferences",
+    3: "Short story or letter — inferencing, predicting outcomes and understanding narrative",
+    4: "Two texts — comparing information, distinguishing facts from opinions, understanding author intention",
+    5: "Gapped text — understanding text structure, cause-effect relationships and how ideas connect",
+    6: "Complex article — identifying specific details, opinions, attitudes and writer purpose",
+    7: "Complex article — recognising implication, exemplification and overall text organisation",
 }
 
 
@@ -136,7 +137,15 @@ def submit_answers(data: SubmitRequest):
             else:
                 weak_parts.append(p)
             skill = PART_SKILLS.get(p, "Reading comprehension")
-            part_lines.append(f"  Part {p} ({skill}): {s['correct']}/{s['total']} correct, {s['skipped']} skipped")
+            part_lines.append(
+                f"  Part {p} ({skill}): {s['correct']}/{s['total']} correct, {s['skipped']} skipped"
+            )
+
+        # Hardcode skipped note in Python — LLM just inserts it as-is
+        skipped_note = (
+            "• You left many questions unanswered — remember there is no penalty for wrong answers in MUET, so always attempt every question even if you are unsure."
+            if skipped_parts else ""
+        )
 
         performance_summary = f"""Student completed MUET Reading practice test (Set {data.set_number}).
 Overall score: {correct_count}/{total} correct. Total skipped: {skipped_count}/{total}.
@@ -151,11 +160,16 @@ HEAVILY SKIPPED parts (skipped most or all questions): {", ".join(f"Part {p}" fo
 IMPORTANT: Use ONLY these labels. Only mention STRONG parts as positives. Only mention WEAK or HEAVILY SKIPPED parts as areas to improve. Do not contradict them."""
 
         # 4. RAG: embed → KNN → LLM
-        rag_result = rag_generate_feedback(component="reading", performance_summary=performance_summary, k=3)
-        feedback           = rag_result["feedback"]
+        rag_result = rag_generate_feedback(
+            component="reading",
+            performance_summary=performance_summary,
+            k=3,
+            skipped_note=skipped_note,
+        )
+        feedback            = rag_result["feedback"]
         structured_feedback = rag_result["structured_feedback"]
-        estimated_band     = rag_result["estimated_band"]
-        top_descriptor_id  = rag_result["top_descriptor_id"]
+        estimated_band      = rag_result["estimated_band"]
+        top_descriptor_id   = rag_result["top_descriptor_id"]
 
         # 5. Save to DB
         if data.student_id:
