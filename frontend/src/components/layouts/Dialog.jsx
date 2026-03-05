@@ -18,8 +18,8 @@ export function ExitWarningDialog({ open, onOpenChange, onConfirm, onCancel }) {
             Leave this page?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-sm text-[#151313]/70 font-medium">
-            Your answers and remaining time are saved. You can return anytime
-            and continue from where you left off.
+            You haven't finished your quiz yet. Press Stay to continue, or Leave
+            if you're sure.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2">
@@ -46,6 +46,7 @@ export function SubmitDialog({
   onOpenChange,
   onConfirm,
   unansweredCount,
+  totalCount,
   submitting,
 }) {
   return (
@@ -62,12 +63,11 @@ export function SubmitDialog({
                 <span className="text-[#E9424C] font-black">
                   {unansweredCount}
                 </span>{' '}
-                unanswered question
-                {unansweredCount > 1 ? 's' : ''}. Once submitted, you cannot
-                change your answers.
+                unanswered question{unansweredCount > 1 ? 's' : ''}. Once
+                submitted, you cannot change your answers.
               </>
             ) : (
-              'You have answered all 40 questions. Once submitted, you cannot change your answers.'
+              `You have answered all ${totalCount} questions. Once submitted, you cannot change your answers.`
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>

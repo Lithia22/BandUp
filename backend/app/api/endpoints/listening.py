@@ -1,4 +1,3 @@
-# app/api/endpoints/listening.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -50,7 +49,7 @@ def get_set_questions(set_number: int):
     try:
         result = (
             supabase.table("questions")
-            .select("id, part_number, question_number, question_text, options, audio_url")
+            .select("id, part_number, question_number, passage_title, passage, question_text, options, audio_url")
             .eq("component", "listening")
             .eq("set_number", set_number)
             .order("question_number")
@@ -139,7 +138,6 @@ def submit_answers(data: SubmitRequest):
                 f"  Part {p} ({skill}): {s['correct']}/{s['total']} correct, {s['skipped']} skipped"
             )
 
-        # Hardcode skipped note in Python — LLM just inserts it as-is
         skipped_note = (
             "• You left many questions unanswered — remember there is no penalty for wrong answers in MUET, so always attempt every question even if you are unsure."
             if skipped_parts else ""

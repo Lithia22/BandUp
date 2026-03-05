@@ -12,17 +12,41 @@ import {
   QuizPageSkeleton,
   SubmissionSkeleton,
 } from '../../../components/layouts/Skeletons'
-import {
-  PassageRenderer,
-  Part4Section,
-  QuestionCard,
-  groupByPartAndPassage,
-} from './ReadingComponents'
+import { PartSection } from './ListeningComponents'
 
-const QUIZ_DURATION = 75 * 60
-const storageKey = (n) => `reading_quiz_${n}`
+const QUIZ_DURATION = 50 * 60
+const storageKey = (n) => `listening_quiz_${n}`
 
-export default function ReadingQuiz() {
+function groupByPart(questions) {
+  const parts = {}
+  for (const q of questions) {
+    const p = q.part_number
+    if (!parts[p]) {
+      parts[p] = {
+        partNumber: p,
+        passageTitle: q.passage_title || null,
+        passage: q.passage || null,
+        audioUrl: null,
+        questions: [],
+      }
+    }
+    parts[p].questions.push(q)
+    if (q.audio_url && !parts[p].audioUrl) parts[p].audioUrl = q.audio_url
+  }
+  return Object.values(parts).sort((a, b) => a.partNumber - b.partNumber)
+}
+
+function labelForAudioId(id) {
+  if (!id) return ''
+  if (id.startsWith('part-5-conv-')) {
+    const n = id.replace('part-5-conv-', '')
+    return `Part 5 — Dialogue ${n}`
+  }
+  const n = id.replace('part-', '')
+  return `Part ${n} Audio`
+}
+
+export default function ListeningQuiz() {
   const { setNumber } = useParams()
   const navigate = useNavigate()
   const [questions, setQuestions] = useState([])
@@ -33,6 +57,7 @@ export default function ReadingQuiz() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
+  const [playingAudioId, setPlayingAudioId] = useState(null)
   const submittingRef = useRef(false)
   const answersRef = useRef({})
   const key = storageKey(setNumber)
@@ -55,7 +80,7 @@ export default function ReadingQuiz() {
     }
 
     api
-      .get(`/reading/sets/${setNumber}`)
+      .get(`/listening/sets/${setNumber}`)
       .then((res) => setQuestions(res.data.questions))
       .catch(() => setError('Failed to load questions.'))
       .finally(() => setLoading(false))
@@ -109,8 +134,7 @@ export default function ReadingQuiz() {
           return null
         }
       })()
-
-      const res = await api.post('/reading/submit', {
+      const res = await api.post('/listening/submit', {
         set_number: parseInt(setNumber),
         answers: currentAnswers,
         student_id: studentId,
@@ -120,11 +144,11 @@ export default function ReadingQuiz() {
       })
       const resultsData = res.data
       localStorage.setItem(
-        `reading_results_${setNumber}`,
+        `listening_results_${setNumber}`,
         JSON.stringify(resultsData)
       )
       localStorage.removeItem(key)
-      navigate(`/reading/${setNumber}/results`, {
+      navigate(`/listening/${setNumber}/results`, {
         state: resultsData,
         replace: true,
       })
@@ -137,23 +161,6 @@ export default function ReadingQuiz() {
   }
 
   if (submitted) return <SubmissionSkeleton />
-
-  const allGroups = groupByPartAndPassage(questions)
-  const answeredCount = Object.values(answers).filter((v) => v != null).length
-  const unansweredCount = questions.length - answeredCount
-  const part4Groups = allGroups.filter((g) => g.partNumber === 4)
-  const seenParts = new Set()
-  const renderGroups = []
-  let part4Added = false
-  for (const g of allGroups) {
-    if (g.partNumber === 4) {
-      if (!part4Added) {
-        renderGroups.push({ type: 'part4', groups: part4Groups })
-        part4Added = true
-      }
-    } else renderGroups.push({ type: 'normal', group: g })
-  }
-
   if (loading) return <QuizPageSkeleton />
   if (error)
     return (
@@ -161,6 +168,11 @@ export default function ReadingQuiz() {
         <p className="text-sm font-semibold text-[#E9424C]">{error}</p>
       </div>
     )
+
+  const partGroups = groupByPart(questions)
+  const answeredCount = Object.values(answers).filter((v) => v != null).length
+  const unansweredCount = questions.length - answeredCount
+  const currentPlayingLabel = labelForAudioId(playingAudioId)
 
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
@@ -182,7 +194,7 @@ export default function ReadingQuiz() {
       <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-8 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3 shrink-0">
           <button
-            onClick={() => navigate('/reading')}
+            onClick={() => navigate('/listening')}
             className="w-8 h-8 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#151313] hover:text-white transition-colors"
           >
             <ChevronLeft size={16} />
@@ -218,65 +230,23 @@ export default function ReadingQuiz() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-10">
-        {renderGroups.map((item) => {
-          if (item.type === 'part4')
-            return (
-              <Part4Section
-                key="part4"
-                groups={item.groups}
-                answers={answers}
-                onSelect={handleSelect}
-                disabled={submitting || submitted}
-              />
-            )
-          const { group } = item
-          const showHeader = !seenParts.has(group.partNumber)
-          if (showHeader) seenParts.add(group.partNumber)
-          const isGapped = (() => {
-            try {
-              return JSON.parse(group.passage)?.type === 'gapped_text'
-            } catch {
-              return false
-            }
-          })()
-          return (
-            <div key={group.key}>
-              {showHeader && (
-                <div className="mb-4">
-                  <span className="inline-block bg-[#151313] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2">
-                    Part {group.partNumber}
-                  </span>
-                  {group.passageTitle && (
-                    <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed mt-1 text-justify">
-                      {group.passageTitle}
-                    </p>
-                  )}
-                </div>
-              )}
-              <PassageRenderer
-                passage={group.passage}
-                partNumber={group.partNumber}
-                gapQuestions={group.questions}
-                answers={answers}
-                onSelect={handleSelect}
-                disabled={submitting || submitted}
-              />
-              {!isGapped && (
-                <div className="space-y-4">
-                  {group.questions.map((q) => (
-                    <QuestionCard
-                      key={q.id}
-                      q={q}
-                      answers={answers}
-                      onSelect={handleSelect}
-                      disabled={submitting || submitted}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
+        {partGroups.map((part) => (
+          <PartSection
+            key={part.partNumber}
+            partNumber={part.partNumber}
+            partTitle={part.passageTitle}
+            passage={part.passage}
+            audioUrl={part.partNumber !== 5 ? part.audioUrl : null}
+            questions={part.questions}
+            answers={answers}
+            onSelect={handleSelect}
+            disabled={submitting || submitted}
+            playingId={playingAudioId}
+            playingLabel={currentPlayingLabel}
+            onPlay={(id) => setPlayingAudioId(id)}
+            onPause={() => setPlayingAudioId(null)}
+          />
+        ))}
       </div>
     </div>
   )

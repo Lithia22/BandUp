@@ -4,16 +4,14 @@ import api from '../../../services/api'
 import { ResultsPage } from '../../../components/layouts/ResultCard'
 
 function getPartForQuestion(qNum) {
-  if (qNum <= 8) return 1
+  if (qNum <= 7) return 1
   if (qNum <= 14) return 2
-  if (qNum <= 20) return 3
-  if (qNum <= 26) return 4
-  if (qNum <= 30) return 5
-  if (qNum <= 33) return 6
-  return 7
+  if (qNum <= 17) return 3
+  if (qNum <= 24) return 4
+  return 5
 }
 
-export default function ReadingResults() {
+export default function ListeningResults() {
   const { setNumber } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -23,7 +21,9 @@ export default function ReadingResults() {
     location.state ||
     (() => {
       try {
-        return JSON.parse(localStorage.getItem(`reading_results_${setNumber}`))
+        return JSON.parse(
+          localStorage.getItem(`listening_results_${setNumber}`)
+        )
       } catch {
         return null
       }
@@ -31,11 +31,11 @@ export default function ReadingResults() {
 
   useEffect(() => {
     if (!results) {
-      navigate(`/reading/${setNumber}`, { replace: true })
+      navigate(`/listening/${setNumber}`, { replace: true })
       return
     }
     api
-      .get(`/reading/sets/${setNumber}`)
+      .get(`/listening/sets/${setNumber}`)
       .then((res) => setQuestions(res.data.questions))
       .catch(() => {})
   }, [])
@@ -48,7 +48,7 @@ export default function ReadingResults() {
   })
 
   const byPart = enriched.reduce((acc, r) => {
-    const part = getPartForQuestion(r.question_number)
+    const part = r.part_number || getPartForQuestion(r.question_number)
     if (!acc[part]) acc[part] = []
     acc[part].push(r)
     return acc
@@ -56,7 +56,7 @@ export default function ReadingResults() {
 
   return (
     <ResultsPage
-      backPath="/reading"
+      backPath="/listening"
       heroImage="/src/assets/7.svg"
       results={results}
       byPart={byPart}

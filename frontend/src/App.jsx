@@ -12,6 +12,9 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import Reading from './pages/student/reading/Reading'
 import ReadingQuiz from './pages/student/reading/ReadingQuiz'
 import ReadingResults from './pages/student/reading/ReadingResults'
+import Listening from './pages/student/listening/Listening'
+import ListeningQuiz from './pages/student/listening/ListeningQuiz'
+import ListeningResults from './pages/student/listening/ListeningResults'
 
 function ProtectedRoute() {
   const token = localStorage.getItem('bandup_token')
@@ -38,6 +41,9 @@ const router = createBrowserRouter([
       { path: '/reading', element: <Reading /> },
       { path: '/reading/:setNumber', element: <ReadingQuiz /> },
       { path: '/reading/:setNumber/results', element: <ReadingResults /> },
+      { path: '/listening', element: <Listening /> },
+      { path: '/listening/:setNumber', element: <ListeningQuiz /> },
+      { path: '/listening/:setNumber/results', element: <ListeningResults /> },
     ],
   },
 ])

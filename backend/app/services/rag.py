@@ -1,4 +1,3 @@
-# app/services/rag.py
 from app.config import supabase, LLM_MODEL, GEMINI_API_KEY
 from app.services.embedding import embed_text
 from app.services.knn import knn_search

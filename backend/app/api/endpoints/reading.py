@@ -1,4 +1,3 @@
-# app/api/endpoints/reading.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -141,7 +140,6 @@ def submit_answers(data: SubmitRequest):
                 f"  Part {p} ({skill}): {s['correct']}/{s['total']} correct, {s['skipped']} skipped"
             )
 
-        # Hardcode skipped note in Python — LLM just inserts it as-is
         skipped_note = (
             "• You left many questions unanswered — remember there is no penalty for wrong answers in MUET, so always attempt every question even if you are unsure."
             if skipped_parts else ""
