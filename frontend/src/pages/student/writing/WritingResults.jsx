@@ -9,6 +9,7 @@ export default function WritingResults() {
   const location = useLocation()
   const [showFeedback, setShowFeedback] = useState(false)
   const [showAnswer, setShowAnswer] = useState(false)
+  const [showSuggested, setShowSuggested] = useState(false)
 
   const results =
     location.state ||
@@ -32,8 +33,10 @@ export default function WritingResults() {
     feedback,
     word_count,
     student_answer,
+    suggested_answer,
   } = results
   const sf = structured_feedback || {}
+  const suggestedText = suggested_answer || sf.suggested_answer || ''
 
   const timelineSections = [
     {
@@ -214,6 +217,40 @@ export default function WritingResults() {
             </div>
           )}
         </div>
+
+        {suggestedText && (
+          <div className="bg-white rounded-2xl border-2 border-[#151313] shadow-[3px_3px_0px_#151313] overflow-hidden">
+            <button
+              onClick={() => setShowSuggested(!showSuggested)}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#f7f7f5] transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-[#151313] uppercase tracking-widest">
+                  Suggested Answer
+                </span>
+                <span className="text-[9px] font-black text-white bg-[#E9424C] px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Band 5
+                </span>
+              </div>
+              {showSuggested ? (
+                <ChevronUp size={14} className="text-[#151313]/40" />
+              ) : (
+                <ChevronDown size={14} className="text-[#151313]/40" />
+              )}
+            </button>
+            {showSuggested && (
+              <div className="border-t-2 border-[#151313] px-5 py-5 space-y-3">
+                <p className="text-[10px] font-semibold text-[#151313]/50 italic">
+                  This is an improved version of your answer at Band 5 level —
+                  same ideas, stronger language.
+                </p>
+                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap">
+                  {suggestedText}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {student_answer && (
           <div className="bg-white rounded-2xl border-2 border-[#151313] shadow-[3px_3px_0px_#151313] overflow-hidden">

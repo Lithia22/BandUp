@@ -109,6 +109,7 @@ Rules:
 - Never mention scores, fractions or percentages
 - If word count is below 100, always mention this in WHERE TO FOCUS
 - Keep the tone encouraging and kind
+- For SUGGESTED ANSWER: rewrite the student's response at Band 5 level — keep their exact same ideas, notes and structure but improve the grammar, vocabulary, sentence variety and style. Do NOT invent new ideas. Keep it as a natural email reply. Do not add any explanation or commentary — just the improved email text only.
 
 Format EXACTLY:
 
@@ -132,7 +133,10 @@ YOUR STUDY PLAN:
 [{resource_guidance}]
 
 YOUR NEXT GOAL:
-[2 sentences on what the next band looks like based on the descriptors and one simple first step]"""
+[2 sentences on what the next band looks like based on the descriptors and one simple first step]
+
+SUGGESTED ANSWER:
+[Rewrite the student's response at Band 5 level — same ideas, improved language. Natural email format only, no commentary.]"""
 
     else:
         prompt = f"""You are a friendly MUET {component_label} coach giving personalised feedback to a Malaysian student.
@@ -201,14 +205,26 @@ YOUR NEXT GOAL:
                 after = after.split(nh + ":")[0]
         return after.strip()
 
-    all_headers = [
-        "ESTIMATED BAND",
-        "YOUR BAND RESULT",
-        "WHAT YOU DID WELL",
-        "WHERE TO FOCUS",
-        "YOUR STUDY PLAN",
-        "YOUR NEXT GOAL",
-    ]
+    all_headers = (
+        [
+            "ESTIMATED BAND",
+            "YOUR BAND RESULT",
+            "WHAT YOU DID WELL",
+            "WHERE TO FOCUS",
+            "YOUR STUDY PLAN",
+            "YOUR NEXT GOAL",
+            "SUGGESTED ANSWER",
+        ]
+        if component == "writing"
+        else [
+            "ESTIMATED BAND",
+            "YOUR BAND RESULT",
+            "WHAT YOU DID WELL",
+            "WHERE TO FOCUS",
+            "YOUR STUDY PLAN",
+            "YOUR NEXT GOAL",
+        ]
+    )
 
     sections = {}
     for i, header in enumerate(all_headers):
@@ -221,6 +237,9 @@ YOUR NEXT GOAL:
         "your_study_plan":   sections.get("YOUR STUDY PLAN", ""),
         "your_next_goal":    sections.get("YOUR NEXT GOAL", ""),
     }
+
+    if component == "writing":
+        structured_feedback["suggested_answer"] = sections.get("SUGGESTED ANSWER", "")
 
     return {
         "feedback": raw,

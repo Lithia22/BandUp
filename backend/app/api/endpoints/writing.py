@@ -115,6 +115,7 @@ Evaluate the student's response based on these 4 criteria derived from MUET Writ
         structured_feedback = rag_result["structured_feedback"]
         estimated_band      = rag_result["estimated_band"]
         top_descriptor_id   = rag_result["top_descriptor_id"]
+        suggested_answer    = structured_feedback.get("suggested_answer", "")
 
         # 5. Save to DB
         if data.student_id:
@@ -176,6 +177,7 @@ Evaluate the student's response based on these 4 criteria derived from MUET Writ
             "feedback": feedback,
             "structured_feedback": structured_feedback,
             "estimated_band": estimated_band,
+            "suggested_answer": suggested_answer,
         }
 
     except HTTPException:
