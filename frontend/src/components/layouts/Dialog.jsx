@@ -48,16 +48,37 @@ export function SubmitDialog({
   unansweredCount,
   totalCount,
   submitting,
+  isWriting = false,
+  wordCount = 0,
+  minWords = 100,
 }) {
+  const belowMinimum = isWriting && wordCount < minWords
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="bg-[#f7f7f5] border-2 border-[#151313] rounded-2xl shadow-[8px_8px_0px_#151313] p-6">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-black text-[#151313]">
-            Submit your answers?
+            Submit your answer?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-sm text-[#151313]/70 font-medium">
-            {unansweredCount > 0 ? (
+            {isWriting ? (
+              belowMinimum ? (
+                <>
+                  Your response is only{' '}
+                  <span className="text-[#E9424C] font-black">
+                    {wordCount} words
+                  </span>
+                  . You need at least{' '}
+                  <span className="text-[#E9424C] font-black">
+                    {minWords} words
+                  </span>
+                  . Once submitted, you cannot change your answer.
+                </>
+              ) : (
+                `Your response is ${wordCount} words. Once submitted, you cannot change your answer.`
+              )
+            ) : unansweredCount > 0 ? (
               <>
                 You still have{' '}
                 <span className="text-[#E9424C] font-black">

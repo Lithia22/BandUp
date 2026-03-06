@@ -15,6 +15,9 @@ import ReadingResults from './pages/student/reading/ReadingResults'
 import Listening from './pages/student/listening/Listening'
 import ListeningQuiz from './pages/student/listening/ListeningQuiz'
 import ListeningResults from './pages/student/listening/ListeningResults'
+import Writing from './pages/student/writing/Writing'
+import WritingQuiz from './pages/student/writing/WritingQuiz'
+import WritingResults from './pages/student/writing/WritingResults'
 
 function ProtectedRoute() {
   const token = localStorage.getItem('bandup_token')
@@ -44,6 +47,9 @@ const router = createBrowserRouter([
       { path: '/listening', element: <Listening /> },
       { path: '/listening/:setNumber', element: <ListeningQuiz /> },
       { path: '/listening/:setNumber/results', element: <ListeningResults /> },
+      { path: '/writing', element: <Writing /> },
+      { path: '/writing/:setNumber', element: <WritingQuiz /> },
+      { path: '/writing/:setNumber/results', element: <WritingResults /> },
     ],
   },
 ])
