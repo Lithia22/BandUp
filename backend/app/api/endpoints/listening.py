@@ -139,7 +139,7 @@ def submit_answers(data: SubmitRequest):
             )
 
         skipped_note = (
-            "• You left many questions unanswered — remember there is no penalty for wrong answers in MUET, so always attempt every question even if you are unsure."
+            "• You left questions unanswered — remember there is no penalty for wrong answers in MUET, so always attempt every question even if you are unsure."
             if skipped_parts else ""
         )
 

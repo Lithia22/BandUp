@@ -62,6 +62,12 @@ COMPONENT_RESOURCES = {
         "(bbclearningenglish.com/english/features/6-minute-english) or TED-Ed on YouTube. "
         "Tips should involve active listening: summarising, predicting, identifying the speaker's main idea."
     ),
+    "writing": (
+        "Suggest resources like BBC Learning English (bbclearningenglish.com), "
+        "British Council LearnEnglish (learnenglish.britishcouncil.org), or sample MUET writing responses. "
+        "Tips should involve active writing practice: writing email replies, checking grammar, "
+        "expanding ideas with reasons and examples, or reading model answers to understand good structure and register."
+    ),
 }
 
 
@@ -83,7 +89,53 @@ def rag_generate_feedback(component: str, performance_summary: str, k: int = 3, 
     component_label = component.capitalize()
     resource_guidance = COMPONENT_RESOURCES.get(component, COMPONENT_RESOURCES["reading"])
 
-    prompt = f"""You are a friendly MUET {component_label} coach giving personalised feedback to a Malaysian student.
+    if component == "writing":
+        prompt = f"""You are a friendly MUET Writing coach giving personalised feedback to a Malaysian student.
+
+Student performance:
+{performance_summary}
+
+Official MUET band descriptors (use ONLY these to estimate the band):
+{descriptor_context}
+
+Rules:
+- Write in simple, friendly English — like a teacher talking directly to the student. Do NOT use any markdown formatting — no asterisks, no bold, no italics, no symbols
+- Base the estimated band strictly on the MUET descriptors above
+- Evaluate based on these 4 criteria from MUET Writing descriptors and test specifications:
+  1. Task Fulfillment — did the student address all notes? Did they use appropriate language functions?
+  2. Language Accuracy — grammar, vocabulary, sentence structure
+  3. Organisation & Coherence — are ideas logically ordered and well-connected?
+  4. Style & Register — is the tone appropriate for the reader-writer relationship?
+- Never mention scores, fractions or percentages
+- If word count is below 100, always mention this in WHERE TO FOCUS
+- Keep the tone encouraging and kind
+
+Format EXACTLY:
+
+ESTIMATED BAND: [Band 1 / Band 2 / Band 3 / Band 4 / Band 5 / Band 5+]
+
+YOUR BAND RESULT:
+[2 simple sentences on what this band means for a Writing student based on the descriptor]
+
+WHAT YOU DID WELL:
+[One • bullet per criteria the student handled well — name the criteria and explain briefly what they did well]
+[One final short encouraging bullet]
+
+WHERE TO FOCUS:
+[One • bullet per criteria that needs improvement — name the criteria and explain specifically what was weak]
+[If word count below 100, add one bullet about meeting the minimum word count]
+[One final short sentence on what to prioritise]
+
+YOUR STUDY PLAN:
+[One • bullet per weak criteria identified in WHERE TO FOCUS]
+[Each tip: [Criteria name] — [specific activity] using [specific resource]]
+[{resource_guidance}]
+
+YOUR NEXT GOAL:
+[2 sentences on what the next band looks like based on the descriptors and one simple first step]"""
+
+    else:
+        prompt = f"""You are a friendly MUET {component_label} coach giving personalised feedback to a Malaysian student.
 
 Student performance:
 {performance_summary}
