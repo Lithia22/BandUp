@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, FileText, PenLine } from 'lucide-react'
+import { Clock, FileText, SquarePen } from 'lucide-react'
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
-import StudentSidebar from '../../../components/layouts/StudentSidebar'
+import SidebarLayout from '../../../components/layouts/SidebarLayout'
 import { PracticeSetSkeleton } from '../../../components/layouts/Skeletons'
 import api from '../../../services/api'
 
@@ -86,7 +86,7 @@ export default function Writing() {
       style={{ '--sidebar-width': '16rem', '--sidebar-width-icon': '3.5rem' }}
     >
       <div className="flex min-h-screen w-full bg-[#f7f7f5]">
-        <StudentSidebar />
+        <SidebarLayout />
         <SidebarInset className="flex-1 min-w-0">
           <main className="h-full overflow-y-auto p-4 md:p-6">
             <div className="flex items-center mb-4 md:hidden">
@@ -163,7 +163,7 @@ export default function Writing() {
                           <FileText size={10} /> 1 task
                         </span>
                         <span className="flex items-center gap-1 text-[10px] font-semibold text-[#151313]/50">
-                          <PenLine size={10} /> 100 words min
+                          <SquarePen size={10} /> 100 words min
                         </span>
                       </div>
 
@@ -203,7 +203,7 @@ export default function Writing() {
                               }
                               className="flex-1 bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-3 py-2 text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-1"
                             >
-                              <PenLine size={12} /> Resume
+                              <SquarePen size={12} /> Resume
                             </button>
                             <button
                               onClick={() =>

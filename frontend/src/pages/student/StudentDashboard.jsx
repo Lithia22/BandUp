@@ -1,15 +1,15 @@
-import { BookOpen, Headphones, PenLine, Mic } from 'lucide-react'
+import { BookOpen, Headphones, SquarePen, Mic } from 'lucide-react'
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
-import StudentSidebar from '../../components/layouts/StudentSidebar'
+import SidebarLayout from '../../components/layouts/SidebarLayout'
 
 const COMPONENTS = [
   { label: 'Reading', icon: BookOpen, band: null },
   { label: 'Listening', icon: Headphones, band: null },
-  { label: 'Writing', icon: PenLine, band: null },
+  { label: 'Writing', icon: SquarePen, band: null },
   { label: 'Speaking', icon: Mic, band: null },
 ]
 
@@ -23,7 +23,7 @@ export default function StudentDashboard() {
       style={{ '--sidebar-width': '16rem', '--sidebar-width-icon': '3.5rem' }}
     >
       <div className="flex min-h-screen w-full bg-[#f7f7f5]">
-        <StudentSidebar />
+        <SidebarLayout />
 
         <SidebarInset className="flex-1 min-w-0">
           <main className="h-full overflow-y-auto p-4 md:p-6">

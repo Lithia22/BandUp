@@ -53,6 +53,9 @@ export default function Auth({ mode = 'login' }) {
 
       <div className="flex-1 flex items-center justify-center px-6 pb-10">
         <div className="w-full max-w-md">
+          <div className="flex justify-center mb-2">
+            <img src="/vite.svg" alt="BandUp" className="h-12 w-auto" />
+          </div>
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-black text-[#151313] mb-2">
               {isLogin ? 'Log in' : 'Create account'}

@@ -1,12 +1,15 @@
 import {
   BookOpen,
   Headphones,
-  PenLine,
+  SquarePen,
   Mic,
   LayoutDashboard,
   LogOut,
   ChevronLeft,
   ChevronRight,
+  BookOpenCheck,
+  Users,
+  BarChart2,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -22,27 +25,41 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-const NAV_ITEMS = [
+const STUDENT_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
   { label: 'Reading', icon: BookOpen, href: '/reading' },
   { label: 'Listening', icon: Headphones, href: '/listening' },
-  { label: 'Writing', icon: PenLine, href: '/writing' },
+  { label: 'Writing', icon: SquarePen, href: '/writing' },
   { label: 'Speaking', icon: Mic, href: '/speaking' },
 ]
 
+const ADMIN_NAV = [
+  { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
+  { label: 'Manage Questions', icon: BookOpenCheck, href: '/admin/questions' },
+  { label: 'View Students', icon: Users, href: '/admin/students' },
+  { label: 'Results Overview', icon: BarChart2, href: '/admin/results' },
+]
+
 function ArrowToggle() {
-  const { toggleSidebar, open } = useSidebar()
+  const { toggleSidebar, open, openMobile, isMobile } = useSidebar()
+  const isOpen = isMobile ? openMobile : open
   return (
     <button
       onClick={toggleSidebar}
       className="w-6 h-6 rounded-full border-2 border-[#151313] bg-white flex items-center justify-center hover:bg-[#E9424C] hover:text-white hover:border-[#E9424C] transition-all duration-150 shrink-0"
     >
-      {open ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
+      {isOpen ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
     </button>
   )
 }
 
-export default function StudentSidebar() {
+export default function SidebarLayout({ role = 'student' }) {
+  const { open, openMobile, isMobile } = useSidebar()
+  const isOpen = isMobile ? openMobile : open
+  const isAdmin = role === 'admin'
+  const navItems = isAdmin ? ADMIN_NAV : STUDENT_NAV
+  const homeHref = isAdmin ? '/admin' : '/student'
+
   const handleLogout = () => {
     localStorage.removeItem('bandup_token')
     localStorage.removeItem('bandup_role')
@@ -61,10 +78,17 @@ export default function StudentSidebar() {
                 size="lg"
                 className="hover:bg-transparent active:bg-transparent flex-1 min-w-0"
               >
-                <a href="/student">
-                  <span className="font-black text-[#151313] text-base truncate">
-                    Band<span className="text-[#E9424C]">Up</span>
-                  </span>
+                <a href={homeHref} className="flex items-center gap-2">
+                  <img
+                    src="/vite.svg"
+                    alt="BandUp"
+                    className="h-6 w-auto shrink-0"
+                  />
+                  {isOpen && (
+                    <span className="font-black text-[#151313] text-base truncate">
+                      Band<span className="text-[#E9424C]">Up</span>
+                    </span>
+                  )}
                 </a>
               </SidebarMenuButton>
               <ArrowToggle />
@@ -77,7 +101,7 @@ export default function StudentSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV_ITEMS.map(({ label, icon: Icon, href }) => (
+              {navItems.map(({ label, icon: Icon, href }) => (
                 <SidebarMenuItem key={label}>
                   <SidebarMenuButton
                     asChild
@@ -111,7 +135,6 @@ export default function StudentSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
       <SidebarRail />
     </Sidebar>
   )

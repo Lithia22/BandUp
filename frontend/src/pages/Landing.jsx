@@ -80,9 +80,12 @@ export default function Landing() {
           <a
             href="#home"
             onClick={(e) => scrollTo(e, '#home')}
-            className="text-xl font-black text-[#151313]"
+            className="flex items-center gap-2"
           >
-            Band<span className="text-[#E9424C]">Up</span>
+            <img src="/vite.svg" alt="BandUp" className="h-7 w-auto" />
+            <span className="text-xl font-black text-[#151313]">
+              Band<span className="text-[#E9424C]">Up</span>
+            </span>
           </a>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -270,9 +273,12 @@ export default function Landing() {
               <a
                 href="#home"
                 onClick={(e) => scrollTo(e, '#home')}
-                className="text-xl md:text-2xl font-black text-[#f7f7f5]"
+                className="flex items-center gap-2"
               >
-                Band<span className="text-[#E9424C]">Up</span>
+                <img src="/vite.svg" alt="BandUp" className="h-7 w-auto" />
+                <span className="text-xl md:text-2xl font-black text-[#f7f7f5]">
+                  Band<span className="text-[#E9424C]">Up</span>
+                </span>
               </a>
               <div className="mt-1">
                 <a
