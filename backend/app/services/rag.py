@@ -68,6 +68,12 @@ COMPONENT_RESOURCES = {
         "Tips should involve active writing practice: writing email replies, checking grammar, "
         "expanding ideas with reasons and examples, or reading model answers to understand good structure and register."
     ),
+    "speaking": (
+        "Suggest resources like BBC Learning English 6 Minute English "
+        "(bbclearningenglish.com/english/features/6-minute-english), TED-Ed on YouTube, or EnglishCentral (englishcentral.com). "
+        "Tips should involve active speaking practice: shadowing native speakers, recording yourself and listening back, "
+        "practising out loud with a 2-minute timer, or watching and imitating presentation styles."
+    ),
 }
 
 
@@ -138,6 +144,56 @@ YOUR NEXT GOAL:
 SUGGESTED ANSWER:
 [Rewrite the student's response at Band 5 level — same ideas, improved language. Natural email format only, no commentary.]"""
 
+    elif component == "speaking":
+        prompt = f"""You are a friendly MUET Speaking coach giving personalised feedback to a Malaysian student.
+
+Student performance:
+{performance_summary}
+
+Official MUET band descriptors (use ONLY these to estimate the band):
+{descriptor_context}
+
+Rules:
+- Write in simple, friendly English — like a teacher talking directly to the student. Do NOT use any markdown formatting — no asterisks, no bold, no italics, no symbols
+- Base the estimated band strictly on the MUET descriptors above
+- Evaluate based on these 4 criteria from MUET Speaking test specifications and band descriptors:
+  1. Task Fulfillment — did the student address the prompt? Did they express opinions, give reasons, elaborate and conclude?
+  2. Accuracy — grammar, vocabulary correctness as reflected in the transcript
+  3. Range — varied sentence structures and vocabulary
+  4. Fluency — natural flow, confidence, minimal filler words and hesitation
+- Never mention scores, fractions or percentages
+- If filler words were detected in the performance summary, always mention this specifically under Fluency in WHERE TO FOCUS
+- If word count seems very low (under 100 words), mention the student may not have spoken for the full 2 minutes
+- Keep the tone encouraging and kind
+- For SPEAKING SCRIPT: rewrite the student's transcript as a stronger Band 5 spoken presentation — keep their exact same ideas and topic but improve the vocabulary, sentence variety, flow and structure. Write it as natural spoken English, not written English. No bullet points, no headers — just flowing spoken paragraphs the student can read aloud and practise. Do not add any explanation or commentary — just the improved script only.
+
+Format EXACTLY:
+
+ESTIMATED BAND: [Band 1 / Band 2 / Band 3 / Band 4 / Band 5 / Band 5+]
+
+YOUR BAND RESULT:
+[2 simple sentences on what this band means for a Speaking student based on the descriptor]
+
+WHAT YOU DID WELL:
+[One • bullet per criteria the student handled well — name the criteria and explain briefly]
+[One final short encouraging bullet]
+
+WHERE TO FOCUS:
+[One • bullet per criteria that needs improvement — name the criteria and explain specifically what was weak]
+[If filler words detected, one bullet specifically about filler words under Fluency]
+[One final short sentence on what to prioritise]
+
+YOUR STUDY PLAN:
+[One • bullet per weak criteria identified in WHERE TO FOCUS]
+[Each tip: [Criteria name] — [specific activity] using [specific resource]]
+[{resource_guidance}]
+
+YOUR NEXT GOAL:
+[2 sentences on what the next band looks like based on the descriptors and one simple first step]
+
+SPEAKING SCRIPT:
+[Rewrite the student's transcript as a Band 5 spoken presentation — same ideas, stronger language. Natural spoken English only, no commentary.]"""
+
     else:
         prompt = f"""You are a friendly MUET {component_label} coach giving personalised feedback to a Malaysian student.
 
@@ -205,26 +261,21 @@ YOUR NEXT GOAL:
                 after = after.split(nh + ":")[0]
         return after.strip()
 
-    all_headers = (
-        [
-            "ESTIMATED BAND",
-            "YOUR BAND RESULT",
-            "WHAT YOU DID WELL",
-            "WHERE TO FOCUS",
-            "YOUR STUDY PLAN",
-            "YOUR NEXT GOAL",
-            "SUGGESTED ANSWER",
+    if component == "writing":
+        all_headers = [
+            "ESTIMATED BAND", "YOUR BAND RESULT", "WHAT YOU DID WELL",
+            "WHERE TO FOCUS", "YOUR STUDY PLAN", "YOUR NEXT GOAL", "SUGGESTED ANSWER",
         ]
-        if component == "writing"
-        else [
-            "ESTIMATED BAND",
-            "YOUR BAND RESULT",
-            "WHAT YOU DID WELL",
-            "WHERE TO FOCUS",
-            "YOUR STUDY PLAN",
-            "YOUR NEXT GOAL",
+    elif component == "speaking":
+        all_headers = [
+            "ESTIMATED BAND", "YOUR BAND RESULT", "WHAT YOU DID WELL",
+            "WHERE TO FOCUS", "YOUR STUDY PLAN", "YOUR NEXT GOAL", "SPEAKING SCRIPT",
         ]
-    )
+    else:
+        all_headers = [
+            "ESTIMATED BAND", "YOUR BAND RESULT", "WHAT YOU DID WELL",
+            "WHERE TO FOCUS", "YOUR STUDY PLAN", "YOUR NEXT GOAL",
+        ]
 
     sections = {}
     for i, header in enumerate(all_headers):
@@ -240,6 +291,8 @@ YOUR NEXT GOAL:
 
     if component == "writing":
         structured_feedback["suggested_answer"] = sections.get("SUGGESTED ANSWER", "")
+    elif component == "speaking":
+        structured_feedback["speaking_script"] = sections.get("SPEAKING SCRIPT", "")
 
     return {
         "feedback": raw,
