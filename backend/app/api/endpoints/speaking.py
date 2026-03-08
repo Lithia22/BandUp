@@ -13,7 +13,7 @@ def get_sets():
     try:
         result = (
             supabase.table("questions")
-            .select("set_number, passage_title")
+            .select("set_number, year")
             .eq("component", "speaking")
             .order("set_number")
             .execute()
@@ -22,16 +22,17 @@ def get_sets():
         for row in result.data:
             sn = row["set_number"]
             if sn not in seen:
-                seen[sn] = row["passage_title"]
+                seen[sn] = row["year"]
 
         sets = [
             {
                 "set_number": sn,
-                "label": title,
+                "year": year,
+                "label": f"Practice Set {sn} ({year})",
                 "duration_prep_secs": 120,
                 "duration_speak_secs": 120,
             }
-            for sn, title in sorted(seen.items())
+            for sn, year in sorted(seen.items())
         ]
         return {"sets": sets}
     except Exception as e:
@@ -39,19 +40,53 @@ def get_sets():
 
 
 @router.get("/sets/{set_number}")
-def get_set_questions(set_number: int):
+def get_booklets(set_number: int):
     try:
         result = (
             supabase.table("questions")
-            .select("id, question_number, passage_title, passage, question_text, options")
+            .select("part_number, passage_title, passage")
             .eq("component", "speaking")
             .eq("set_number", set_number)
+            .order("part_number")
+            .execute()
+        )
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        seen = {}
+        for row in result.data:
+            pn = row["part_number"]
+            if pn not in seen:
+                seen[pn] = row
+
+        booklets = [seen[pn] for pn in sorted(seen.keys())]
+        return {"set_number": set_number, "booklets": booklets}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/sets/{set_number}/{booklet_number}")
+def get_candidates(set_number: int, booklet_number: int):
+    try:
+        result = (
+            supabase.table("questions")
+            .select("id, question_number, passage_title, passage, question_text")
+            .eq("component", "speaking")
+            .eq("set_number", set_number)
+            .eq("part_number", booklet_number)
             .order("question_number")
             .execute()
         )
         if not result.data:
-            raise HTTPException(status_code=404, detail="Set not found")
-        return {"set_number": set_number, "candidates": result.data}
+            raise HTTPException(status_code=404, detail="Booklet not found")
+
+        return {
+            "set_number": set_number,
+            "booklet_number": booklet_number,
+            "candidates": result.data,
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -62,6 +97,7 @@ def get_set_questions(set_number: int):
 async def submit_speaking(
     audio: UploadFile = File(...),
     set_number: int = Form(...),
+    part_number: int = Form(...),
     question_id: str = Form(...),
     candidate: str = Form(...),
     student_id: Optional[str] = Form(None),
@@ -107,7 +143,7 @@ async def submit_speaking(
             filler_summary = f"\nFiller words detected in transcript: {breakdown}. Total filler word count: {filler_result['total']}."
 
         # 6. Build performance summary for RAG
-        performance_summary = f"""Student completed MUET Speaking Part 1 Individual Presentation (Set {set_number}, Candidate {candidate}).
+        performance_summary = f"""Student completed MUET Speaking Part 1 Individual Presentation (Set {set_number}, Booklet {part_number}, Candidate {candidate}).
 
 Topic situation: {q['passage']}
 Student's specific prompt: {q['question_text']}
@@ -191,6 +227,7 @@ Evaluate the student's spoken response based on these criteria from MUET Speakin
 
         return {
             "set_number": set_number,
+            "part_number": part_number,
             "candidate": candidate,
             "transcript": transcript,
             "word_count": word_count,

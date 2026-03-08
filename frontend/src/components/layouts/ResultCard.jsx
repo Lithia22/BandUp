@@ -16,6 +16,45 @@ export const cleanText = (text) => {
   return text.replace(/^\[|\]$/g, '').trim()
 }
 
+export const buildTimelineSections = (sf, estimated_band) =>
+  [
+    {
+      num: '01',
+      label: `Your ${estimated_band} Result`,
+      content: cleanText(sf.your_band_result),
+      isList: false,
+      isLast: false,
+    },
+    {
+      num: '02',
+      label: 'What You Did Well',
+      content: cleanText(sf.what_you_did_well),
+      isList: true,
+      isLast: false,
+    },
+    {
+      num: '03',
+      label: 'Where to Focus',
+      content: cleanText(sf.where_to_focus),
+      isList: true,
+      isLast: false,
+    },
+    {
+      num: '04',
+      label: 'How To Improve',
+      content: cleanText(sf.your_study_plan),
+      isList: true,
+      isLast: false,
+    },
+    {
+      num: '05',
+      label: 'Next Target',
+      content: cleanText(sf.your_next_goal),
+      isList: false,
+      isLast: true,
+    },
+  ].filter((s) => s.content)
+
 export function ResultCard({ r }) {
   const [expanded, setExpanded] = useState(false)
   const hasOptions = r.options && Object.keys(r.options).length > 0
@@ -181,44 +220,7 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
   const correct = answerResults.filter((r) => r.is_correct).length
   const wrong = answerResults.filter((r) => !r.is_correct).length
   const skipped = answerResults.filter((r) => !r.student_answer).length
-
-  const timelineSections = [
-    {
-      num: '01',
-      label: `Your ${estimated_band} Result`,
-      content: cleanText(sf.your_band_result),
-      isList: false,
-      isLast: false,
-    },
-    {
-      num: '02',
-      label: 'What You Did Well',
-      content: cleanText(sf.what_you_did_well),
-      isList: true,
-      isLast: false,
-    },
-    {
-      num: '03',
-      label: 'Where to Focus',
-      content: cleanText(sf.where_to_focus),
-      isList: true,
-      isLast: false,
-    },
-    {
-      num: '04',
-      label: 'How To Improve',
-      content: cleanText(sf.your_study_plan),
-      isList: true,
-      isLast: false,
-    },
-    {
-      num: '05',
-      label: 'Next Target',
-      content: cleanText(sf.your_next_goal),
-      isList: false,
-      isLast: true,
-    },
-  ].filter((s) => s.content)
+  const timelineSections = buildTimelineSections(sf, estimated_band)
 
   return (
     <div className="min-h-screen bg-[#f7f7f5]">

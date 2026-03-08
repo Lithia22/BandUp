@@ -18,6 +18,10 @@ import ListeningResults from './pages/student/listening/ListeningResults'
 import Writing from './pages/student/writing/Writing'
 import WritingQuiz from './pages/student/writing/WritingQuiz'
 import WritingResults from './pages/student/writing/WritingResults'
+import Speaking from './pages/student/speaking/Speaking'
+import SpeakingBooklets from './pages/student/speaking/SpeakingBooklets'
+import SpeakingQuiz from './pages/student/speaking/SpeakingQuiz'
+import SpeakingResults from './pages/student/speaking/SpeakingResults'
 
 function ProtectedRoute() {
   const token = localStorage.getItem('bandup_token')
@@ -50,6 +54,20 @@ const router = createBrowserRouter([
       { path: '/writing', element: <Writing /> },
       { path: '/writing/:setNumber', element: <WritingQuiz /> },
       { path: '/writing/:setNumber/results', element: <WritingResults /> },
+      { path: '/speaking', element: <Speaking /> },
+      { path: '/speaking/:setNumber', element: <SpeakingBooklets /> },
+      {
+        path: '/speaking/:setNumber/:partNumber',
+        element: <SpeakingBooklets />,
+      },
+      {
+        path: '/speaking/:setNumber/:partNumber/:candidateNumber',
+        element: <SpeakingQuiz />,
+      },
+      {
+        path: '/speaking/:setNumber/:partNumber/:candidateNumber/results',
+        element: <SpeakingResults />,
+      },
     ],
   },
 ])

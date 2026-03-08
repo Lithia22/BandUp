@@ -93,13 +93,12 @@ export default function Writing() {
               <SidebarTrigger />
             </div>
 
-            {/* Hero banner */}
             <div
               className="relative rounded-2xl border-2 border-[#151313] overflow-hidden mb-6"
               style={{ background: '#1A1A1A', minHeight: 160 }}
             >
               <img
-                src="/src/assets/5.svg"
+                src="/src/assets/4.svg"
                 alt="Writing illustration"
                 className="absolute right-0 top-1/2 -translate-y-1/2 h-[130%] object-contain"
                 style={{ maxWidth: '45%' }}

@@ -298,8 +298,8 @@ export default function WritingQuiz() {
             <span
               className={`text-[10px] font-black tabular-nums ${wordCount >= MIN_WORDS ? 'text-[#22c55e]' : 'text-[#E9424C]'}`}
             >
-              {wordCount} word{wordCount !== 1 ? 's' : ''}
-              {wordCount >= MIN_WORDS ? ' ✓' : ` / ${MIN_WORDS} min`}
+              {wordCount}
+              {wordCount >= MIN_WORDS ? ' ✓' : ` / ${MIN_WORDS} words`}
             </span>
           </div>
           <textarea

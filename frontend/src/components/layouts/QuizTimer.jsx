@@ -35,36 +35,23 @@ export default function QuizTimer({
     setIntervalId(null)
   }
 
-  const isLow = timeLeft <= 600
-  const isCritical = timeLeft <= 60
+  const isCritical = timeLeft <= 30
 
   return (
     <div
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 shrink-0 transition-colors ${
         isCritical
           ? 'border-[#E9424C] bg-[#E9424C]/10 animate-pulse'
-          : isLow
-            ? 'border-[#fccc42] bg-[#fccc42]/10'
-            : 'border-[#151313]/20 bg-white'
+          : 'border-[#151313] bg-white'
       }`}
     >
       <Clock
         size={12}
-        className={
-          isCritical
-            ? 'text-[#E9424C]'
-            : isLow
-              ? 'text-[#b8960a]'
-              : 'text-[#151313]/40'
-        }
+        className={isCritical ? 'text-[#E9424C]' : 'text-[#151313]'}
       />
       <span
         className={`text-xs font-black tabular-nums ${
-          isCritical
-            ? 'text-[#E9424C]'
-            : isLow
-              ? 'text-[#b8960a]'
-              : 'text-[#151313]'
+          isCritical ? 'text-[#E9424C]' : 'text-[#151313]'
         }`}
       >
         {fmt(timeLeft)}

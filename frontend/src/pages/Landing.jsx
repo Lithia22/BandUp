@@ -186,7 +186,9 @@ export default function Landing() {
           >
             Reach your
             <br />
-            <span className="text-[#E9424C]">target MUET</span> band level
+            <span className="text-[#E9424C]">target MUET</span>
+            <br />
+            band level
           </h1>
           <p
             className="text-[#151313] leading-relaxed mb-8"
