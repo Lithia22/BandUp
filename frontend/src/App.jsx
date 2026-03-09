@@ -9,6 +9,7 @@ import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import StudentDashboard from './pages/student/StudentDashboard'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import Analytics from './pages/student/Analytics'
 import Reading from './pages/student/reading/Reading'
 import ReadingQuiz from './pages/student/reading/ReadingQuiz'
 import ReadingResults from './pages/student/reading/ReadingResults'
@@ -45,6 +46,7 @@ const router = createBrowserRouter([
       { path: '/dashboard', element: <DashboardRedirect /> },
       { path: '/student', element: <StudentDashboard /> },
       { path: '/admin', element: <AdminDashboard /> },
+      { path: '/analytics', element: <Analytics /> },
       { path: '/reading', element: <Reading /> },
       { path: '/reading/:setNumber', element: <ReadingQuiz /> },
       { path: '/reading/:setNumber/results', element: <ReadingResults /> },

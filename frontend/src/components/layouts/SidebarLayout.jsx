@@ -31,6 +31,7 @@ const STUDENT_NAV = [
   { label: 'Listening', icon: Headphones, href: '/listening' },
   { label: 'Writing', icon: SquarePen, href: '/writing' },
   { label: 'Speaking', icon: Mic, href: '/speaking' },
+  { label: 'Analytics', icon: BarChart2, href: '/analytics' },
 ]
 
 const ADMIN_NAV = [

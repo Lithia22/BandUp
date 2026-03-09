@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table'
 import SidebarLayout from '../../components/layouts/SidebarLayout'
 import Calendar from '../../components/layouts/Calendar'
-import WeeklyProgressCard from '../../components/layouts/WeeklyProgressCard'
+import { WeeklyProgressCard } from '../../components/layouts/Charts'
 import api from '../../services/api'
 
 const TABS = ['reading', 'listening', 'writing', 'speaking']
@@ -47,6 +47,7 @@ function formatDate(isoString) {
 export default function StudentDashboard() {
   const name = localStorage.getItem('bandup_name') || 'Student'
   const firstName = name.split(' ')[0]
+
   const [attempts, setAttempts] = useState({})
   const [history, setHistory] = useState([])
   const [weeklyData, setWeeklyData] = useState([])
@@ -69,7 +70,7 @@ export default function StudentDashboard() {
     }
 
     api
-      .get(`/dashboard?user_id=${studentId}`)
+      .get(`/analytics?user_id=${studentId}`)
       .then((res) => {
         const d = res.data
         setAttempts(d.attempts || {})
@@ -122,7 +123,7 @@ export default function StudentDashboard() {
                   </p>
                   <p className="text-white/30 text-xs font-medium leading-relaxed">
                     Every session counts — reading, listening, writing and
-                    speaking make the difference.
+                    speaking all add up.
                   </p>
                 </div>
               </div>
@@ -236,14 +237,9 @@ export default function StudentDashboard() {
                                     className="border-b border-[#151313]/10 hover:bg-[#f7f7f5] transition-colors"
                                   >
                                     <TableCell className="py-3 pl-4">
-                                      <div className="flex items-center gap-2">
-                                        <span
-                                          className={`w-2 h-2 rounded-full shrink-0 ${row.component === 'reading' || row.component === 'writing' ? 'bg-[#E9424C]' : 'bg-[#151313]'}`}
-                                        />
-                                        <span className="text-xs font-black text-[#151313] capitalize">
-                                          {row.component}
-                                        </span>
-                                      </div>
+                                      <span className="text-xs font-black text-[#151313] capitalize">
+                                        {row.component}
+                                      </span>
                                     </TableCell>
                                     <TableCell className="py-3">
                                       <span className="text-[10px] font-semibold text-[#151313]/60">
