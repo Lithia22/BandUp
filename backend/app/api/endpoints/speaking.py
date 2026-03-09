@@ -108,7 +108,7 @@ async def submit_speaking(
 
         # 1. Read audio bytes
         audio_bytes = await audio.read()
-        filename = audio.filename or "speech.webm"
+        filename = audio.filename or "speech.wav"
 
         # 2. Transcribe via Groq Whisper
         try:
@@ -117,7 +117,10 @@ async def submit_speaking(
             raise HTTPException(status_code=422, detail=f"Transcription failed: {str(e)}")
 
         if not transcript or len(transcript.strip()) < 5:
-            raise HTTPException(status_code=422, detail="Could not transcribe audio. Please speak clearly and try again.")
+            raise HTTPException(
+                status_code=422,
+                detail="Could not transcribe audio. Please speak clearly and try again."
+            )
 
         # 3. Detect filler words
         filler_result = detect_filler_words(transcript)

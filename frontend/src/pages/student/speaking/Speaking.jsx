@@ -42,7 +42,7 @@ export default function Speaking() {
               style={{ background: '#1A1A1A', minHeight: 160 }}
             >
               <img
-                src="/src/assets/4.svg"
+                src="/src/assets/5.svg"
                 alt="Speaking illustration"
                 className="absolute right-0 top-1/2 -translate-y-1/2 h-[130%] object-contain"
                 style={{ maxWidth: '45%' }}

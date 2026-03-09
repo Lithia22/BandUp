@@ -5,40 +5,57 @@ GROQ_STT_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 
 FILLER_WORDS = [
     "uh", "um", "uhm", "umm", "erm", "err",
-    "like", "you know", "basically", "literally",
-    "actually", "right", "okay", "so", "well",
+    "you know",
 ]
 
-async def transcribe_audio(audio_bytes: bytes, filename: str = "speech.webm") -> str:
-    """Transcribe audio bytes using Groq Whisper and return transcript text."""
+
+def get_mime_type(filename: str) -> str:
+    filename_lower = filename.lower()
+    if filename_lower.endswith(".mp4") or filename_lower.endswith(".m4a"):
+        return "audio/mp4"
+    elif filename_lower.endswith(".ogg"):
+        return "audio/ogg"
+    elif filename_lower.endswith(".wav"):
+        return "audio/wav"
+    elif filename_lower.endswith(".mp3"):
+        return "audio/mpeg"
+    else:
+        return "audio/webm"
+
+
+async def transcribe_audio(audio_bytes: bytes, filename: str = "speech.wav") -> str:
+    mime_type = get_mime_type(filename)
+
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
             GROQ_STT_URL,
             headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
-            files={"file": (filename, audio_bytes, "audio/webm")},
+            files={"file": (filename, audio_bytes, mime_type)},
             data={
                 "model": STT_MODEL,
                 "language": "en",
-                "response_format": "text",
+                "response_format": "verbose_json",
+                "prompt": "Transcribe exactly as spoken, including all filler words like uh, um, uhm, you know.",
             },
         )
         response.raise_for_status()
-        return response.text.strip()
+        data = response.json()
+        segments = data.get("segments", [])
+        if segments:
+            return " ".join(seg["text"].strip() for seg in segments)
+        return data.get("text", "").strip()
 
 
 def detect_filler_words(transcript: str) -> dict:
-    """Count filler words in transcript and return detailed breakdown."""
     words = transcript.lower().split()
     counts = {}
 
-    # Single word fillers
     single_fillers = [f for f in FILLER_WORDS if " " not in f]
     for word in words:
         clean = word.strip(".,!?;:'\"")
         if clean in single_fillers:
             counts[clean] = counts.get(clean, 0) + 1
 
-    # Multi-word fillers
     text_lower = transcript.lower()
     multi_fillers = [f for f in FILLER_WORDS if " " in f]
     for phrase in multi_fillers:

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
+import RecordRTC from 'recordrtc'
 import api from '../../../services/api'
 import { SubmissionSkeleton } from '../../../components/layouts/Skeletons'
 import { ExitWarningDialog } from '../../../components/layouts/Dialog'
@@ -19,12 +20,10 @@ export default function SpeakingQuiz() {
   const [speakTime, setSpeakTime] = useState(SPEAK_DURATION)
   const [notes, setNotes] = useState('')
   const [recording, setRecording] = useState(false)
-  const [audioBlob, setAudioBlob] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showExitDialog, setShowExitDialog] = useState(false)
-  const mediaRecorderRef = useRef(null)
-  const chunksRef = useRef([])
+  const recorderRef = useRef(null)
   const streamRef = useRef(null)
   const startTimeRef = useRef(null)
 
@@ -42,26 +41,18 @@ export default function SpeakingQuiz() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    if (audioBlob) doSubmit(audioBlob)
-  }, [audioBlob])
-
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
-      const mr = new MediaRecorder(stream)
-      mediaRecorderRef.current = mr
-      chunksRef.current = []
-      mr.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data)
-      }
-      mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
-        streamRef.current?.getTracks().forEach((t) => t.stop())
-        setAudioBlob(blob)
-      }
-      mr.start()
+      recorderRef.current = new RecordRTC(stream, {
+        type: 'audio',
+        mimeType: 'audio/wav',
+        recorderType: RecordRTC.StereoAudioRecorder,
+        numberOfAudioChannels: 1,
+        desiredSampRate: 16000,
+      })
+      recorderRef.current.startRecording()
       setRecording(true)
       setPhase('speak')
       startTimeRef.current = new Date().toISOString()
@@ -73,11 +64,13 @@ export default function SpeakingQuiz() {
   }
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current?.state !== 'inactive') {
-      mediaRecorderRef.current?.stop()
-    }
     setRecording(false)
     setPhase('submitting')
+    recorderRef.current.stopRecording(() => {
+      const blob = recorderRef.current.getBlob()
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      doSubmit(blob)
+    })
   }
 
   const doSubmit = async (blob) => {
@@ -93,7 +86,7 @@ export default function SpeakingQuiz() {
       })()
 
       const formData = new FormData()
-      formData.append('audio', blob, 'speech.webm')
+      formData.append('audio', blob, 'speech.wav')
       formData.append('set_number', setNumber)
       formData.append('part_number', partNumber)
       formData.append('question_id', question.id)
@@ -136,8 +129,9 @@ export default function SpeakingQuiz() {
         open={showExitDialog}
         onOpenChange={setShowExitDialog}
         onConfirm={() => {
-          if (mediaRecorderRef.current?.state !== 'inactive')
-            mediaRecorderRef.current?.stop()
+          try {
+            recorderRef.current?.stopRecording()
+          } catch {}
           streamRef.current?.getTracks().forEach((t) => t.stop())
           navigate(`/speaking/${setNumber}/${partNumber}`)
         }}
@@ -226,11 +220,14 @@ export default function SpeakingQuiz() {
               <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest">
                 Your Notes
               </p>
+              <p className="text-[10px] font-medium text-[#151313]/30 mt-0.5">
+                Jot down key points now — notes lock when speaking time starts
+              </p>
             </div>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Jot down your key points here during prep time..."
+              placeholder="Type your notes here..."
               className="w-full p-4 text-sm font-medium text-[#151313] leading-relaxed resize-none focus:outline-none bg-white"
               rows={6}
             />
@@ -239,9 +236,12 @@ export default function SpeakingQuiz() {
 
         {phase === 'speak' && (
           <div className="bg-white rounded-2xl border-2 border-[#151313] overflow-hidden shadow-[3px_3px_0px_#151313]">
-            <div className="px-4 py-3 border-b border-[#151313]/10">
+            <div className="px-4 py-3 border-b border-[#151313]/10 bg-[#151313]/5">
               <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest">
                 Your Notes
+              </p>
+              <p className="text-[10px] font-medium text-[#151313]/30 mt-0.5">
+                Notes are locked — speak now!
               </p>
             </div>
             <div className="p-4 text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap min-h-[120px]">
