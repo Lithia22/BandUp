@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import auth, reading, listening, writing, speaking, admin
+from app.api.endpoints import auth, reading, listening, writing, speaking, admin, dashboard
 
 app = FastAPI(title="BandUp API")
 
@@ -18,6 +18,7 @@ app.include_router(listening.router, prefix="/listening", tags=["Listening"])
 app.include_router(writing.router, prefix="/writing", tags=["Writing"])
 app.include_router(speaking.router, prefix="/speaking", tags=["Speaking"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 
 @app.get("/")
 def root():
