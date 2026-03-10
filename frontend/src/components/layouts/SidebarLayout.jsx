@@ -27,18 +27,17 @@ import {
 
 const STUDENT_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
+  { label: 'Analytics', icon: BarChart2, href: '/analytics' },
   { label: 'Reading', icon: BookOpen, href: '/reading' },
   { label: 'Listening', icon: Headphones, href: '/listening' },
   { label: 'Writing', icon: SquarePen, href: '/writing' },
   { label: 'Speaking', icon: Mic, href: '/speaking' },
-  { label: 'Analytics', icon: BarChart2, href: '/analytics' },
 ]
 
 const ADMIN_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
+  { label: 'Students', icon: Users, href: '/admin/students' },
   { label: 'Manage Questions', icon: BookOpenCheck, href: '/admin/questions' },
-  { label: 'View Students', icon: Users, href: '/admin/students' },
-  { label: 'Results Overview', icon: BarChart2, href: '/admin/results' },
 ]
 
 function ArrowToggle() {

@@ -206,12 +206,9 @@ export function BandOverTimeChart({ bandTrend }) {
                         cursor={false}
                         content={
                           <ChartTooltipContent
-                            // Hide the label header
                             labelFormatter={() => null}
-                            // Format the value to show just the band
                             formatter={(value, name, props) => {
                               const formattedBand = bandLabel(value)
-                              // Return only the formatted value without any header
                               return formattedBand
                             }}
                           />

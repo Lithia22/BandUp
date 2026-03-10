@@ -123,7 +123,7 @@ export default function StudentDashboard() {
                   </p>
                   <p className="text-white/30 text-xs font-medium leading-relaxed">
                     Every session counts — reading, listening, writing and
-                    speaking all add up.
+                    speaking make the difference.
                   </p>
                 </div>
               </div>
