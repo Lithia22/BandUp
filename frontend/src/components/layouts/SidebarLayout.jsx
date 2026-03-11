@@ -36,7 +36,7 @@ const STUDENT_NAV = [
 
 const ADMIN_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-  { label: 'Students', icon: Users, href: '/admin/students' },
+  { label: 'Analytics', icon: Users, href: '/admin/analytics' },
   { label: 'Manage Questions', icon: BookOpenCheck, href: '/admin/questions' },
 ]
 

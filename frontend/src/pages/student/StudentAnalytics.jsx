@@ -13,7 +13,7 @@ import {
   BandRadarChart,
   AttemptsBarChart,
   bandLabel,
-} from '../../components/layouts/Charts'
+} from '../../components/layouts/StudentCharts'
 import api from '../../services/api'
 
 const COMPONENT_ICONS = {
@@ -23,7 +23,7 @@ const COMPONENT_ICONS = {
   speaking: Mic,
 }
 
-export default function Analytics() {
+export default function StudentAnalytics() {
   const [bandTrend, setBandTrend] = useState({})
   const [componentBands, setComponentBands] = useState({})
   const [attempts, setAttempts] = useState({})

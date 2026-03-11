@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table'
 import SidebarLayout from '../../components/layouts/SidebarLayout'
 import Calendar from '../../components/layouts/Calendar'
-import { WeeklyProgressCard } from '../../components/layouts/Charts'
+import { WeeklyProgressCard } from '../../components/layouts/StudentCharts'
 import api from '../../services/api'
 
 const TABS = ['reading', 'listening', 'writing', 'speaking']
