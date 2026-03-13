@@ -24,6 +24,7 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { Button } from '@/components/ui/button'
 
 const STUDENT_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
@@ -44,12 +45,14 @@ function ArrowToggle() {
   const { toggleSidebar, open, openMobile, isMobile } = useSidebar()
   const isOpen = isMobile ? openMobile : open
   return (
-    <button
+    <Button
+      variant="outline"
+      size="icon"
       onClick={toggleSidebar}
-      className="w-6 h-6 rounded-full border-2 border-[#151313] bg-white flex items-center justify-center hover:bg-[#E9424C] hover:text-white hover:border-[#E9424C] transition-all duration-150 shrink-0"
+      className="w-6 h-6 rounded-full border-2 border-[#151313] bg-white hover:bg-[#E9424C] hover:text-white hover:border-[#E9424C] transition-all duration-150 shrink-0"
     >
       {isOpen ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
-    </button>
+    </Button>
   )
 }
 
@@ -105,7 +108,11 @@ export default function SidebarLayout({ role = 'student' }) {
                 <SidebarMenuItem key={label}>
                   <SidebarMenuButton
                     asChild
-                    isActive={window.location.pathname === href}
+                    isActive={
+                      href === '/admin'
+                        ? window.location.pathname === href
+                        : window.location.pathname.startsWith(href)
+                    }
                     tooltip={label}
                     className="data-[active=true]:bg-[#E9424C] data-[active=true]:text-white data-[active=true]:shadow-[2px_2px_0px_#151313] font-semibold"
                   >

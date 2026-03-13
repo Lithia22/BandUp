@@ -9,6 +9,7 @@ import {
 import SidebarLayout from '../../../components/layouts/SidebarLayout'
 import { PracticeSetSkeleton } from '../../../components/layouts/Skeletons'
 import api from '../../../services/api'
+import { Button } from '@/components/ui/button'
 
 export default function Speaking() {
   const navigate = useNavigate()
@@ -74,12 +75,13 @@ export default function Speaking() {
             {error && !loading && (
               <div className="bg-red-50 border-2 border-[#E9424C] rounded-2xl p-6 max-w-2xl">
                 <p className="text-sm font-semibold text-[#E9424C]">{error}</p>
-                <button
+                <Button
+                  variant="link"
                   onClick={() => window.location.reload()}
-                  className="mt-3 text-xs font-black text-[#151313] underline underline-offset-2"
+                  className="mt-3 text-xs font-black text-[#151313] underline underline-offset-2 p-0 h-auto"
                 >
                   Try again
-                </button>
+                </Button>
               </div>
             )}
 
@@ -101,12 +103,12 @@ export default function Speaking() {
                         <Mic size={10} /> 2 min speak
                       </span>
                     </div>
-                    <button
+                    <Button
                       onClick={() => navigate(`/speaking/${set.set_number}`)}
-                      className="w-full bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-4 py-2 text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-4 py-2 h-auto text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-2"
                     >
                       View Booklets
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>

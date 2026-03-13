@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Play, Pause, RotateCcw, Volume2, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Progress } from '@/components/ui/progress'
 
 export function AudioPlayer({
   src,
@@ -106,24 +108,20 @@ export function AudioPlayer({
 
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5">
-          <button
+          <Button
             onClick={toggle}
-            disabled={!src}
-            className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-white transition-colors disabled:opacity-40 ${
-              isBlocked
-                ? 'bg-white/10 border-white/10 cursor-not-allowed'
-                : 'bg-[#E9424C] border-[#E9424C] hover:bg-[#c73540] cursor-pointer'
+            variant="ghost"
+            size="icon"
+            className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-white transition-colors ${
+              !src
+                ? 'opacity-40 cursor-not-allowed'
+                : isBlocked
+                  ? 'bg-white/10 border-white/10 hover:bg-white/10 cursor-pointer' // Make it clickable even when blocked
+                  : 'bg-[#E9424C] border-[#E9424C] hover:bg-[#c73540]'
             }`}
           >
             {playing ? <Pause size={14} /> : <Play size={14} />}
-          </button>
-          <button
-            onClick={restart}
-            disabled={!src}
-            className="w-7 h-7 rounded-xl border-2 border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:border-white/40 transition-colors disabled:opacity-40"
-          >
-            <RotateCcw size={11} />
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1">
@@ -133,14 +131,12 @@ export function AudioPlayer({
             </p>
           )}
           <div
-            className={`h-1.5 bg-white/10 rounded-full overflow-hidden ${isBlocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`relative ${isBlocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             onClick={seek}
           >
-            <div
-              className="h-full bg-[#E9424C] rounded-full transition-all duration-100"
-              style={{
-                width: duration ? `${(progress / duration) * 100}%` : '0%',
-              }}
+            <Progress
+              value={duration ? (progress / duration) * 100 : 0}
+              className="h-1.5 bg-white/10 [&>div]:bg-[#E9424C]"
             />
           </div>
         </div>
@@ -180,18 +176,19 @@ export function QuestionCard({ q, answers, onSelect, disabled }) {
       {hasImageOptions ? (
         <div className="grid grid-cols-1 gap-3 max-w-sm">
           {Object.entries(q.options).map(([key, value]) => (
-            <button
+            <Button
               key={key}
+              variant="outline"
               onClick={() => onSelect(q.id, key)}
               disabled={disabled}
-              className={`flex flex-col rounded-xl border-2 transition-all duration-150 overflow-hidden ${
+              className={`flex flex-col p-0 h-auto rounded-xl border-2 transition-all duration-150 overflow-hidden ${
                 answers[q.id] === key
-                  ? 'border-[#E9424C] shadow-[2px_2px_0px_#E9424C]'
+                  ? 'border-[#E9424C] shadow-[2px_2px_0px_#E9424C] hover:border-[#E9424C]'
                   : 'border-[#151313]/20 hover:border-[#151313]'
-              } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+              }`}
             >
               <div
-                className={`flex items-center gap-1.5 px-3 py-2 border-b-2 ${
+                className={`w-full flex items-center gap-1.5 px-3 py-2 border-b-2 ${
                   answers[q.id] === key
                     ? 'bg-[#E9424C] border-[#E9424C]'
                     : 'bg-[#f7f7f5] border-[#151313]/10'
@@ -219,25 +216,26 @@ export function QuestionCard({ q, answers, onSelect, disabled }) {
                 alt={`Option ${key}`}
                 className="w-full h-auto object-contain max-h-40"
               />
-            </button>
+            </Button>
           ))}
         </div>
       ) : (
         <div className="space-y-2">
           {Object.entries(q.options).map(([key, value]) => (
-            <button
+            <Button
               key={key}
+              variant="outline"
               onClick={() => onSelect(q.id, key)}
               disabled={disabled}
-              className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-150 ${
+              className={`w-full justify-start px-4 py-3 h-auto rounded-xl border-2 text-sm font-semibold ${
                 answers[q.id] === key
-                  ? 'bg-[#E9424C] text-white border-[#151313] shadow-[2px_2px_0px_#151313]'
+                  ? 'bg-[#E9424C] text-white border-[#151313] shadow-[2px_2px_0px_#151313] hover:bg-[#E9424C]/90'
                   : 'border-[#151313]/20 text-[#151313] hover:border-[#151313] hover:bg-[#f7f7f5]'
-              } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+              }`}
             >
               <span className="font-black mr-2">{key}.</span>
               {value}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -288,13 +286,14 @@ export function MatchingQuestionCard({ q, answers, onSelect, disabled }) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
+          <Button
+            variant="outline"
             disabled={disabled}
-            className={`inline-flex items-center gap-2 text-xs font-black px-3 py-2 rounded-xl border-2 transition-colors focus:outline-none shrink-0 ${
+            className={`inline-flex items-center gap-2 text-xs font-black px-3 py-2 h-auto rounded-xl border-2 ${
               selected
-                ? 'border-[#E9424C] text-[#E9424C] bg-[#E9424C]/5'
+                ? 'border-[#E9424C] text-[#E9424C] bg-[#E9424C]/5 hover:bg-[#E9424C]/10'
                 : 'border-[#151313]/30 text-[#151313]/50 bg-white hover:border-[#151313]'
-            } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+            }`}
           >
             {selected ? (
               <>
@@ -305,7 +304,7 @@ export function MatchingQuestionCard({ q, answers, onSelect, disabled }) {
               'Select answer'
             )}
             <ChevronDown size={12} />
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         {!disabled && (
           <DropdownMenuContent align="end" className="min-w-48">

@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Button } from '@/components/ui/button'
 
 function getActivityColor(count) {
   if (count === 0) return null
@@ -44,18 +45,22 @@ export default function Calendar({ sessionsByDay }) {
             {monthName} {year}
           </CardTitle>
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => setCurrent(new Date(year, month - 1, 1))}
-              className="w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#151313] hover:text-white transition-all"
+              className="w-6 h-6 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-all"
             >
               <ChevronLeft size={10} />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => setCurrent(new Date(year, month + 1, 1))}
-              className="w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#151313] hover:text-white transition-all"
+              className="w-6 h-6 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-all"
             >
               <ChevronRight size={10} />
-            </button>
+            </Button>
           </div>
         </div>
       </CardHeader>

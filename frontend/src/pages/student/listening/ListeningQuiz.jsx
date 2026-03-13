@@ -193,12 +193,14 @@ export default function ListeningQuiz() {
 
       <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-8 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3 shrink-0">
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => navigate('/listening')}
-            className="w-8 h-8 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#151313] hover:text-white transition-colors"
+            className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors"
           >
             <ChevronLeft size={16} />
-          </button>
+          </Button>
           <p className="text-[10px] font-semibold text-[#151313]/40">
             {answeredCount}/{questions.length} answered
           </p>

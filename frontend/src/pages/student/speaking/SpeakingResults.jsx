@@ -5,6 +5,7 @@ import {
   parseBullets,
   buildTimelineSections,
 } from '../../../components/layouts/ResultCard'
+import { Button } from '@/components/ui/button'
 
 export default function SpeakingResults() {
   const { setNumber, partNumber, candidateNumber } = useParams()
@@ -39,12 +40,14 @@ export default function SpeakingResults() {
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
       <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-6 py-3 flex items-center gap-3">
-        <button
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => navigate(`/speaking/${setNumber}/${partNumber}`)}
-          className="w-8 h-8 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#151313] hover:text-white transition-colors shrink-0"
+          className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors shrink-0"
         >
           <ChevronLeft size={16} />
-        </button>
+        </Button>
         <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest">
           Speaking • Set {setNumber} • Booklet {partNumber} • Candidate{' '}
           {String.fromCharCode(64 + parseInt(candidateNumber))}
@@ -116,9 +119,10 @@ export default function SpeakingResults() {
         </div>
 
         <div className="bg-white rounded-2xl border-2 border-[#151313] shadow-[3px_3px_0px_#151313] overflow-hidden">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setShowFeedback(!showFeedback)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#f7f7f5] transition-colors"
+            className="w-full flex items-center justify-between px-5 py-4 h-auto hover:bg-[#f7f7f5] transition-colors"
           >
             <span className="text-xs font-black text-[#151313] uppercase tracking-widest">
               AI Feedback
@@ -128,7 +132,7 @@ export default function SpeakingResults() {
             ) : (
               <ChevronDown size={14} className="text-[#151313]/40" />
             )}
-          </button>
+          </Button>
           {showFeedback && (
             <div className="border-t-2 border-[#151313] px-5 py-5">
               {timelineSections.length > 0 ? (
@@ -183,9 +187,10 @@ export default function SpeakingResults() {
 
         {speaking_script && (
           <div className="bg-white rounded-2xl border-2 border-[#151313] shadow-[3px_3px_0px_#151313] overflow-hidden">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setShowScript(!showScript)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#f7f7f5] transition-colors"
+              className="w-full flex items-center justify-between px-5 py-4 h-auto hover:bg-[#f7f7f5] transition-colors"
             >
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-[#151313] uppercase tracking-widest">
@@ -200,7 +205,7 @@ export default function SpeakingResults() {
               ) : (
                 <ChevronDown size={14} className="text-[#151313]/40" />
               )}
-            </button>
+            </Button>
             {showScript && (
               <div className="border-t-2 border-[#151313] px-5 py-5 space-y-3">
                 <p className="text-[10px] font-semibold text-[#151313]/50 italic">
@@ -217,9 +222,10 @@ export default function SpeakingResults() {
 
         {transcript && (
           <div className="bg-white rounded-2xl border-2 border-[#151313] shadow-[3px_3px_0px_#151313] overflow-hidden">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setShowTranscript(!showTranscript)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#f7f7f5] transition-colors"
+              className="w-full flex items-center justify-between px-5 py-4 h-auto hover:bg-[#f7f7f5] transition-colors"
             >
               <span className="text-xs font-black text-[#151313] uppercase tracking-widest">
                 Your Transcript
@@ -229,7 +235,7 @@ export default function SpeakingResults() {
               ) : (
                 <ChevronDown size={14} className="text-[#151313]/40" />
               )}
-            </button>
+            </Button>
             {showTranscript && (
               <div className="border-t-2 border-[#151313] px-5 py-5">
                 <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap">

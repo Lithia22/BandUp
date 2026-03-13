@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import RecordRTC from 'recordrtc'
 import api from '../../../services/api'
 import { SubmissionSkeleton } from '../../../components/layouts/Skeletons'
 import { ExitWarningDialog } from '../../../components/layouts/Dialog'
 import QuizTimer from '../../../components/layouts/QuizTimer'
+import { Textarea } from '@/components/ui/textarea'
 
 const PREP_DURATION = 2 * 60
 const SPEAK_DURATION = 2 * 60
@@ -139,16 +141,18 @@ export default function SpeakingQuiz() {
       />
 
       <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-8 py-3 flex items-center gap-4">
-        <button
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() =>
             phase === 'prep' || phase === 'speak'
               ? setShowExitDialog(true)
               : navigate(`/speaking/${setNumber}/${partNumber}`)
           }
-          className="w-8 h-8 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#151313] hover:text-white transition-colors"
+          className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors"
         >
           <ChevronLeft size={16} />
-        </button>
+        </Button>
         <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest flex-1">
           Speaking • Set {setNumber} • Booklet {partNumber} • Candidate{' '}
           {String.fromCharCode(64 + parseInt(candidateNumber))}
@@ -224,12 +228,11 @@ export default function SpeakingQuiz() {
                 Jot down key points now — notes lock when speaking time starts
               </p>
             </div>
-            <textarea
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Type your notes here..."
-              className="w-full p-4 text-sm font-medium text-[#151313] leading-relaxed resize-none focus:outline-none bg-white"
-              rows={6}
+              className="min-h-[150px] text-sm font-medium border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
         )}

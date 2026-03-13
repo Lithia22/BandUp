@@ -7,6 +7,8 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react'
 import {
   BarChart,
@@ -15,7 +17,6 @@ import {
   YAxis,
   CartesianGrid,
   Cell,
-  Customized,
   PieChart,
   Pie,
   Legend,
@@ -52,7 +53,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { toast } from 'sonner'
 
 export const CLUSTER_CONFIG = {
   'Foundation Needed': {
@@ -62,6 +62,7 @@ export const CLUSTER_CONFIG = {
     border: 'border-[#E9424C]/30',
     text: 'text-[#E9424C]',
     description: 'Students with low bands across all components.',
+    shortName: 'Foundation',
   },
   'Balanced Performer': {
     icon: TrendingUp,
@@ -70,6 +71,7 @@ export const CLUSTER_CONFIG = {
     border: 'border-[#FFD800]/40',
     text: 'text-[#FFD800]',
     description: 'Students with consistent bands across all components.',
+    shortName: 'Balanced',
   },
   'Good Understanding Skills': {
     icon: BookOpen,
@@ -78,6 +80,7 @@ export const CLUSTER_CONFIG = {
     border: 'border-[#B57EDC]/30',
     text: 'text-[#B57EDC]',
     description: 'Students stronger in Listening & Reading bands.',
+    shortName: 'Understanding',
   },
   'Good Expressive Skills': {
     icon: Users,
@@ -86,11 +89,12 @@ export const CLUSTER_CONFIG = {
     border: 'border-[#2BBFBF]/30',
     text: 'text-[#2BBFBF]',
     description: 'Students stronger in Writing & Speaking bands.',
+    shortName: 'Expressive',
   },
 }
 
-export const COMPONENTS = ['listening', 'reading', 'writing', 'speaking']
 export const ALL_TABS = ['All', ...Object.keys(CLUSTER_CONFIG)]
+export const COMPONENTS = ['listening', 'reading', 'writing', 'speaking']
 
 export function ClusterBadge({ label }) {
   const cfg = CLUSTER_CONFIG[label] || {}
@@ -237,7 +241,7 @@ function StudentTable({ students, loading, search }) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between px-1 flex-wrap gap-2">
+      <div className="flex items-center justify-between gap-4 w-full">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <p className="text-[10px] font-semibold text-[#151313]/40 whitespace-nowrap">
@@ -272,25 +276,48 @@ function StudentTable({ students, loading, search }) {
               : `${startRow}–${endRow} of ${filtered.length}`}
           </p>
         </div>
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="icon"
             className="h-6 w-6 border border-[#151313]/20 rounded-md text-[#151313]/50 hover:bg-[#151313] hover:text-white transition-all"
-            onClick={() => goPage(safePage - 1)}
+            onClick={() => goToPage(1)}
+            disabled={safePage === 1}
           >
-            <ChevronLeft size={11} />
+            <ChevronsLeft size={11} />
           </Button>
-          <span className="text-[10px] font-black text-[#151313]/50">
-            Page {safePage} of {totalPages}
-          </span>
           <Button
             variant="outline"
             size="icon"
             className="h-6 w-6 border border-[#151313]/20 rounded-md text-[#151313]/50 hover:bg-[#151313] hover:text-white transition-all"
-            onClick={() => goPage(safePage + 1)}
+            onClick={() => goToPage(safePage - 1)}
+            disabled={safePage === 1}
+          >
+            <ChevronLeft size={11} />
+          </Button>
+
+          <span className="text-[10px] font-black text-[#151313]/50 min-w-[60px] text-center">
+            Page {safePage} of {totalPages}
+          </span>
+
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-6 w-6 border border-[#151313]/20 rounded-md text-[#151313]/50 hover:bg-[#151313] hover:text-white transition-all"
+            onClick={() => goToPage(safePage + 1)}
+            disabled={safePage === totalPages}
           >
             <ChevronRight size={11} />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-6 w-6 border border-[#151313]/20 rounded-md text-[#151313]/50 hover:bg-[#151313] hover:text-white transition-all"
+            onClick={() => goToPage(totalPages)}
+            disabled={safePage === totalPages}
+          >
+            <ChevronsRight size={11} />
           </Button>
         </div>
       </div>
@@ -320,64 +347,6 @@ function CustomPieLabel({
       fontSize={11}
       fontWeight={900}
     >{`${(percent * 100).toFixed(0)}%`}</text>
-  )
-}
-
-function ClusterEllipses({ xAxisMap, yAxisMap, scatterByCluster }) {
-  if (!xAxisMap || !yAxisMap) return null
-  const xScale = Object.values(xAxisMap)[0]
-  const yScale = Object.values(yAxisMap)[0]
-  if (!xScale?.scale || !yScale?.scale) return null
-  return (
-    <>
-      {Object.entries(scatterByCluster).map(([label, pts]) => {
-        if (!pts.length) return null
-        const color = CLUSTER_CONFIG[label]?.color
-        if (!color) return null
-        const px = pts.map((p) => xScale.scale(p.x))
-        const py = pts.map((p) => yScale.scale(p.y))
-        const cx = px.reduce((s, v) => s + v, 0) / px.length
-        const cy = py.reduce((s, v) => s + v, 0) / py.length
-        const pad = 28
-        const rx =
-          pts.length === 1
-            ? pad
-            : Math.max(
-                pad,
-                Math.sqrt(
-                  px.reduce((s, v) => s + (v - cx) ** 2, 0) / px.length
-                ) *
-                  1.8 +
-                  pad
-              )
-        const ry =
-          pts.length === 1
-            ? pad
-            : Math.max(
-                pad,
-                Math.sqrt(
-                  py.reduce((s, v) => s + (v - cy) ** 2, 0) / py.length
-                ) *
-                  1.8 +
-                  pad
-              )
-        return (
-          <ellipse
-            key={label}
-            cx={cx}
-            cy={cy}
-            rx={rx}
-            ry={ry}
-            fill={color}
-            fillOpacity={0.08}
-            stroke={color}
-            strokeOpacity={0.35}
-            strokeWidth={1.5}
-            strokeDasharray="5 3"
-          />
-        )
-      })}
-    </>
   )
 }
 
@@ -488,51 +457,6 @@ function CentroidTooltipContent({ active, payload }) {
   )
 }
 
-export function ClusterCardsSection({ data }) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {Object.entries(CLUSTER_CONFIG).map(
-        ([label, { icon: Icon, color, text, description }]) => {
-          const count = data?.summary?.[label] || 0
-          return (
-            <div
-              key={label}
-              className="border-2 border-[#151313] shadow-[3px_3px_0px_#151313] rounded-2xl bg-white p-4 flex flex-col gap-3"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div
-                  className="w-9 h-9 rounded-xl border-2 border-[#151313] flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#151313]"
-                  style={{ background: color }}
-                >
-                  <Icon size={15} className="text-white" />
-                </div>
-                <span
-                  className={`text-2xl font-black leading-none mt-0.5 ${count > 0 ? text : 'text-[#151313]/20'}`}
-                >
-                  {count}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs font-black text-[#151313] leading-tight mb-1">
-                  {label}
-                </p>
-                <p className="text-[10px] font-medium text-[#151313]/40 leading-relaxed line-clamp-2 min-h-[2.5rem]">
-                  {description}
-                </p>
-              </div>
-              <div className="pt-1 border-t border-[#151313]/10">
-                <span className="text-[9px] font-semibold text-[#151313]/30 uppercase tracking-widest">
-                  {count === 1 ? '1 student' : `${count} students`}
-                </span>
-              </div>
-            </div>
-          )
-        }
-      )}
-    </div>
-  )
-}
-
 export function ClusterBreakdownChart({ clusterBarData }) {
   return (
     <ChartCard
@@ -554,8 +478,13 @@ export function ClusterBreakdownChart({ clusterBarData }) {
               height={52}
               tick={(props) => {
                 const { x, y, payload } = props
-                const words = payload.value.split(' ')
+                const item = clusterBarData.find(
+                  (d) => d.name === payload.value
+                )
+                const words = (item?.fullName || payload.value).split(' ')
                 const mid = Math.ceil(words.length / 2)
+                const line1 = words.slice(0, mid).join(' ')
+                const line2 = words.slice(mid).join(' ')
                 return (
                   <text
                     x={x}
@@ -566,11 +495,11 @@ export function ClusterBreakdownChart({ clusterBarData }) {
                     fontWeight={700}
                   >
                     <tspan x={x} dy={0}>
-                      {words.slice(0, mid).join(' ')}
+                      {line1}
                     </tspan>
-                    {words.slice(mid).length > 0 && (
+                    {line2 && (
                       <tspan x={x} dy={14}>
-                        {words.slice(mid).join(' ')}
+                        {line2}
                       </tspan>
                     )}
                   </text>
@@ -585,25 +514,16 @@ export function ClusterBreakdownChart({ clusterBarData }) {
               tick={{ fontSize: 10, fontWeight: 700, fill: '#15131360' }}
             />
             <Tooltip
-              cursor={false}
-              content={({ active, payload }) => {
-                if (!active || !payload?.length) return null
-                const d = payload[0].payload
-                return (
-                  <div
-                    style={{
-                      borderRadius: '10px',
-                      border: '2px solid #151313',
-                      padding: '8px 12px',
-                      background: 'white',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      boxShadow: '3px 3px 0px #151313',
-                    }}
-                  >
-                    {d.fullName}: {d.count} student{d.count !== 1 ? 's' : ''}
-                  </div>
-                )
+              formatter={(value, name) => [
+                `${value} student${value !== 1 ? 's' : ''}`,
+                name,
+              ]}
+              contentStyle={{
+                borderRadius: '10px',
+                border: '2px solid #151313',
+                fontSize: '11px',
+                fontWeight: 700,
+                boxShadow: '3px 3px 0px #151313',
               }}
             />
             <Bar dataKey="count" radius={[6, 6, 0, 0]}>
@@ -763,15 +683,6 @@ export function ClusterMapChart({ scatterByCluster, centroids, labels }) {
                 <ZAxis range={[36, 36]} />
                 <ReferenceLine x={3} stroke="#15131318" strokeDasharray="5 4" />
                 <ReferenceLine y={3} stroke="#15131318" strokeDasharray="5 4" />
-                <Customized
-                  component={(props) => (
-                    <ClusterEllipses
-                      xAxisMap={props.xAxisMap}
-                      yAxisMap={props.yAxisMap}
-                      scatterByCluster={scatterByCluster}
-                    />
-                  )}
-                />
                 <Tooltip
                   cursor={{ strokeDasharray: '3 3' }}
                   content={({ active, payload }) => {
@@ -904,13 +815,8 @@ export function StudentRecordsSection({
                     ? data?.total_students || 0
                     : data?.summary?.[tab] || 0
                 const cfg = CLUSTER_CONFIG[tab]
-                const shortName =
-                  tab === 'All'
-                    ? 'All'
-                    : tab
-                        .replace(' Skills', '')
-                        .replace(' Performer', '')
-                        .replace(' Needed', '')
+                const shortName = tab === 'All' ? 'All' : cfg?.shortName || tab
+
                 return (
                   <TabsTrigger
                     key={tab}
@@ -919,7 +825,11 @@ export function StudentRecordsSection({
                   >
                     {shortName}
                     <span
-                      className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${tab === 'All' ? 'bg-[#151313]/10 text-[#151313]/60 group-data-[state=active]:bg-white group-data-[state=active]:text-[#151313]/60' : `${cfg?.bg} ${cfg?.text}`}`}
+                      className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                        tab === 'All'
+                          ? 'bg-[#151313]/10 text-[#151313]/60 group-data-[state=active]:bg-white group-data-[state=active]:text-[#151313]/60'
+                          : `${cfg?.bg} ${cfg?.text}`
+                      }`}
                     >
                       {count}
                     </span>

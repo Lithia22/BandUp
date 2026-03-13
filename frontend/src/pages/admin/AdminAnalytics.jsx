@@ -6,7 +6,6 @@ import {
 } from '@/components/ui/sidebar'
 import {
   CLUSTER_CONFIG,
-  ClusterCardsSection,
   ClusterBreakdownChart,
   ClusterDistributionChart,
   ClusterMapChart,
@@ -43,11 +42,7 @@ export default function AdminAnalytics() {
   const labels = Object.keys(CLUSTER_CONFIG)
 
   const clusterBarData = labels.map((label) => ({
-    name: label
-      .replace(' Skills', '')
-      .replace(' Performer', '')
-      .replace(' Needed', ''),
-    fullName: label,
+    name: label,
     count: data?.summary?.[label] || 0,
     color: CLUSTER_CONFIG[label].color,
   }))
@@ -131,8 +126,6 @@ export default function AdminAnalytics() {
                 patterns across all 4 MUET components
               </p>
             </div>
-
-            <ClusterCardsSection data={data} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ClusterBreakdownChart clusterBarData={clusterBarData} />

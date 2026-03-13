@@ -9,6 +9,8 @@ import {
 import SidebarLayout from '../../../components/layouts/SidebarLayout'
 import { PracticeSetSkeleton } from '../../../components/layouts/Skeletons'
 import api from '../../../services/api'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 
 const storageKey = (setNumber) => `writing_quiz_${setNumber}`
 
@@ -130,12 +132,13 @@ export default function Writing() {
             {error && !loading && (
               <div className="bg-red-50 border-2 border-[#E9424C] rounded-2xl p-6 max-w-2xl">
                 <p className="text-sm font-semibold text-[#E9424C]">{error}</p>
-                <button
+                <Button
+                  variant="link"
                   onClick={() => window.location.reload()}
-                  className="mt-3 text-xs font-black text-[#151313] underline underline-offset-2"
+                  className="mt-3 text-xs font-black text-[#151313] underline underline-offset-2 p-0 h-auto"
                 >
                   Try again
-                </button>
+                </Button>
               </div>
             )}
 
@@ -178,14 +181,10 @@ export default function Writing() {
                               {wordCount} words
                             </span>
                           </div>
-                          <div className="h-1.5 bg-[#151313]/10 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${wordCount >= 100 ? 'bg-[#22c55e]' : 'bg-[#E9424C]'}`}
-                              style={{
-                                width: `${Math.min((wordCount / 100) * 100, 100)}%`,
-                              }}
-                            />
-                          </div>
+                          <Progress
+                            value={Math.min((wordCount / 100) * 100, 100)}
+                            className={`h-1.5 ${wordCount >= 100 ? 'bg-[#22c55e]' : 'bg-[#E9424C]'}`}
+                          />
                           <p className="text-[8px] font-medium text-[#151313]/30 mt-1">
                             Last active:{' '}
                             {formatTimestamp(hasProgress.timestamp)}
@@ -196,32 +195,33 @@ export default function Writing() {
                       <div className="flex gap-2 mt-2">
                         {hasProgress ? (
                           <>
-                            <button
+                            <Button
                               onClick={() =>
                                 handleStartSet(set.set_number, 'resume')
                               }
-                              className="flex-1 bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-3 py-2 text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-1"
+                              className="flex-1 bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-3 py-2 h-auto text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-1"
                             >
                               <SquarePen size={12} /> Resume
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              variant="outline"
                               onClick={() =>
                                 handleStartSet(set.set_number, 'restart')
                               }
-                              className="flex-1 bg-white text-[#151313] border-2 border-[#151313] rounded-xl px-3 py-2 text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#151313] hover:text-white transition-all flex items-center justify-center gap-1"
+                              className="flex-1 bg-white text-[#151313] border-2 border-[#151313] rounded-xl px-3 py-2 h-auto text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#151313] hover:text-white transition-all flex items-center justify-center gap-1"
                             >
                               Restart
-                            </button>
+                            </Button>
                           </>
                         ) : (
-                          <button
+                          <Button
                             onClick={() =>
                               handleStartSet(set.set_number, 'start')
                             }
-                            className="w-full bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-4 py-2 text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-2"
+                            className="w-full bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-4 py-2 h-auto text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-2"
                           >
                             Start Practice
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>

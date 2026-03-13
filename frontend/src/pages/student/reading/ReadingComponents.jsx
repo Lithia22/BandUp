@@ -6,6 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 
 const box =
   'bg-white border-2 border-[#151313] rounded-2xl p-5 shadow-[3px_3px_0px_#151313]'
@@ -215,17 +216,19 @@ export function GappedTextPassage({
           </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={disabled}
-                className={`inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-lg border-2 transition-colors focus:outline-none ${
+                className={`inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 h-auto rounded-lg border-2 ${
                   selected
-                    ? 'border-[#E9424C] text-[#E9424C] bg-[#E9424C]/5'
-                    : 'border-[#151313]/30 text-[#151313]/50 bg-white hover:border-[#151313]'
-                } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                    ? 'border-[#E9424C] text-[#E9424C] bg-[#E9424C]/5 hover:bg-[#E9424C]/10'
+                    : 'border-[#151313]/30 text-[#151313]/50 bg-white hover:border-[#151313] hover:text-[#151313]'
+                } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {selected || '___'}
                 <ChevronDown size={10} />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             {!disabled && (
               <DropdownMenuContent align="start" className="min-w-20">
@@ -372,19 +375,20 @@ export function QuestionCard({ q, answers, onSelect, disabled }) {
       </p>
       <div className="space-y-2">
         {Object.entries(q.options).map(([key, value]) => (
-          <button
+          <Button
             key={key}
+            variant="outline"
             onClick={() => onSelect(q.id, key)}
             disabled={disabled}
-            className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-150 ${
+            className={`w-full justify-start px-4 py-3 h-auto rounded-xl border-2 text-sm font-semibold whitespace-normal break-words text-left ${
               answers[q.id] === key
-                ? 'bg-[#E9424C] text-white border-[#151313] shadow-[2px_2px_0px_#151313]'
+                ? 'bg-[#E9424C] text-white border-[#151313] shadow-[2px_2px_0px_#151313] hover:bg-[#E9424C]/90'
                 : 'border-[#151313]/20 text-[#151313] hover:border-[#151313] hover:bg-[#f7f7f5]'
-            } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+            }`}
           >
-            <span className="font-black mr-2">{key}.</span>
-            {value}
-          </button>
+            <span className="font-black mr-2 shrink-0">{key}.</span>
+            <span className="flex-1">{value}</span>
+          </Button>
         ))}
       </div>
     </div>

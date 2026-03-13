@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronDown, ChevronUp, Check, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export const parseBullets = (text) => {
   if (!text) return []
@@ -66,9 +67,10 @@ export function ResultCard({ r }) {
 
   return (
     <div className="bg-white rounded-2xl border-2 border-[#151313] overflow-hidden shadow-[3px_3px_0px_#151313]">
-      <button
+      <Button
+        variant="ghost"
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#f7f7f5] transition-colors"
+        className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#f7f7f5] transition-colors h-auto"
       >
         <div className="flex items-center gap-3">
           <span
@@ -88,7 +90,7 @@ export function ResultCard({ r }) {
           </span>
           {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
-      </button>
+      </Button>
 
       {expanded && (
         <div className="border-t-2 border-[#151313]/10 p-5 bg-[#f7f7f5]/50">
@@ -225,12 +227,14 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
       <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-6 py-3 flex items-center gap-3">
-        <button
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => navigate(backPath)}
-          className="w-8 h-8 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#151313] hover:text-white transition-colors shrink-0"
+          className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors shrink-0"
         >
           <ChevronLeft size={16} />
-        </button>
+        </Button>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-5">
@@ -304,19 +308,16 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
         </div>
 
         <div className="bg-white rounded-2xl border-2 border-[#151313] shadow-[3px_3px_0px_#151313] overflow-hidden">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setShowFeedback(!showFeedback)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#f7f7f5] transition-colors"
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#f7f7f5] transition-colors h-auto"
           >
             <span className="text-xs font-black text-[#151313] uppercase tracking-widest">
               AI Feedback
             </span>
-            {showFeedback ? (
-              <ChevronUp size={14} className="text-[#151313]/40" />
-            ) : (
-              <ChevronDown size={14} className="text-[#151313]/40" />
-            )}
-          </button>
+            {showFeedback ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </Button>
           {showFeedback && (
             <div className="border-t-2 border-[#151313] px-5 py-5">
               {timelineSections.length > 0 ? (

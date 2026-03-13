@@ -12,6 +12,7 @@ import {
   QuizPageSkeleton,
   SubmissionSkeleton,
 } from '../../../components/layouts/Skeletons'
+import { Textarea } from '@/components/ui/textarea'
 
 const QUIZ_DURATION = 25 * 60
 const storageKey = (n) => `writing_quiz_${n}`
@@ -233,12 +234,14 @@ export default function WritingQuiz() {
 
       <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-8 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3 shrink-0">
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => navigate('/writing')}
-            className="w-8 h-8 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#151313] hover:text-white transition-colors"
+            className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors"
           >
             <ChevronLeft size={16} />
-          </button>
+          </Button>
           <p
             className={`text-[10px] font-semibold tabular-nums ${wordCount >= MIN_WORDS ? 'text-[#22c55e]' : 'text-[#151313]/40'}`}
           >
@@ -302,13 +305,12 @@ export default function WritingQuiz() {
               {wordCount >= MIN_WORDS ? ' ✓' : ` / ${MIN_WORDS} words`}
             </span>
           </div>
-          <textarea
+          <Textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             disabled={submitting || submitted}
             placeholder="Write your reply here..."
-            className="w-full p-5 text-sm font-medium text-[#151313] leading-relaxed resize-none focus:outline-none bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-            rows={16}
+            className="min-h-[400px] text-sm font-medium border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 resize-y"
           />
         </div>
 

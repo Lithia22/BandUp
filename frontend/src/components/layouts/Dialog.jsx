@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Trash2 } from 'lucide-react'
 
 export function ExitWarningDialog({ open, onOpenChange, onConfirm, onCancel }) {
   return (
@@ -105,6 +106,42 @@ export function SubmitDialog({
             className="bg-[#E9424C] text-white border-2 border-[#151313] rounded-xl px-4 py-2 text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#c73540] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {submitting ? 'Submitting...' : 'Yes, submit'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+export function DeleteDialog({ open, label, onConfirm, onCancel }) {
+  return (
+    <AlertDialog open={open}>
+      <AlertDialogContent className="bg-[#f7f7f5] border-2 border-[#151313] rounded-2xl shadow-[8px_8px_0px_#151313] p-6">
+        <AlertDialogHeader>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-9 h-9 rounded-xl bg-[#E9424C] border-2 border-[#151313] flex items-center justify-center shadow-[2px_2px_0px_#151313] shrink-0">
+              <Trash2 size={15} className="text-white" />
+            </div>
+            <AlertDialogTitle className="text-base font-black text-[#151313]">
+              Delete {label}?
+            </AlertDialogTitle>
+          </div>
+          <AlertDialogDescription className="text-xs font-medium text-[#151313]/50">
+            This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2">
+          <AlertDialogCancel
+            onClick={onCancel}
+            className="flex-1 text-xs font-black text-[#151313] border-2 border-[#151313]/20 rounded-xl px-4 py-2.5 hover:border-[#151313] transition-all"
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="flex-1 bg-[#E9424C] text-white text-xs font-black border-2 border-[#151313] rounded-xl px-4 py-2.5 shadow-[2px_2px_0px_#151313] hover:bg-[#c73038] transition-all"
+          >
+            Yes, Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

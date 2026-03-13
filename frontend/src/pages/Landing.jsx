@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Menu, X, ArrowUpRight } from 'lucide-react'
 import { toast } from 'sonner'
+import { Input } from '@/components/ui/input'
 
 const NAV_LINKS = [
   { label: 'Home', href: '#home' },
@@ -119,9 +120,14 @@ export default function Landing() {
             </Button>
           </div>
 
-          <button className="md:hidden p-2 text-[#151313]" onClick={toggleMenu}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleMenu}
+            className="md:hidden text-[#151313] hover:text-[#E9424C] hover:bg-transparent"
+          >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          </Button>
         </div>
 
         {menuOpen && (
@@ -291,14 +297,13 @@ export default function Landing() {
                 </a>
               </div>
             </div>
-
             <div className="w-full md:w-auto flex gap-2">
-              <input
+              <Input
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-[#f7f7f5]/10 border border-[#f7f7f5]/20 text-[#f7f7f5] text-xs placeholder:text-[#f7f7f5]/40 focus:outline-none focus:border-[#E9424C] w-full md:w-40"
+                className="bg-[#f7f7f5]/10 border-[#f7f7f5]/20 text-[#f7f7f5] placeholder:text-[#f7f7f5]/40 focus-visible:border-[#E9424C] w-full md:w-40"
               />
               <Button
                 onClick={handleSubscribe}

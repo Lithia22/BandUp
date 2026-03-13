@@ -43,12 +43,16 @@ export default function Auth({ mode = 'login' }) {
   return (
     <div className="min-h-screen bg-[#f7f7f5] flex flex-col">
       <div className="w-full px-6 py-4 flex justify-end">
-        <a
-          href="/"
-          className="w-8 h-8 rounded-full border-2 border-[#151313] flex items-center justify-center hover:bg-[#E9424C] hover:text-white transition-colors"
+        <Button
+          variant="outline"
+          size="icon"
+          asChild
+          className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#E9424C] hover:text-white transition-colors"
         >
-          <X size={16} />
-        </a>
+          <a href="/">
+            <X size={16} />
+          </a>
+        </Button>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-6 pb-10">
@@ -117,13 +121,15 @@ export default function Auth({ mode = 'login' }) {
                     minLength={8}
                     className="border-2 border-[#151313] rounded-xl h-12 text-sm font-semibold pr-11 focus-visible:border-[#E9424C]"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#151313] opacity-40 hover:opacity-80"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#151313] opacity-40 hover:opacity-80 w-auto h-auto p-1"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
