@@ -46,8 +46,6 @@ function formatDate(isoString) {
 
 export default function StudentDashboard() {
   const name = localStorage.getItem('bandup_name') || 'Student'
-  const firstName = name.split(' ')[0]
-
   const [attempts, setAttempts] = useState({})
   const [history, setHistory] = useState([])
   const [weeklyData, setWeeklyData] = useState([])
@@ -97,8 +95,13 @@ export default function StudentDashboard() {
         <SidebarInset className="flex-1 min-w-0 overflow-hidden">
           <div className="flex h-screen">
             <main className="flex-1 min-w-0 overflow-y-auto p-4 md:p-6 space-y-5">
-              <div className="flex items-center md:hidden">
-                <SidebarTrigger />
+              <div className="flex items-center justify-between mb-2 md:hidden">
+                <div className="flex items-center gap-2">
+                  <SidebarTrigger />
+                  <h2 className="text-lg font-black text-[#151313]">
+                    Dashboard
+                  </h2>
+                </div>
               </div>
 
               <div
@@ -116,7 +119,7 @@ export default function StudentDashboard() {
                     Welcome back
                   </p>
                   <h2 className="text-white text-xl md:text-2xl font-black leading-tight mb-2">
-                    Hey, {firstName}!
+                    Hey, {name}!
                   </h2>
                   <p className="text-white/50 text-xs font-medium leading-relaxed mb-1">
                     Keep practising consistently to reach your target MUET band.

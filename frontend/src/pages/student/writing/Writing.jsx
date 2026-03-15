@@ -91,8 +91,11 @@ export default function Writing() {
         <SidebarLayout />
         <SidebarInset className="flex-1 min-w-0">
           <main className="h-full overflow-y-auto p-4 md:p-6">
-            <div className="flex items-center mb-4 md:hidden">
-              <SidebarTrigger />
+            <div className="flex items-center justify-between mb-4 md:hidden">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <h2 className="text-lg font-black text-[#151313]">Writing</h2>
+              </div>
             </div>
 
             <div
@@ -117,7 +120,6 @@ export default function Writing() {
                 </p>
               </div>
             </div>
-
             <p className="text-[10px] font-black text-[#151313]/60 uppercase tracking-widest mb-3">
               Choose a Practice Set
             </p>
@@ -186,7 +188,7 @@ export default function Writing() {
                             className={`h-1.5 ${wordCount >= 100 ? 'bg-[#22c55e]' : 'bg-[#E9424C]'}`}
                           />
                           <p className="text-[8px] font-medium text-[#151313]/30 mt-1">
-                            Last active:{' '}
+                            Last active:
                             {formatTimestamp(hasProgress.timestamp)}
                           </p>
                         </div>

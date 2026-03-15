@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Users } from 'lucide-react'
 import {
   SidebarProvider,
   SidebarInset,
@@ -11,7 +10,6 @@ import api from '../../services/api'
 
 export default function AdminDashboard() {
   const name = localStorage.getItem('bandup_name') || 'Admin'
-  const firstName = name.split(' ')[0]
   const [clusterData, setClusterData] = useState(null)
 
   useEffect(() => {
@@ -32,8 +30,11 @@ export default function AdminDashboard() {
         <SidebarLayout role="admin" />
         <SidebarInset className="flex-1 min-w-0">
           <main className="h-full overflow-y-auto p-4 md:p-6 space-y-5">
-            <div className="flex items-center md:hidden">
-              <SidebarTrigger />
+            <div className="flex items-center justify-between mb-2 md:hidden">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <h2 className="text-lg font-black text-[#151313]">Dashboard</h2>
+              </div>
             </div>
 
             <div
@@ -51,7 +52,7 @@ export default function AdminDashboard() {
                   Admin Panel
                 </p>
                 <h2 className="text-white text-xl md:text-2xl font-black leading-tight mb-2">
-                  Hey, {firstName}!
+                  Hey, {name}!
                 </h2>
                 <p className="text-white/50 text-xs font-medium leading-relaxed mb-1">
                   Monitor student performance clusters and manage your question

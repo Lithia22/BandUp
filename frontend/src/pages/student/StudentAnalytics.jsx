@@ -66,21 +66,21 @@ export default function StudentAnalytics() {
         <SidebarLayoutDefault />
         <SidebarInset className="flex-1 min-w-0">
           <main className="overflow-y-auto p-4 md:p-6 space-y-6">
-            <div className="flex items-center md:hidden">
-              <SidebarTrigger />
+            <div className="flex items-center justify-between mb-1 md:mb-2">
+              <div className="flex items-center gap-2">
+                <div className="md:hidden">
+                  <SidebarTrigger />
+                </div>
+                <div>
+                  <h1 className="text-lg md:text-xl font-black text-[#151313]">
+                    Performance Overview
+                  </h1>
+                </div>
+              </div>
             </div>
-
-            <div>
-              <p className="text-[10px] font-black text-[#151313]/50 uppercase tracking-widest mb-0.5">
-                My Analytics
-              </p>
-              <h1 className="text-xl font-black text-[#151313]">
-                Performance Overview
-              </h1>
-              <p className="text-xs text-[#151313]/40 font-medium mt-0.5">
-                A summary of your MUET practice progress
-              </p>
-            </div>
+            <p className="text-xs text-[#151313]/40 font-medium mb-4 md:mb-6">
+              A summary of your MUET practice progress
+            </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {components.map((c) => {

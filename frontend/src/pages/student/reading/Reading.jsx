@@ -104,9 +104,13 @@ export default function Reading() {
         <SidebarLayout />
         <SidebarInset className="flex-1 min-w-0">
           <main className="h-full overflow-y-auto p-4 md:p-6">
-            <div className="flex items-center mb-4 md:hidden">
-              <SidebarTrigger />
+            <div className="flex items-center justify-between mb-4 md:hidden">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <h2 className="text-lg font-black text-[#151313]">Reading</h2>
+              </div>
             </div>
+
             <div
               className="relative rounded-2xl border-2 border-[#151313] overflow-hidden mb-6"
               style={{ background: '#1A1A1A', minHeight: 160 }}
@@ -187,7 +191,7 @@ export default function Reading() {
                           </div>
                           <Progress value={progressPercent} className="h-1.5" />
                           <p className="text-[8px] font-medium text-[#151313]/30 mt-1">
-                            Last active:{' '}
+                            Last active:
                             {formatTimestamp(hasProgress.timestamp)}
                           </p>
                         </div>

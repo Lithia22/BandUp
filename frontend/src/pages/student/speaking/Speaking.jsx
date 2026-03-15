@@ -34,8 +34,11 @@ export default function Speaking() {
         <SidebarLayout role="student" />
         <SidebarInset className="flex-1 min-w-0">
           <main className="h-full overflow-y-auto p-4 md:p-6">
-            <div className="flex items-center mb-4 md:hidden">
-              <SidebarTrigger />
+            <div className="flex items-center justify-between mb-4 md:hidden">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <h2 className="text-lg font-black text-[#151313]">Speaking</h2>
+              </div>
             </div>
 
             <div
@@ -60,7 +63,6 @@ export default function Speaking() {
                 </p>
               </div>
             </div>
-
             <p className="text-[10px] font-black text-[#151313]/60 uppercase tracking-widest mb-3">
               Choose a Practice Set
             </p>

@@ -114,18 +114,20 @@ export default function AdminAnalytics() {
         <SidebarLayout role="admin" />
         <SidebarInset className="flex-1 min-w-0">
           <main className="overflow-y-auto p-4 md:p-6 space-y-6">
-            <div className="flex items-center md:hidden">
-              <SidebarTrigger />
+            <div className="flex items-center justify-between mb-1 md:mb-2">
+              <div className="flex items-center gap-2">
+                <div className="md:hidden">
+                  <SidebarTrigger />
+                </div>
+                <h1 className="text-lg md:text-xl font-black text-[#151313]">
+                  Student Analysis
+                </h1>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-black text-[#151313]">
-                Student Analysis
-              </h1>
-              <p className="text-xs text-[#151313]/40 font-medium mt-0.5">
-                {data?.total_students || 0} students grouped by performance
-                patterns across all 4 MUET components
-              </p>
-            </div>
+            <p className="text-xs text-[#151313]/40 font-medium mb-4 md:mb-6">
+              {data?.total_students || 0} students grouped by performance
+              patterns across all 4 MUET components
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ClusterBreakdownChart clusterBarData={clusterBarData} />

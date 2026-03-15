@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Play, Pause, RotateCcw, Volume2, ChevronDown } from 'lucide-react'
+import { Play, Pause, Volume2, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -297,7 +297,7 @@ export function MatchingQuestionCard({ q, answers, onSelect, disabled }) {
           >
             {selected ? (
               <>
-                <span className="font-black">{selected}.</span>{' '}
+                <span className="font-black">{selected}.</span>
                 {options[selected]}
               </>
             ) : (

@@ -17,25 +17,25 @@ const COMPONENTS = [
     label: 'Reading',
     svg: '2.svg',
     time: '75 mins • 40 Ques',
-    desc: 'Academic passages with MCQ',
+    desc: 'MCQs and gapped text questions',
   },
   {
     label: 'Listening',
     svg: '3.svg',
     time: '50 mins • 30 Ques',
-    desc: 'Audio passages with feedback',
+    desc: 'Multiple choice questions',
   },
   {
     label: 'Writing',
     svg: '4.svg',
     time: '25 mins • 1 essay',
-    desc: 'Write essays with AI feedback',
+    desc: 'Guided email or letter writing',
   },
   {
     label: 'Speaking',
     svg: '5.svg',
     time: '2 mins prep • 2 mins speak',
-    desc: 'Speak and get AI evaluation',
+    desc: 'Individual presentation practice',
   },
 ]
 
@@ -83,7 +83,7 @@ export default function Landing() {
             onClick={(e) => scrollTo(e, '#home')}
             className="flex items-center gap-2"
           >
-            <img src="/vite.svg" alt="BandUp" className="h-7 w-auto" />
+            <img src="/logo.svg" alt="BandUp" className="h-7 w-auto" />
             <span className="text-xl font-black text-[#151313]">
               Band<span className="text-[#E9424C]">Up</span>
             </span>
@@ -220,7 +220,7 @@ export default function Landing() {
               onClick={(e) => scrollTo(e, '#features')}
               className="text-[#E9424C] text-sm flex items-center gap-1 font-bold group"
             >
-              Learn more{' '}
+              Learn more
               <ArrowUpRight
                 size={16}
                 className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
@@ -259,7 +259,7 @@ export default function Landing() {
                   {label}
                 </h3>
                 <p className="text-xs font-semibold opacity-40 mb-2">{time}</p>
-                <p className="text-xs md:text-sm font-medium opacity-60 mb-3 whitespace-nowrap">
+                <p className="text-[10px] md:text-xs font-medium opacity-60 mb-3">
                   {desc}
                 </p>
                 <Button
@@ -283,7 +283,7 @@ export default function Landing() {
                 onClick={(e) => scrollTo(e, '#home')}
                 className="flex items-center gap-2"
               >
-                <img src="/vite.svg" alt="BandUp" className="h-7 w-auto" />
+                <img src="/logo.svg" alt="BandUp" className="h-7 w-auto" />
                 <span className="text-xl md:text-2xl font-black text-[#f7f7f5]">
                   Band<span className="text-[#E9424C]">Up</span>
                 </span>

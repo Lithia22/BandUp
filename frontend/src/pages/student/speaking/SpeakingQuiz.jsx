@@ -154,7 +154,7 @@ export default function SpeakingQuiz() {
           <ChevronLeft size={16} />
         </Button>
         <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest flex-1">
-          Speaking • Set {setNumber} • Booklet {partNumber} • Candidate{' '}
+          Speaking • Set {setNumber} • Booklet {partNumber} • Candidate
           {String.fromCharCode(64 + parseInt(candidateNumber))}
         </p>
         {phase === 'prep' && (
@@ -208,7 +208,7 @@ export default function SpeakingQuiz() {
           {question?.question_text && (
             <div className="p-4 bg-[#E9424C]/5 border-l-4 border-[#E9424C]">
               <p className="text-[10px] font-black text-[#E9424C] uppercase tracking-widest mb-1">
-                Your Task — Candidate{' '}
+                Your Task — Candidate
                 {String.fromCharCode(64 + parseInt(candidateNumber))}
               </p>
               <p className="text-sm font-semibold text-[#151313] leading-relaxed">

@@ -49,7 +49,7 @@ export default function SpeakingResults() {
           <ChevronLeft size={16} />
         </Button>
         <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest">
-          Speaking • Set {setNumber} • Booklet {partNumber} • Candidate{' '}
+          Speaking • Set {setNumber} • Booklet {partNumber} • Candidate
           {String.fromCharCode(64 + parseInt(candidateNumber))}
         </p>
       </div>

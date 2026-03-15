@@ -4,9 +4,11 @@ import {
   Navigate,
   Outlet,
 } from 'react-router-dom'
-import { Toaster } from '@/components/ui/sonner'
+import { useState, useEffect } from 'react'
+import { Toaster } from '../../frontend/src/components/ui/sonner'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
+import Profile from './pages/Profile'
 import StudentDashboard from './pages/student/StudentDashboard'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
@@ -24,10 +26,55 @@ import Speaking from './pages/student/speaking/Speaking'
 import SpeakingBooklets from './pages/student/speaking/SpeakingBooklets'
 import SpeakingQuiz from './pages/student/speaking/SpeakingQuiz'
 import SpeakingResults from './pages/student/speaking/SpeakingResults'
+import api from './services/api'
 
 function ProtectedRoute() {
+  const [isValid, setIsValid] = useState(null)
   const token = localStorage.getItem('bandup_token')
-  if (!token) return <Navigate to="/login" replace />
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!token) {
+        setIsValid(false)
+        return
+      }
+
+      try {
+        await api.get('/auth/verify')
+        setIsValid(true)
+      } catch (error) {
+        localStorage.removeItem('bandup_token')
+        localStorage.removeItem('bandup_role')
+        localStorage.removeItem('bandup_name')
+        setIsValid(false)
+      }
+    }
+
+    verifyToken()
+  }, [token])
+
+  if (isValid === null) return null
+  if (!isValid) return <Navigate to="/login" replace />
+  return <Outlet />
+}
+
+function AdminRoute() {
+  const role = localStorage.getItem('bandup_role')
+
+  if (role !== 'admin') {
+    return <Navigate to="/student" replace />
+  }
+
+  return <Outlet />
+}
+
+function StudentRoute() {
+  const role = localStorage.getItem('bandup_role')
+
+  if (role !== 'student') {
+    return <Navigate to="/admin" replace />
+  }
+
   return <Outlet />
 }
 
@@ -45,32 +92,48 @@ const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       { path: '/dashboard', element: <DashboardRedirect /> },
-      { path: '/student', element: <StudentDashboard /> },
-      { path: '/admin', element: <AdminDashboard /> },
-      { path: '/admin/analytics', element: <AdminAnalytics /> },
-      { path: '/analytics', element: <StudentAnalytics /> },
-      { path: '/reading', element: <Reading /> },
-      { path: '/reading/:setNumber', element: <ReadingQuiz /> },
-      { path: '/reading/:setNumber/results', element: <ReadingResults /> },
-      { path: '/listening', element: <Listening /> },
-      { path: '/listening/:setNumber', element: <ListeningQuiz /> },
-      { path: '/listening/:setNumber/results', element: <ListeningResults /> },
-      { path: '/writing', element: <Writing /> },
-      { path: '/writing/:setNumber', element: <WritingQuiz /> },
-      { path: '/writing/:setNumber/results', element: <WritingResults /> },
-      { path: '/speaking', element: <Speaking /> },
-      { path: '/speaking/:setNumber', element: <SpeakingBooklets /> },
+      { path: '/profile', element: <Profile /> },
+
       {
-        path: '/speaking/:setNumber/:partNumber',
-        element: <SpeakingBooklets />,
+        element: <AdminRoute />,
+        children: [
+          { path: '/admin', element: <AdminDashboard /> },
+          { path: '/admin/analytics', element: <AdminAnalytics /> },
+        ],
       },
+
       {
-        path: '/speaking/:setNumber/:partNumber/:candidateNumber',
-        element: <SpeakingQuiz />,
-      },
-      {
-        path: '/speaking/:setNumber/:partNumber/:candidateNumber/results',
-        element: <SpeakingResults />,
+        element: <StudentRoute />,
+        children: [
+          { path: '/student', element: <StudentDashboard /> },
+          { path: '/analytics', element: <StudentAnalytics /> },
+          { path: '/reading', element: <Reading /> },
+          { path: '/reading/:setNumber', element: <ReadingQuiz /> },
+          { path: '/reading/:setNumber/results', element: <ReadingResults /> },
+          { path: '/listening', element: <Listening /> },
+          { path: '/listening/:setNumber', element: <ListeningQuiz /> },
+          {
+            path: '/listening/:setNumber/results',
+            element: <ListeningResults />,
+          },
+          { path: '/writing', element: <Writing /> },
+          { path: '/writing/:setNumber', element: <WritingQuiz /> },
+          { path: '/writing/:setNumber/results', element: <WritingResults /> },
+          { path: '/speaking', element: <Speaking /> },
+          { path: '/speaking/:setNumber', element: <SpeakingBooklets /> },
+          {
+            path: '/speaking/:setNumber/:partNumber',
+            element: <SpeakingBooklets />,
+          },
+          {
+            path: '/speaking/:setNumber/:partNumber/:candidateNumber',
+            element: <SpeakingQuiz />,
+          },
+          {
+            path: '/speaking/:setNumber/:partNumber/:candidateNumber/results',
+            element: <SpeakingResults />,
+          },
+        ],
       },
     ],
   },

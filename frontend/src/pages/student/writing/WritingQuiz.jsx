@@ -279,7 +279,7 @@ export default function WritingQuiz() {
             Task 1
           </span>
           <p className="text-xs font-semibold text-[#151313]/60 italic mb-4">
-            You are advised to spend about{' '}
+            You are advised to spend about
             <strong className="text-[#151313] not-italic">25 minutes</strong> on
             this task.
           </p>
@@ -288,8 +288,8 @@ export default function WritingQuiz() {
         {question && <EmailDisplay passage={question.passage} />}
 
         <p className="text-sm font-medium text-[#151313] leading-relaxed">
-          Using <strong>all the notes given</strong>, write a reply of{' '}
-          <strong>at least {MIN_WORDS} words</strong> in an appropriate style.{' '}
+          Using <strong>all the notes given</strong>, write a reply of
+          <strong>at least {MIN_WORDS} words</strong> in an appropriate style.
           <span className="text-[#151313]/40">[30]</span>
         </p>
 

@@ -10,6 +10,7 @@ import {
   BookOpenCheck,
   Users,
   BarChart2,
+  User,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -33,12 +34,14 @@ const STUDENT_NAV = [
   { label: 'Listening', icon: Headphones, href: '/listening' },
   { label: 'Writing', icon: SquarePen, href: '/writing' },
   { label: 'Speaking', icon: Mic, href: '/speaking' },
+  { label: 'Profile', icon: User, href: '/profile' },
 ]
 
 const ADMIN_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
   { label: 'Analytics', icon: Users, href: '/admin/analytics' },
   { label: 'Manage Questions', icon: BookOpenCheck, href: '/admin/questions' },
+  { label: 'Profile', icon: User, href: '/profile' },
 ]
 
 function ArrowToggle() {
@@ -83,7 +86,7 @@ export default function SidebarLayout({ role = 'student' }) {
               >
                 <a href={homeHref} className="flex items-center gap-2">
                   <img
-                    src="/vite.svg"
+                    src="/logo.svg"
                     alt="BandUp"
                     className="h-6 w-auto shrink-0"
                   />
