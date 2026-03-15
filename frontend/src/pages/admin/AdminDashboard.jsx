@@ -115,6 +115,23 @@ export default function AdminDashboard() {
             </div>
 
             <a
+              href="/admin/questions"
+              className="block border-2 border-[#151313] rounded-2xl bg-white shadow-[3px_3px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-black text-[#151313]">
+                    Go Manage Questions
+                  </p>
+                  <p className="text-[10px] text-[#151313]/40 font-medium mt-0.5">
+                    Create new set of practice or edit existing ones for each
+                    component
+                  </p>
+                </div>
+              </div>
+            </a>
+
+            <a
               href="/admin/analytics"
               className="block border-2 border-[#151313] rounded-2xl bg-white shadow-[3px_3px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 p-4"
             >

@@ -84,7 +84,7 @@ export default function Auth({ mode = 'login' }) {
           variant="outline"
           size="icon"
           asChild
-          className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#E9424C] hover:text-white transition-colors"
+          className="w-8 h-8 rounded-full border-2 border-[#151313] bg-white text-[#151313] hover:bg-[#E9424C] hover:text-white transition-colors"
         >
           <a href="/">
             <X size={16} />

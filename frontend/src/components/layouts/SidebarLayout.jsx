@@ -8,7 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   BookOpenCheck,
-  Users,
+  ScatterChart,
   BarChart2,
   User,
 } from 'lucide-react'
@@ -39,8 +39,8 @@ const STUDENT_NAV = [
 
 const ADMIN_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-  { label: 'Analytics', icon: Users, href: '/admin/analytics' },
   { label: 'Manage Questions', icon: BookOpenCheck, href: '/admin/questions' },
+  { label: 'Analytics', icon: ScatterChart, href: '/admin/analytics' },
   { label: 'Profile', icon: User, href: '/profile' },
 ]
 

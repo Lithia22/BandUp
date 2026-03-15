@@ -11,6 +11,9 @@ import Auth from './pages/Auth'
 import Profile from './pages/Profile'
 import StudentDashboard from './pages/student/StudentDashboard'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminQuestions from './pages/admin/questions/AdminQuestions'
+import AdminReading from './pages/admin/questions/reading/AdminReading'
+import AdminReadingEditor from './pages/admin/questions/reading/AdminReadingEditor'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import StudentAnalytics from './pages/student/StudentAnalytics'
 import Reading from './pages/student/reading/Reading'
@@ -99,6 +102,13 @@ const router = createBrowserRouter([
         children: [
           { path: '/admin', element: <AdminDashboard /> },
           { path: '/admin/analytics', element: <AdminAnalytics /> },
+          { path: '/admin/questions', element: <AdminQuestions /> },
+          { path: '/admin/reading', element: <AdminReading /> },
+          { path: '/admin/reading/editor', element: <AdminReadingEditor /> },
+          {
+            path: '/admin/reading/editor/:setNumber',
+            element: <AdminReadingEditor />,
+          },
         ],
       },
 
