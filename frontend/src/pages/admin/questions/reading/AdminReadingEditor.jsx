@@ -1,141 +1,238 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, Plus, Trash2, Copy } from 'lucide-react'
+import {
+  ChevronLeft,
+  Plus,
+  Trash2,
+  Check,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import api from '../../../../services/api'
 import { toast } from 'sonner'
 import { QuestionCardSkeleton } from '../../../../components/layouts/Skeletons'
 import { ExitWarningDialog } from '../../../../components/layouts/Dialog'
 
-// Part configurations
 const PART_CONFIG = {
-  1: {
-    name: 'Part 1 - Three Notices',
-    questions: 4,
-    passageType: 'three_column_table',
-    description: 'Compare three notices (A, B, C)',
-    template: {
-      type: 'three_column_table',
-      columns: [
-        { label: 'A', title: '', body: '', details: '', footer: '' },
-        { label: 'B', title: '', body: '', details: '', footer: '' },
-        { label: 'C', title: '', body: '', details: '', footer: '' },
-      ],
-    },
-  },
-  2: {
-    name: 'Part 2 - Email',
-    questions: 5,
-    passageType: 'plain',
-    description: 'Email with To:/From:/Subject:',
-  },
-  3: {
-    name: 'Part 3 - Short Story',
-    questions: 5,
-    passageType: 'plain',
-    description: 'Short story with numbered paragraphs',
-  },
-  4: {
-    name: 'Part 4 - Two Texts',
-    questions: 6,
-    passageType: 'two_texts',
-    description: 'Compare two texts',
-    template: {
-      type: 'two_texts',
-      texts: [
-        {
-          label: 'Text 1',
-          paragraphs: [
-            { number: 1, text: '' },
-            { number: 2, text: '' },
-            { number: 3, text: '' },
-          ],
-        },
-        {
-          label: 'Text 2',
-          paragraphs: [
-            { number: 1, text: '' },
-            { number: 2, text: '' },
-            { number: 3, text: '' },
-          ],
-        },
-      ],
-    },
-  },
-  5: {
-    name: 'Part 5 - Gapped Text',
-    questions: 6,
-    passageType: 'gapped_text',
-    description: 'Fill in the blanks with sentences A-G',
-    template: {
-      type: 'gapped_text',
-      main_text:
-        '1\tLike many of us, when I wake up, I reach for the phone. 01___\n\n2\tBy the time I reach the office, my phone already needs charging. 02___\n\n3\tThe lithium-ion batteries that power most of our devices have a major drawback. 03___\n\n4\tProfessor Clare Grey at Cambridge University is working on a solution. 04___\n\n5\tHer team is developing batteries that could charge in minutes. 05___\n\n6\tThis technology could revolutionise electric vehicles. 06___',
-      sentences: [
-        { key: 'A', text: '' },
-        { key: 'B', text: '' },
-        { key: 'C', text: '' },
-        { key: 'D', text: '' },
-        { key: 'E', text: '' },
-        { key: 'F', text: '' },
-        { key: 'G', text: '' },
-      ],
-    },
-  },
-  6: {
-    name: 'Part 6 - Complex Article',
-    questions: 7,
-    passageType: 'lined_text',
-    description: 'Article with line numbers',
-    template: {
-      type: 'lined_text',
-      paragraphs: [
-        { number: 1, lines: '1-9', text: '' },
-        { number: 2, lines: '10-18', text: '' },
-        { number: 3, lines: '19-27', text: '' },
-        { number: 4, lines: '28-36', text: '' },
-        { number: 5, lines: '37-45', text: '' },
-        { number: 6, lines: '46-54', text: '' },
-        { number: 7, lines: '55-63', text: '' },
-      ],
-    },
-  },
-  7: {
-    name: 'Part 7 - Complex Article',
-    questions: 7,
-    passageType: 'lined_text',
-    description: 'Article with line numbers',
-    template: {
-      type: 'lined_text',
-      paragraphs: [
-        { number: 1, lines: '1-8', text: '' },
-        { number: 2, lines: '9-16', text: '' },
-        { number: 3, lines: '17-24', text: '' },
-        { number: 4, lines: '25-32', text: '' },
-        { number: 5, lines: '33-40', text: '' },
-        { number: 6, lines: '41-48', text: '' },
-        { number: 7, lines: '49-56', text: '' },
-      ],
-    },
-  },
+  1: { questions: 4, startQ: 1 },
+  2: { questions: 5, startQ: 5 },
+  3: { questions: 5, startQ: 10 },
+  4: { questions: 6, startQ: 15 },
+  5: { questions: 6, startQ: 21 },
+  6: { questions: 7, startQ: 27 },
+  7: { questions: 7, startQ: 34 },
 }
 
-const QUESTION_TEMPLATE = {
-  question_number: 1,
-  question_text: '',
-  options: { A: '', B: '', C: '' },
-  correct_answer: 'A',
+const PART5_OPTIONS = { A: '', B: '', C: '', D: '', E: '', F: '', G: '' }
+
+const extractColumnText = (col) => {
+  if (!col) return ''
+  try {
+    const p = typeof col === 'string' ? JSON.parse(col) : col
+    return [p.title, p.body, p.details, p.footer].filter(Boolean).join('\n')
+  } catch {
+    return typeof col === 'string' ? col : ''
+  }
+}
+
+const buildColumnFromText = (text, label) => ({
+  label,
+  title: '',
+  body: text.trim(),
+  details: '',
+  footer: '',
+})
+
+const parseTextToParagraphs = (text) =>
+  text
+    .split('\n\n')
+    .filter(Boolean)
+    .map((para, i) => ({
+      number: i + 1,
+      text: para.replace(/^\d+\.\s*/, ''),
+    }))
+
+const extractPart4Texts = (questions) => {
+  let text1 = '',
+    text2 = ''
+  for (const q of questions.filter((q) => q.part_number === 4)) {
+    if (!q.passage) continue
+    try {
+      const p = JSON.parse(q.passage)
+      if (p.type === 'two_texts') {
+        if (!text1 && p.texts?.[0]?.paragraphs)
+          text1 = p.texts[0].paragraphs
+            .map((x) => `${x.number}. ${x.text}`)
+            .join('\n\n')
+        if (!text2 && p.texts?.[1]?.paragraphs)
+          text2 = p.texts[1].paragraphs
+            .map((x) => `${x.number}. ${x.text}`)
+            .join('\n\n')
+      } else if (p.type === 'numbered_paragraphs') {
+        const content =
+          p.paragraphs?.map((x) => `${x.number}. ${x.text}`).join('\n\n') || ''
+        if (p.label === 'Text 1' && !text1) text1 = content
+        if (p.label === 'Text 2' && !text2) text2 = content
+      }
+      if (text1 && text2) break
+    } catch {}
+  }
+  return { text1, text2 }
+}
+
+function QuestionCard({
+  q,
+  idx,
+  total,
+  selectedPart,
+  fieldErrors,
+  updateQuestion,
+  updateOption,
+  updateCorrectAnswer,
+  removeQuestion,
+  moveQuestion,
+  errKey,
+  labelErr,
+  ErrMsg,
+}) {
+  return (
+    <Card className="border-2 border-[#151313] rounded-2xl shadow-[3px_3px_0px_#151313] overflow-hidden">
+      <CardHeader className="border-b-2 border-[#151313] bg-white py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <div className="flex flex-col gap-0.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => moveQuestion(idx, -1)}
+                disabled={idx === 0}
+                className="w-6 h-5 p-0 text-[#151313]/30 hover:text-[#151313] disabled:opacity-20"
+              >
+                <ArrowUp size={10} />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => moveQuestion(idx, 1)}
+                disabled={idx === total - 1}
+                className="w-6 h-5 p-0 text-[#151313]/30 hover:text-[#151313] disabled:opacity-20"
+              >
+                <ArrowDown size={10} />
+              </Button>
+            </div>
+            <CardTitle className="text-sm font-black text-[#151313]">
+              <span className="text-[#E9424C] mr-2">{q.question_number}.</span>
+              Question
+            </CardTitle>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => removeQuestion(q.question_number)}
+            className="text-[#E9424C] hover:text-[#E9424C]"
+          >
+            <Trash2 size={14} />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-5 space-y-4">
+        <div className="space-y-1">
+          <Label
+            className={`text-xs font-black uppercase tracking-widest ${labelErr(`q${q.question_number}_text`)}`}
+          >
+            Question Text
+          </Label>
+          <Input
+            value={q.question_text}
+            onChange={(e) =>
+              updateQuestion(q.question_number, 'question_text', e.target.value)
+            }
+            className={`border-2 rounded-xl text-sm ${errKey(`q${q.question_number}_text`)}`}
+            placeholder="Enter question text..."
+          />
+          <ErrMsg k={`q${q.question_number}_text`} />
+        </div>
+        {selectedPart !== 5 && (
+          <div className="space-y-2">
+            <Label className="text-xs font-black text-[#151313] uppercase tracking-widest">
+              Options
+            </Label>
+            {Object.entries(q.options).map(([key, value]) => {
+              const isCorrect = q.correct_answer === key
+              const hk = `q${q.question_number}_opt_${key}`
+              return (
+                <div key={key} className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        updateCorrectAnswer(q.question_number, key)
+                      }
+                      className={`w-8 h-8 p-0 rounded-full border-2 shrink-0 ${isCorrect ? 'bg-[#22c55e] border-[#22c55e] text-white hover:bg-[#22c55e] hover:text-white' : 'border-[#151313] text-[#151313] hover:bg-[#151313] hover:text-white'}`}
+                    >
+                      {isCorrect ? <Check size={14} /> : key}
+                    </Button>
+                    <Input
+                      value={value}
+                      onChange={(e) =>
+                        updateOption(q.question_number, key, e.target.value)
+                      }
+                      className={`flex-1 border-2 rounded-xl text-sm ${fieldErrors[hk] ? 'border-[#E9424C]' : isCorrect ? 'border-[#22c55e] bg-[#22c55e]/5' : 'border-[#151313]'}`}
+                      placeholder={`Option ${key}`}
+                    />
+                  </div>
+                  <ErrMsg k={hk} />
+                </div>
+              )
+            })}
+            <ErrMsg k={`q${q.question_number}_correct`} />
+          </div>
+        )}
+        {selectedPart === 5 && (
+          <div className="space-y-2">
+            <Label className="text-xs font-black text-[#151313] uppercase tracking-widest">
+              Correct Answer
+            </Label>
+            <div className="flex gap-2 flex-wrap">
+              {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((key) => {
+                const isCorrect = q.correct_answer === key
+                return (
+                  <Button
+                    key={key}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => updateCorrectAnswer(q.question_number, key)}
+                    className={`w-9 h-9 p-0 rounded-full border-2 text-xs font-black ${isCorrect ? 'bg-[#22c55e] border-[#22c55e] text-white hover:bg-[#22c55e] hover:text-white' : 'border-[#151313] text-[#151313] hover:bg-[#151313] hover:text-white'}`}
+                  >
+                    {isCorrect ? <Check size={12} /> : key}
+                  </Button>
+                )
+              })}
+            </div>
+            <ErrMsg k={`q${q.question_number}_correct`} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
 export default function AdminReadingEditor() {
@@ -143,18 +240,375 @@ export default function AdminReadingEditor() {
   const { setNumber } = useParams()
   const [searchParams] = useSearchParams()
   const draftId = searchParams.get('draft')
-
+  const isMounted = useRef(true)
+  const isSaving = useRef(false)
+  const suppressUnsaved = useRef(false)
+  const draftLoaded = useRef(false)
+  const sessionDraftId = useRef(draftId || 'autosave_new_set')
   const [selectedPart, setSelectedPart] = useState(1)
-  const [passageData, setPassageData] = useState(null)
-  const [questions, setQuestions] = useState([])
+  const [allQuestions, setAllQuestions] = useState([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [year, setYear] = useState(new Date().getFullYear())
   const [editableSetNumber, setEditableSetNumber] = useState(setNumber || '')
   const [unsavedChanges, setUnsavedChanges] = useState(false)
   const [showExitDialog, setShowExitDialog] = useState(false)
+  const [setExistsError, setSetExistsError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [columnA, setColumnA] = useState('')
+  const [columnB, setColumnB] = useState('')
+  const [columnC, setColumnC] = useState('')
+  const [text1, setText1] = useState('')
+  const [text2, setText2] = useState('')
+  const [passageMap, setPassageMap] = useState({})
+  const [instructionMap, setInstructionMap] = useState({})
+  const [instruction4Text1, setInstruction4Text1] = useState('')
+  const [instruction4Text2, setInstruction4Text2] = useState('')
+  const [instruction4Both, setInstruction4Both] = useState('')
+  const [part5Options, setPart5Options] = useState({
+    A: '',
+    B: '',
+    C: '',
+    D: '',
+    E: '',
+    F: '',
+    G: '',
+  })
 
-  // Load existing set or draft
+  const passageText = passageMap[selectedPart] || ''
+  const setPassageText = (val) =>
+    setPassageMap((prev) => ({ ...prev, [selectedPart]: val }))
+  const instruction = instructionMap[selectedPart] || ''
+  const setInstruction = (val) =>
+    setInstructionMap((prev) => ({ ...prev, [selectedPart]: val }))
+
+  const currentPartQuestions = allQuestions
+    .filter((q) => q.part_number === selectedPart)
+    .sort((a, b) => a.question_number - b.question_number)
+
+  useEffect(() => {
+    isMounted.current = true
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  const moveQuestion = (idx, direction) => {
+    const partQs = [...currentPartQuestions]
+    const newIdx = idx + direction
+    if (newIdx < 0 || newIdx >= partQs.length) return
+    const temp = partQs[idx]
+    partQs[idx] = partQs[newIdx]
+    partQs[newIdx] = temp
+    const startQ = PART_CONFIG[selectedPart].startQ
+    partQs.forEach((q, i) => {
+      q.question_number = startQ + i
+    })
+    setAllQuestions((prev) => [
+      ...prev.filter((q) => q.part_number !== selectedPart),
+      ...partQs,
+    ])
+  }
+
+  useEffect(() => {
+    if (loading || setNumber || draftId || draftLoaded.current) return
+    if (currentPartQuestions.length === 0) {
+      const config = PART_CONFIG[selectedPart]
+      const defaultOptions =
+        selectedPart === 5
+          ? { ...PART5_OPTIONS }
+          : selectedPart >= 6
+            ? { A: '', B: '', C: '', D: '' }
+            : { A: '', B: '', C: '' }
+      setAllQuestions((prev) => [
+        ...prev,
+        ...Array.from({ length: config.questions }, (_, i) => ({
+          question_number: config.startQ + i,
+          question_text: '',
+          options: defaultOptions,
+          correct_answer: '',
+          part_number: selectedPart,
+          passage: null,
+        })),
+      ])
+    }
+  }, [selectedPart, loading])
+
+  useEffect(() => {
+    if (suppressUnsaved.current) return
+    setUnsavedChanges(true)
+  }, [
+    allQuestions,
+    passageMap,
+    instructionMap,
+    year,
+    editableSetNumber,
+    columnA,
+    columnB,
+    columnC,
+    text1,
+    text2,
+    instruction4Text1,
+    instruction4Text2,
+    instruction4Both,
+    part5Options,
+  ])
+
+  const autoSaveDraft = useCallback(() => {
+    if (setNumber || allQuestions.length === 0 || !isMounted.current) return
+    try {
+      localStorage.setItem(
+        `reading_draft_${sessionDraftId.current}`,
+        JSON.stringify({
+          allQuestions,
+          passageMap,
+          instructionMap,
+          columnA,
+          columnB,
+          columnC,
+          text1,
+          text2,
+          instruction4Text1,
+          instruction4Text2,
+          instruction4Both,
+          part5Options,
+          selectedPart,
+          year,
+          setNumber: editableSetNumber,
+          timestamp: Date.now(),
+        })
+      )
+    } catch {}
+  }, [
+    allQuestions,
+    passageMap,
+    instructionMap,
+    columnA,
+    columnB,
+    columnC,
+    text1,
+    text2,
+    instruction4Text1,
+    instruction4Text2,
+    instruction4Both,
+    part5Options,
+    selectedPart,
+    year,
+    editableSetNumber,
+    setNumber,
+  ])
+
+  useEffect(() => {
+    if (suppressUnsaved.current || setNumber) return
+    const timer = setTimeout(autoSaveDraft, 1500)
+    return () => clearTimeout(timer)
+  }, [autoSaveDraft])
+
+  useEffect(() => {
+    if (setNumber) return
+    const interval = setInterval(autoSaveDraft, 5000)
+    return () => clearInterval(interval)
+  }, [autoSaveDraft])
+
+  const loadPassageStateForPart = (partNumber, questions) => {
+    if (partNumber === 4) {
+      const { text1: t1, text2: t2 } = extractPart4Texts(questions)
+      setText1(t1)
+      setText2(t2)
+      const p4 = questions.filter((q) => q.part_number === 4)
+      const q1516 = p4.find((q) => q.question_number <= 16)
+      const q1718 = p4.find(
+        (q) => q.question_number >= 17 && q.question_number <= 18
+      )
+      const q1920 = p4.find((q) => q.question_number >= 19)
+      if (q1516?.passage_title) setInstruction4Text1(q1516.passage_title)
+      if (q1718?.passage_title) setInstruction4Text2(q1718.passage_title)
+      if (q1920?.passage_title) setInstruction4Both(q1920.passage_title)
+      return
+    }
+    const q = questions.find((q) => q.part_number === partNumber)
+    if (q?.passage_title)
+      setInstructionMap((prev) => ({ ...prev, [partNumber]: q.passage_title }))
+    if (!q?.passage) return
+    try {
+      const parsed = JSON.parse(q.passage)
+      if (parsed.type === 'three_column_table') {
+        setColumnA(extractColumnText(parsed.columns[0]))
+        setColumnB(extractColumnText(parsed.columns[1]))
+        setColumnC(extractColumnText(parsed.columns[2]))
+        return
+      }
+      if (parsed.type === 'gapped_text') {
+        setPassageMap((prev) => ({
+          ...prev,
+          [partNumber]: parsed.main_text || '',
+        }))
+        return
+      }
+      if (parsed.type === 'lined_text') {
+        setPassageMap((prev) => ({
+          ...prev,
+          [partNumber]:
+            parsed.paragraphs
+              ?.map((p) => `[Lines ${p.lines}] ${p.text}`)
+              .join('\n\n') || '',
+        }))
+        return
+      }
+    } catch {}
+    setPassageMap((prev) => ({ ...prev, [partNumber]: q.passage }))
+  }
+
+  const loadAllPassageStates = (questions) => {
+    const newPassageMap = {},
+      newInstructionMap = {}
+    let newColumnA = '',
+      newColumnB = '',
+      newColumnC = ''
+    let newText1 = '',
+      newText2 = ''
+    let newI4T1 = '',
+      newI4T2 = '',
+      newI4B = ''
+    let newPart5Options = { A: '', B: '', C: '', D: '', E: '', F: '', G: '' }
+
+    for (const part of [1, 2, 3, 4, 5, 6, 7]) {
+      if (part === 4) {
+        const { text1: t1, text2: t2 } = extractPart4Texts(questions)
+        newText1 = t1
+        newText2 = t2
+        const p4 = questions.filter((q) => q.part_number === 4)
+        const q1516 = p4.find((q) => q.question_number <= 16)
+        const q1718 = p4.find(
+          (q) => q.question_number >= 17 && q.question_number <= 18
+        )
+        const q1920 = p4.find((q) => q.question_number >= 19)
+        if (q1516?.passage_title) newI4T1 = q1516.passage_title
+        if (q1718?.passage_title) newI4T2 = q1718.passage_title
+        if (q1920?.passage_title) newI4B = q1920.passage_title
+        continue
+      }
+      if (part === 5) {
+        const p5q = questions.find((q) => q.part_number === 5)
+        if (p5q?.options) newPart5Options = { ...PART5_OPTIONS, ...p5q.options }
+        if (p5q?.passage_title) newInstructionMap[5] = p5q.passage_title
+        if (p5q?.passage) newPassageMap[5] = p5q.passage
+        continue
+      }
+      const q = questions.find((q) => q.part_number === part)
+      if (!q) continue
+      if (q.passage_title) newInstructionMap[part] = q.passage_title
+      if (!q.passage) continue
+      try {
+        const parsed = JSON.parse(q.passage)
+        if (parsed.type === 'three_column_table') {
+          newColumnA = extractColumnText(parsed.columns[0])
+          newColumnB = extractColumnText(parsed.columns[1])
+          newColumnC = extractColumnText(parsed.columns[2])
+        } else if (parsed.type === 'gapped_text') {
+          newPassageMap[part] = parsed.main_text || ''
+        } else if (parsed.type === 'lined_text') {
+          newPassageMap[part] =
+            parsed.paragraphs
+              ?.map((p) => `[Lines ${p.lines}] ${p.text}`)
+              .join('\n\n') || ''
+        } else {
+          newPassageMap[part] = q.passage
+        }
+      } catch {
+        newPassageMap[part] = q.passage
+      }
+    }
+
+    setPassageMap(newPassageMap)
+    setInstructionMap(newInstructionMap)
+    setColumnA(newColumnA)
+    setColumnB(newColumnB)
+    setColumnC(newColumnC)
+    setText1(newText1)
+    setText2(newText2)
+    setInstruction4Text1(newI4T1)
+    setInstruction4Text2(newI4T2)
+    setInstruction4Both(newI4B)
+    setPart5Options(newPart5Options)
+  }
+
+  const loadSet = async (setNum) => {
+    if (!isMounted.current) return
+
+    setLoading(true)
+    suppressUnsaved.current = true
+    try {
+      const res = await api.get(`/reading/sets/${setNum}`)
+      if (!isMounted.current) return
+
+      const questions = res.data.questions
+      if (questions.length > 0) {
+        setYear(questions[0].year || new Date().getFullYear())
+        setEditableSetNumber(setNum)
+        const mapped = questions.map((q) => ({
+          id: q.id,
+          question_number: q.question_number,
+          question_text: q.question_text,
+          options: q.options,
+          correct_answer: q.correct_answer
+            ? String(q.correct_answer).trim()
+            : '',
+          part_number: q.part_number,
+          passage: q.passage,
+          passage_title: q.passage_title,
+        }))
+        setAllQuestions(mapped)
+        loadAllPassageStates(mapped)
+      }
+    } catch {
+      if (isMounted.current) toast.error('Failed to load set')
+    } finally {
+      if (isMounted.current) {
+        setLoading(false)
+        setUnsavedChanges(false)
+      }
+      setTimeout(() => {
+        if (isMounted.current) suppressUnsaved.current = false
+      }, 100)
+    }
+  }
+
+  const loadDraft = (id) => {
+    try {
+      const draft = JSON.parse(localStorage.getItem(`reading_draft_${id}`))
+      if (!draft || !isMounted.current) return
+
+      draftLoaded.current = true
+      setAllQuestions(draft.allQuestions || [])
+      setPassageMap(draft.passageMap || {})
+      setInstructionMap(draft.instructionMap || {})
+      setColumnA(draft.columnA || '')
+      setColumnB(draft.columnB || '')
+      setColumnC(draft.columnC || '')
+      setText1(draft.text1 || '')
+      setText2(draft.text2 || '')
+      setInstruction4Text1(draft.instruction4Text1 || '')
+      setInstruction4Text2(draft.instruction4Text2 || '')
+      setInstruction4Both(draft.instruction4Both || '')
+      setPart5Options(
+        draft.part5Options || {
+          A: '',
+          B: '',
+          C: '',
+          D: '',
+          E: '',
+          F: '',
+          G: '',
+        }
+      )
+      setSelectedPart(draft.selectedPart || 1)
+      setYear(draft.year || new Date().getFullYear())
+      setEditableSetNumber(draft.setNumber || '')
+      setUnsavedChanges(false)
+    } catch {}
+  }
+
   useEffect(() => {
     if (setNumber) {
       loadSet(setNumber)
@@ -162,407 +616,535 @@ export default function AdminReadingEditor() {
     } else if (draftId) {
       loadDraft(draftId)
     } else {
-      // New set - initialize with Part 1
-      setPassageData(PART_CONFIG[1].template || null)
-      setQuestions(generateQuestionsForPart(1))
+      const existing = localStorage.getItem(
+        `reading_draft_${sessionDraftId.current}`
+      )
+      if (existing) loadDraft(sessionDraftId.current)
     }
   }, [setNumber, draftId])
 
-  // Track unsaved changes
-  useEffect(() => {
-    setUnsavedChanges(true)
-  }, [passageData, questions, year, editableSetNumber])
-
-  const loadSet = async (setNum) => {
-    setLoading(true)
-    try {
-      const res = await api.get(`/reading/sets/${setNum}`)
-      const questions = res.data.questions
-
-      if (questions.length > 0) {
-        const firstQ = questions[0]
-        setYear(firstQ.year || new Date().getFullYear())
-
-        if (firstQ.passage) {
-          try {
-            setPassageData(JSON.parse(firstQ.passage))
-          } catch {
-            setPassageData({ type: 'plain', text: firstQ.passage })
-          }
-        }
-
-        // Group questions by part
-        const sorted = questions.sort((a, b) => a.part_number - b.part_number)
-        setQuestions(
-          sorted.map((q) => ({
-            id: q.id,
-            question_number: q.question_number,
-            question_text: q.question_text,
-            options: q.options,
-            correct_answer: q.correct_answer,
-            part_number: q.part_number,
-          }))
-        )
-
-        // Set to first part
-        setSelectedPart(sorted[0]?.part_number || 1)
-      }
-    } catch (error) {
-      toast.error('Failed to load set')
-    } finally {
-      setLoading(false)
-      setUnsavedChanges(false)
-    }
+  const updateQuestion = (questionNumber, field, value) => {
+    setAllQuestions((prev) =>
+      prev.map((q) =>
+        q.part_number === selectedPart && q.question_number === questionNumber
+          ? { ...q, [field]: value }
+          : q
+      )
+    )
+    setFieldErrors((prev) => {
+      const next = { ...prev }
+      delete next[`q${questionNumber}_${field}`]
+      return next
+    })
   }
 
-  const loadDraft = (id) => {
-    try {
-      const draft = JSON.parse(localStorage.getItem(`reading_draft_${id}`))
-      if (draft) {
-        setPassageData(draft.passageData)
-        setQuestions(draft.questions)
-        setSelectedPart(draft.selectedPart || 1)
-        setYear(draft.year || new Date().getFullYear())
-        setEditableSetNumber(draft.setNumber || '')
-        toast.info('Draft loaded')
-        setUnsavedChanges(false)
-      }
-    } catch (error) {
-      toast.error('Failed to load draft')
-    }
+  const updateOption = (questionNumber, optKey, value) => {
+    setAllQuestions((prev) =>
+      prev.map((q) =>
+        q.part_number === selectedPart && q.question_number === questionNumber
+          ? { ...q, options: { ...q.options, [optKey]: value } }
+          : q
+      )
+    )
   }
 
-  const generateQuestionsForPart = (part) => {
-    const config = PART_CONFIG[part]
-    const qs = []
-    for (let i = 1; i <= config.questions; i++) {
-      qs.push({
-        ...QUESTION_TEMPLATE,
-        question_number: i,
-        part_number: part,
-        options:
-          part >= 5 ? { A: '', B: '', C: '', D: '' } : { A: '', B: '', C: '' },
-      })
-    }
-    return qs
-  }
-
-  const handlePartChange = (part) => {
-    const newPart = parseInt(part)
-    setSelectedPart(newPart)
-
-    // Check if we already have questions for this part
-    const existingQs = questions.filter((q) => q.part_number === newPart)
-    if (existingQs.length > 0) {
-      setQuestions(existingQs)
-    } else {
-      setQuestions(generateQuestionsForPart(newPart))
-    }
-
-    // Load template for this part if no passage data
-    if (!passageData) {
-      setPassageData(PART_CONFIG[newPart].template || null)
-    }
-  }
-
-  const updateQuestion = (index, field, value) => {
-    const updated = [...questions]
-    updated[index][field] = value
-    setQuestions(updated)
-  }
-
-  const updateOption = (qIndex, optKey, value) => {
-    const updated = [...questions]
-    updated[qIndex].options = { ...updated[qIndex].options, [optKey]: value }
-    setQuestions(updated)
+  const updateCorrectAnswer = (questionNumber, value) => {
+    setAllQuestions((prev) =>
+      prev.map((q) =>
+        q.part_number === selectedPart && q.question_number === questionNumber
+          ? { ...q, correct_answer: value }
+          : q
+      )
+    )
   }
 
   const addQuestion = () => {
-    const newQ = {
-      ...QUESTION_TEMPLATE,
-      question_number: questions.length + 1,
-      part_number: selectedPart,
-      options:
-        selectedPart >= 5
-          ? { A: '', B: '', C: '', D: '' }
-          : { A: '', B: '', C: '' },
-    }
-    setQuestions([...questions, newQ])
-  }
-
-  const removeQuestion = (index) => {
-    const updated = questions.filter((_, i) => i !== index)
-    // Renumber questions
-    updated.forEach((q, i) => {
-      q.question_number = i + 1
-    })
-    setQuestions(updated)
-  }
-
-  const updatePassageField = (path, value) => {
-    if (!passageData) return
-
-    if (passageData.type === 'plain') {
-      setPassageData({ type: 'plain', text: value })
+    const config = PART_CONFIG[selectedPart]
+    if (currentPartQuestions.length >= config.questions) {
+      toast.error(
+        `Cannot add more than ${config.questions} questions for Part ${selectedPart}`
+      )
       return
     }
-
-    const updated = { ...passageData }
-    const parts = path.split('.')
-    let current = updated
-    for (let i = 0; i < parts.length - 1; i++) {
-      current = current[parts[i]]
-    }
-    current[parts[parts.length - 1]] = value
-    setPassageData(updated)
+    const defaultOptions =
+      selectedPart === 5
+        ? { ...PART5_OPTIONS }
+        : selectedPart >= 6
+          ? { A: '', B: '', C: '', D: '' }
+          : { A: '', B: '', C: '' }
+    setAllQuestions((prev) => [
+      ...prev,
+      {
+        question_number: config.startQ + currentPartQuestions.length,
+        question_text: '',
+        options: defaultOptions,
+        correct_answer: '',
+        part_number: selectedPart,
+        passage: null,
+      },
+    ])
   }
+
+  const removeQuestion = (questionNumber) => {
+    const remaining = allQuestions.filter(
+      (q) =>
+        !(
+          q.part_number === selectedPart && q.question_number === questionNumber
+        )
+    )
+    const startQ = PART_CONFIG[selectedPart].startQ
+    remaining
+      .filter((q) => q.part_number === selectedPart)
+      .sort((a, b) => a.question_number - b.question_number)
+      .forEach((q, i) => {
+        q.question_number = startQ + i
+      })
+    setAllQuestions(remaining)
+  }
+
+  const validateBeforeSave = () => {
+    const errors = {}
+    if (!editableSetNumber?.toString().trim())
+      errors.setNumber = 'Set number is required'
+    if (!year?.toString().trim()) errors.year = 'Year is required'
+    ;[1, 2, 3, 5, 6, 7].forEach((part) => {
+      if (!instructionMap[part]?.trim())
+        errors[`instruction_${part}`] =
+          `Instruction for Part ${part} is required`
+    })
+    if (!instruction4Text1?.trim())
+      errors.instruction4Text1 = 'Part 4 Text 1 instruction is required'
+    if (!instruction4Text2?.trim())
+      errors.instruction4Text2 = 'Part 4 Text 2 instruction is required'
+    if (!instruction4Both?.trim())
+      errors.instruction4Both = 'Part 4 both texts instruction is required'
+    if (!columnA?.trim()) errors.columnA = 'Notice A is required'
+    if (!columnB?.trim()) errors.columnB = 'Notice B is required'
+    if (!columnC?.trim()) errors.columnC = 'Notice C is required'
+    if (!text1?.trim()) errors.text1 = 'Text 1 is required'
+    if (!text2?.trim()) errors.text2 = 'Text 2 is required'
+    ;[2, 3, 5, 6, 7].forEach((part) => {
+      if (!passageMap[part]?.trim())
+        errors[`passage_${part}`] = `Passage text for Part ${part} is required`
+    })
+    if (selectedPart === 5) {
+      Object.entries(part5Options).forEach(([key, val]) => {
+        if (!val?.trim())
+          errors[`part5_opt_${key}`] = `Option ${key} is required`
+      })
+    }
+    allQuestions.forEach((q) => {
+      if (!q.question_text?.trim())
+        errors[`q${q.question_number}_text`] =
+          `Question ${q.question_number} text is required`
+      if (q.part_number !== 5) {
+        Object.entries(q.options).forEach(([key, val]) => {
+          if (!val?.trim())
+            errors[`q${q.question_number}_opt_${key}`] =
+              `Option ${key} for Q${q.question_number} is required`
+        })
+      }
+      if (!q.correct_answer?.trim())
+        errors[`q${q.question_number}_correct`] =
+          `Select correct answer for Q${q.question_number}`
+    })
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  useEffect(() => {
+    const check = async () => {
+      if (!editableSetNumber || !year) {
+        setSetExistsError('')
+        return
+      }
+      if (setNumber && editableSetNumber === setNumber) {
+        setSetExistsError('')
+        return
+      }
+      try {
+        const res = await api.get('/reading/sets')
+        const exists = res.data.sets?.some(
+          (s) =>
+            s.set_number === parseInt(editableSetNumber) &&
+            s.year === parseInt(year)
+        )
+        setSetExistsError(
+          exists ? `Set ${editableSetNumber} (${year}) already exists` : ''
+        )
+      } catch {}
+    }
+    check()
+  }, [editableSetNumber, year, setNumber])
 
   const saveSet = async () => {
+    if (isSaving.current) return
+    if (!validateBeforeSave()) {
+      toast.error('Please fix all errors before saving')
+      return
+    }
+    if (setExistsError) return
+
+    isSaving.current = true
     setSaving(true)
     try {
-      // Use editable set number or generate new one
       let targetSetNumber = editableSetNumber
       if (!targetSetNumber) {
-        const setsRes = await api.get('/reading/sets')
-        const maxSet = Math.max(
-          ...setsRes.data.sets.map((s) => s.set_number),
-          0
-        )
-        targetSetNumber = (maxSet + 1).toString()
+        const res = await api.get('/reading/sets')
+        targetSetNumber = (
+          Math.max(...(res.data.sets?.map((s) => s.set_number) || [0]), 0) + 1
+        ).toString()
       }
-
-      // Save each question
-      for (const q of questions) {
-        const questionData = {
+      for (const q of allQuestions) {
+        const part = q.part_number
+        let passage, passage_title
+        if (part === 4) {
+          const t1Json = JSON.stringify({
+            type: 'numbered_paragraphs',
+            label: 'Text 1',
+            paragraphs: parseTextToParagraphs(text1),
+          })
+          const t2Json = JSON.stringify({
+            type: 'numbered_paragraphs',
+            label: 'Text 2',
+            paragraphs: parseTextToParagraphs(text2),
+          })
+          const bothJson = JSON.stringify({
+            type: 'two_texts',
+            texts: [
+              { label: 'Text 1', paragraphs: parseTextToParagraphs(text1) },
+              { label: 'Text 2', paragraphs: parseTextToParagraphs(text2) },
+            ],
+          })
+          if (q.question_number <= 16) {
+            passage = t1Json
+            passage_title = instruction4Text1
+          } else if (q.question_number <= 18) {
+            passage = t2Json
+            passage_title = instruction4Text2
+          } else {
+            passage = bothJson
+            passage_title = instruction4Both
+          }
+        } else if (part === 1) {
+          passage = JSON.stringify({
+            type: 'three_column_table',
+            columns: [
+              buildColumnFromText(columnA, 'A'),
+              buildColumnFromText(columnB, 'B'),
+              buildColumnFromText(columnC, 'C'),
+            ],
+          })
+          passage_title = instructionMap[1] || ''
+        } else {
+          passage = passageMap[part] || ''
+          passage_title = instructionMap[part] || ''
+        }
+        const finalOptions = part === 5 ? { ...part5Options } : q.options
+        const payload = {
           component: 'reading',
           set_number: parseInt(targetSetNumber),
-          part_number: selectedPart,
+          part_number: part,
           question_number: q.question_number,
           question_text: q.question_text,
-          options: q.options,
+          options: finalOptions,
           correct_answer: q.correct_answer,
-          passage:
-            passageData?.type === 'plain'
-              ? passageData.text
-              : JSON.stringify(passageData),
-          passage_title: `Part ${selectedPart} - ${PART_CONFIG[selectedPart].name}`,
-          year,
+          passage,
+          passage_title,
+          year: parseInt(year),
         }
-
-        if (q.id) {
-          await api.put(`/admin/questions/${q.id}`, questionData)
-        } else {
-          await api.post('/admin/questions', questionData)
-        }
+        if (q.id) await api.put(`/admin/questions/${q.id}`, payload)
+        else await api.post('/admin/questions', payload)
       }
-
-      // Clear draft if this was a draft
-      if (draftId) {
-        localStorage.removeItem(`reading_draft_${draftId}`)
+      if (isMounted.current) {
+        localStorage.removeItem(`reading_draft_${sessionDraftId.current}`)
+        toast.success(`Set ${targetSetNumber} saved successfully!`)
+        navigate('/admin/reading')
       }
-
-      toast.success(`Set ${targetSetNumber} saved successfully!`)
-      navigate('/admin/reading')
-    } catch (error) {
-      toast.error('Failed to save set')
+    } catch {
+      if (isMounted.current) toast.error('Failed to save set')
     } finally {
-      setSaving(false)
+      if (isMounted.current) setSaving(false)
+      isSaving.current = false
     }
   }
 
-  const handleBack = () => {
-    if (unsavedChanges) {
-      setShowExitDialog(true)
-    } else {
-      navigate('/admin/reading')
-    }
-  }
+  const errKey = (key) =>
+    fieldErrors[key] ? 'border-[#E9424C]' : 'border-[#151313]'
+  const labelErr = (key) =>
+    fieldErrors[key] ? 'text-[#E9424C]' : 'text-[#151313]'
+  const ErrMsg = ({ k }) =>
+    fieldErrors[k] ? (
+      <p className="text-[10px] text-[#E9424C] font-medium">{fieldErrors[k]}</p>
+    ) : null
 
   const renderPassageEditor = () => {
-    const config = PART_CONFIG[selectedPart]
-
-    if (config.passageType === 'plain') {
+    if (selectedPart === 1)
       return (
-        <div className="space-y-4">
-          <Label>Passage Text</Label>
-          <Textarea
-            value={passageData?.text || ''}
-            onChange={(e) =>
-              setPassageData({ type: 'plain', text: e.target.value })
-            }
-            rows={10}
-            className="font-mono text-sm border-2 border-[#151313] rounded-xl focus-visible:border-[#E9424C]"
-            placeholder="Paste the passage here..."
-          />
-        </div>
-      )
-    }
-
-    if (config.passageType === 'three_column_table') {
-      const data = passageData || config.template
-      return (
-        <div className="space-y-6">
-          <p className="text-sm font-medium text-[#151313]/60">
-            Three notices (A, B, C)
-          </p>
-          <div className="grid grid-cols-3 gap-4">
-            {['A', 'B', 'C'].map((label, idx) => (
-              <div
-                key={label}
-                className="bg-white border-2 border-[#151313] rounded-2xl p-4"
-              >
-                <h3 className="text-sm font-black text-[#151313] mb-3">
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <Label
+              className={`text-xs font-black uppercase tracking-widest ${labelErr('instruction_1')}`}
+            >
+              Instruction Text
+            </Label>
+            <Input
+              value={instructionMap[1] || ''}
+              onChange={(e) => {
+                setInstructionMap((p) => ({ ...p, 1: e.target.value }))
+                setFieldErrors((p) => {
+                  const n = { ...p }
+                  delete n.instruction_1
+                  return n
+                })
+              }}
+              className={`border-2 rounded-xl text-sm ${errKey('instruction_1')}`}
+              placeholder="e.g. Read three short texts about..."
+            />
+            <ErrMsg k="instruction_1" />
+          </div>
+          <Separator className="bg-[#151313]/10" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { label: 'A', value: columnA, setter: setColumnA, ek: 'columnA' },
+              { label: 'B', value: columnB, setter: setColumnB, ek: 'columnB' },
+              { label: 'C', value: columnC, setter: setColumnC, ek: 'columnC' },
+            ].map(({ label, value, setter, ek }) => (
+              <div key={label} className="space-y-2">
+                <Label
+                  className={`text-xs font-black uppercase tracking-widest ${labelErr(ek)}`}
+                >
                   Notice {label}
-                </h3>
-                <div className="space-y-2">
-                  <Input
-                    value={data.columns?.[idx]?.title || ''}
-                    onChange={(e) =>
-                      updatePassageField(`columns.${idx}.title`, e.target.value)
-                    }
-                    className="border-2 border-[#151313] rounded-xl"
-                    placeholder="Title"
-                  />
-                  <Textarea
-                    value={data.columns?.[idx]?.body || ''}
-                    onChange={(e) =>
-                      updatePassageField(`columns.${idx}.body`, e.target.value)
-                    }
-                    rows={3}
-                    className="border-2 border-[#151313] rounded-xl"
-                    placeholder="Body"
-                  />
-                  <Textarea
-                    value={data.columns?.[idx]?.details || ''}
-                    onChange={(e) =>
-                      updatePassageField(
-                        `columns.${idx}.details`,
-                        e.target.value
-                      )
-                    }
-                    rows={2}
-                    className="border-2 border-[#151313] rounded-xl"
-                    placeholder="Details"
-                  />
-                  <Input
-                    value={data.columns?.[idx]?.footer || ''}
-                    onChange={(e) =>
-                      updatePassageField(
-                        `columns.${idx}.footer`,
-                        e.target.value
-                      )
-                    }
-                    className="border-2 border-[#151313] rounded-xl"
-                    placeholder="Footer"
-                  />
-                </div>
+                </Label>
+                <Textarea
+                  value={value}
+                  onChange={(e) => {
+                    setter(e.target.value)
+                    setFieldErrors((p) => {
+                      const n = { ...p }
+                      delete n[ek]
+                      return n
+                    })
+                  }}
+                  rows={12}
+                  className={`font-mono text-sm border-2 rounded-xl ${errKey(ek)} focus-visible:border-[#E9424C]`}
+                  placeholder={`Paste Notice ${label} here, e.g.:\nGo Clean\nThe Education Dept is going to have a project...\nDate : 23 October 2021\nTime : 9 a.m. – 11 a.m.\nPlace : Library\nHelp us to think clean and go green!`}
+                />
+                <ErrMsg k={ek} />
               </div>
             ))}
           </div>
         </div>
       )
-    }
 
-    if (config.passageType === 'gapped_text') {
-      const data = passageData || config.template
+    if (selectedPart === 4)
       return (
         <div className="space-y-6">
-          <div>
-            <Label>Main Text (use 01___, 02___, etc. for gaps)</Label>
-            <Textarea
-              value={data.main_text || ''}
-              onChange={(e) => updatePassageField('main_text', e.target.value)}
-              rows={8}
-              className="font-mono text-sm border-2 border-[#151313] rounded-xl"
+          <div className="space-y-2">
+            <Label
+              className={`text-xs font-black uppercase tracking-widest ${labelErr('instruction4Text1')}`}
+            >
+              Text 1 Instruction
+            </Label>
+            <Input
+              value={instruction4Text1}
+              onChange={(e) => {
+                setInstruction4Text1(e.target.value)
+                setFieldErrors((p) => {
+                  const n = { ...p }
+                  delete n.instruction4Text1
+                  return n
+                })
+              }}
+              className={`border-2 rounded-xl text-sm ${errKey('instruction4Text1')}`}
+              placeholder="e.g. Read two texts about..."
             />
+            <ErrMsg k="instruction4Text1" />
           </div>
-          <div>
-            <Label>Sentences A-G</Label>
-            <div className="grid grid-cols-1 gap-2">
-              {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((key) => (
-                <div key={key} className="flex items-center gap-2">
-                  <span className="font-black w-6">{key}.</span>
-                  <Input
-                    value={
-                      data.sentences?.find((s) => s.key === key)?.text || ''
-                    }
-                    onChange={(e) => {
-                      const sentences = [...(data.sentences || [])]
-                      const idx = sentences.findIndex((s) => s.key === key)
-                      if (idx >= 0) {
-                        sentences[idx].text = e.target.value
-                      } else {
-                        sentences.push({ key, text: e.target.value })
-                      }
-                      updatePassageField('sentences', sentences)
-                    }}
-                    className="border-2 border-[#151313] rounded-xl"
-                    placeholder={`Sentence ${key}`}
-                  />
+          <div className="space-y-2">
+            <Label className="text-xs font-black uppercase tracking-widest text-[#151313]">
+              Text 1
+            </Label>
+            <Textarea
+              value={text1}
+              onChange={(e) => {
+                setText1(e.target.value)
+                setFieldErrors((p) => {
+                  const n = { ...p }
+                  delete n.text1
+                  return n
+                })
+              }}
+              rows={12}
+              className={`font-mono text-sm border-2 rounded-xl ${errKey('text1')} focus-visible:border-[#E9424C]`}
+              placeholder="Text 1 paragraphs..."
+            />
+            <ErrMsg k="text1" />
+          </div>
+          <Separator className="bg-[#151313]/10" />
+          <div className="space-y-2">
+            <Label
+              className={`text-xs font-black uppercase tracking-widest ${labelErr('instruction4Text2')}`}
+            >
+              Text 2 Instruction
+            </Label>
+            <Input
+              value={instruction4Text2}
+              onChange={(e) => {
+                setInstruction4Text2(e.target.value)
+                setFieldErrors((p) => {
+                  const n = { ...p }
+                  delete n.instruction4Text2
+                  return n
+                })
+              }}
+              className={`border-2 rounded-xl text-sm ${errKey('instruction4Text2')}`}
+              placeholder="e.g. Read two texts about..."
+            />
+            <ErrMsg k="instruction4Text2" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-black uppercase tracking-widest text-[#151313]">
+              Text 2
+            </Label>
+            <Textarea
+              value={text2}
+              onChange={(e) => {
+                setText2(e.target.value)
+                setFieldErrors((p) => {
+                  const n = { ...p }
+                  delete n.text2
+                  return n
+                })
+              }}
+              rows={12}
+              className={`font-mono text-sm border-2 rounded-xl ${errKey('text2')} focus-visible:border-[#E9424C]`}
+              placeholder="Text 2 paragraphs..."
+            />
+            <ErrMsg k="text2" />
+          </div>
+          <Separator className="bg-[#151313]/10" />
+          <div className="space-y-2">
+            <Label
+              className={`text-xs font-black uppercase tracking-widest ${labelErr('instruction4Both')}`}
+            >
+              Both Texts Instruction (Q19–20)
+            </Label>
+            <Input
+              value={instruction4Both}
+              onChange={(e) => {
+                setInstruction4Both(e.target.value)
+                setFieldErrors((p) => {
+                  const n = { ...p }
+                  delete n.instruction4Both
+                  return n
+                })
+              }}
+              className={`border-2 rounded-xl text-sm ${errKey('instruction4Both')}`}
+              placeholder="e.g. Read two texts about..."
+            />
+            <ErrMsg k="instruction4Both" />
+          </div>
+        </div>
+      )
+
+    const ek = `passage_${selectedPart}`
+    const ik = `instruction_${selectedPart}`
+    return (
+      <div className="space-y-5">
+        <div className="space-y-2">
+          <Label
+            className={`text-xs font-black uppercase tracking-widest ${labelErr(ik)}`}
+          >
+            Instruction Text
+          </Label>
+          <Input
+            value={instruction}
+            onChange={(e) => {
+              setInstruction(e.target.value)
+              setFieldErrors((p) => {
+                const n = { ...p }
+                delete n[ik]
+                return n
+              })
+            }}
+            className={`border-2 rounded-xl text-sm ${errKey(ik)}`}
+            placeholder="e.g. Read a text about..."
+          />
+          <ErrMsg k={ik} />
+        </div>
+        <Separator className="bg-[#151313]/10" />
+        <div className="space-y-2">
+          <Label
+            className={`text-xs font-black uppercase tracking-widest ${labelErr(ek)}`}
+          >
+            Passage Text
+          </Label>
+          <Textarea
+            value={passageText}
+            onChange={(e) => {
+              setPassageText(e.target.value)
+              setFieldErrors((p) => {
+                const n = { ...p }
+                delete n[ek]
+                return n
+              })
+            }}
+            rows={12}
+            className={`font-mono text-sm border-2 rounded-xl ${errKey(ek)} focus-visible:border-[#E9424C]`}
+            placeholder="Paste the passage here..."
+          />
+          <ErrMsg k={ek} />
+        </div>
+        {selectedPart === 5 && (
+          <>
+            <Separator className="bg-[#151313]/10" />
+            <div className="space-y-3">
+              <Label className="text-xs font-black uppercase tracking-widest text-[#151313]">
+                Sentences A to G
+              </Label>
+              <p className="text-[10px] text-[#151313]/50 font-medium">
+                These 7 options apply to all 6 questions in Part 5. One will be
+                the extra sentence students do not need to use.
+              </p>
+              {Object.keys(part5Options).map((key) => (
+                <div key={key} className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-[#151313] w-4 shrink-0">
+                      {key}
+                    </span>
+                    <Input
+                      value={part5Options[key]}
+                      onChange={(e) => {
+                        setPart5Options((p) => ({
+                          ...p,
+                          [key]: e.target.value,
+                        }))
+                        setFieldErrors((p) => {
+                          const n = { ...p }
+                          delete n[`part5_opt_${key}`]
+                          return n
+                        })
+                      }}
+                      className={`flex-1 border-2 rounded-xl text-sm ${fieldErrors[`part5_opt_${key}`] ? 'border-[#E9424C]' : 'border-[#151313]'}`}
+                      placeholder={`Sentence ${key}`}
+                    />
+                  </div>
+                  <ErrMsg k={`part5_opt_${key}`} />
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (
-      config.passageType === 'lined_text' ||
-      config.passageType === 'two_texts'
-    ) {
-      const data = passageData || config.template
-      return (
-        <div className="space-y-4">
-          {config.passageType === 'lined_text' && (
-            <p className="text-sm font-medium text-[#151313]/60">
-              Paragraphs with line numbers
-            </p>
-          )}
-          {data.paragraphs?.map((para, idx) => (
-            <div key={idx} className="flex gap-2 items-start">
-              <div className="w-16">
-                <Input
-                  value={para.lines || ''}
-                  onChange={(e) =>
-                    updatePassageField(
-                      `paragraphs.${idx}.lines`,
-                      e.target.value
-                    )
-                  }
-                  placeholder="1-9"
-                  className="border-2 border-[#151313] rounded-xl text-xs"
-                />
-              </div>
-              <Textarea
-                value={para.text || ''}
-                onChange={(e) =>
-                  updatePassageField(`paragraphs.${idx}.text`, e.target.value)
-                }
-                rows={2}
-                className="flex-1 border-2 border-[#151313] rounded-xl text-sm"
-                placeholder={`Paragraph ${para.number || idx + 1}`}
-              />
-            </div>
-          ))}
-        </div>
-      )
-    }
-
-    return null
+          </>
+        )}
+      </div>
+    )
   }
 
-  if (loading) {
+  if (loading)
     return (
       <div className="min-h-screen bg-[#f7f7f5]">
         <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-8 py-3">
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-8 rounded-full border-2 border-[#151313] bg-gray-200 animate-pulse" />
-            <div className="flex-1">
-              <div className="h-4 w-48 bg-gray-200 animate-pulse mb-1" />
-              <div className="h-3 w-24 bg-gray-200 animate-pulse" />
-            </div>
-          </div>
+          <div className="w-8 h-8 rounded-full border-2 border-[#151313] bg-gray-200 animate-pulse" />
         </div>
         <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-10">
           {[1, 2, 3].map((i) => (
@@ -571,200 +1153,229 @@ export default function AdminReadingEditor() {
         </div>
       </div>
     )
-  }
 
   return (
-    <div className="min-h-screen bg-[#f7f7f5]">
-      <ExitWarningDialog
-        open={showExitDialog}
-        onOpenChange={setShowExitDialog}
-        onConfirm={() => navigate('/admin/reading')}
-        onCancel={() => setShowExitDialog(false)}
-        title="Unsaved Changes"
-        description="You have unsaved changes. If you leave now, your progress will be lost."
-        cancelText="Stay"
-        confirmText="Leave"
-      />
+    <TooltipProvider>
+      <div className="min-h-screen bg-[#f7f7f5]">
+        <ExitWarningDialog
+          open={showExitDialog}
+          onOpenChange={setShowExitDialog}
+          onConfirm={() => navigate('/admin/reading')}
+          onCancel={() => setShowExitDialog(false)}
+          title="Unsaved Changes"
+          description="You have unsaved changes. If you leave now, your progress will be lost."
+          cancelText="Stay"
+          confirmText="Leave"
+        />
 
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-8 py-3 flex items-center gap-4">
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="sticky top-0 z-50 bg-[#f7f7f5] border-b-2 border-[#151313] px-4 md:px-8 py-3 flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
             size="icon"
-            onClick={handleBack}
-            className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors"
+            onClick={() =>
+              unsavedChanges
+                ? setShowExitDialog(true)
+                : navigate('/admin/reading')
+            }
+            className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors shrink-0"
           >
             <ChevronLeft size={16} />
           </Button>
-        </div>
+          <p className="text-[10px] font-semibold text-[#151313]/40 flex-1 min-w-[200px]">
+            Editing Set {editableSetNumber || 'New'} • Part {selectedPart}
+          </p>
+          <div className="flex items-center gap-3 ml-auto flex-wrap">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 bg-white border-2 border-[#151313] rounded-xl px-3 py-1.5">
+                  <span className="text-xs font-black text-[#151313]/60">
+                    Duration:
+                  </span>
+                  <span className="text-xs font-black text-[#151313]">
+                    75 min
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reading test duration is fixed at 75 minutes</p>
+              </TooltipContent>
+            </Tooltip>
 
-        <div className="flex items-center gap-3 ml-auto">
-          <div className="flex items-center gap-2">
-            <Label className="text-xs font-black text-[#151313]">Set</Label>
-            <Input
-              type="number"
-              value={editableSetNumber}
-              onChange={(e) => setEditableSetNumber(e.target.value)}
-              className="w-20 border-2 border-[#151313] rounded-xl text-xs font-black h-8"
-              placeholder="Set #"
-              min="1"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs font-black text-[#151313]">Year</Label>
-            <Input
-              type="number"
-              value={year}
-              onChange={(e) => setYear(parseInt(e.target.value))}
-              className="w-20 border-2 border-[#151313] rounded-xl text-xs font-black h-8"
-              placeholder="Year"
-            />
-          </div>
-          <Button
-            onClick={saveSet}
-            disabled={saving}
-            className="bg-[#E9424C] text-white font-black text-xs border-2 border-[#151313] rounded-xl px-4 py-2 shadow-[2px_2px_0px_#151313] shrink-0 disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Part Tabs */}
-      <div className="max-w-3xl mx-auto px-4 md:px-6 pt-6">
-        <Tabs value={selectedPart.toString()} onValueChange={handlePartChange}>
-          <TabsList className="bg-white border-2 border-[#151313] rounded-xl shadow-[2px_2px_0px_#151313] h-auto p-1 w-auto mb-6">
-            {[1, 2, 3, 4, 5, 6, 7].map((p) => (
-              <TabsTrigger
-                key={p}
-                value={p.toString()}
-                className="text-[10px] font-black rounded-lg px-3 py-1.5 data-[state=active]:bg-[#151313] data-[state=active]:text-white data-[state=active]:shadow-[2px_2px_0px_#E9424C] transition-all"
+            <div className="flex items-center gap-2">
+              <Label
+                className={`text-xs font-black whitespace-nowrap ${labelErr('setNumber')}`}
               >
-                Part {p}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <TabsContent value={selectedPart.toString()} className="space-y-6">
-            <>
-              {/* Passage Editor */}
-              <div className="bg-white border-2 border-[#151313] rounded-2xl p-5 shadow-[3px_3px_0px_#151313]">
-                <h3 className="text-xs font-black text-[#151313] uppercase tracking-widest mb-4">
-                  Passage
-                </h3>
-                {renderPassageEditor()}
+                Set
+              </Label>
+              <div className="relative">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={editableSetNumber}
+                  onChange={(e) => {
+                    setEditableSetNumber(e.target.value.replace(/[^0-9]/g, ''))
+                    setFieldErrors((p) => {
+                      const n = { ...p }
+                      delete n.setNumber
+                      return n
+                    })
+                    setSetExistsError('')
+                  }}
+                  className={`w-20 border-2 rounded-xl text-xs font-black h-8 placeholder:text-[9px] pr-7 ${
+                    setExistsError || fieldErrors.setNumber
+                      ? 'border-[#E9424C]'
+                      : 'border-[#151313]'
+                  }`}
+                  placeholder="Enter Set"
+                />
+                {(setExistsError || fieldErrors.setNumber) && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#E9424C] font-bold text-sm">
+                    !
+                  </span>
+                )}
               </div>
+            </div>
 
-              {/* Questions Editor */}
+            <div className="flex items-center gap-2">
+              <Label
+                className={`text-xs font-black whitespace-nowrap ${labelErr('year')}`}
+              >
+                Year
+              </Label>
+              <div className="relative">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={year}
+                  onChange={(e) => {
+                    setYear(
+                      e.target.value
+                        ? parseInt(e.target.value.replace(/[^0-9]/g, ''))
+                        : ''
+                    )
+                    setFieldErrors((p) => {
+                      const n = { ...p }
+                      delete n.year
+                      return n
+                    })
+                    setSetExistsError('')
+                  }}
+                  className={`w-20 border-2 rounded-xl text-xs font-black h-8 placeholder:text-[9px] pr-7 ${
+                    setExistsError || fieldErrors.year
+                      ? 'border-[#E9424C]'
+                      : 'border-[#151313]'
+                  }`}
+                  placeholder="Enter Year"
+                />
+                {(setExistsError || fieldErrors.year) && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#E9424C] font-bold text-sm">
+                    !
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {setExistsError && (
+              <p className="text-[10px] text-[#E9424C] font-medium whitespace-nowrap">
+                Set {editableSetNumber} ({year}) already exists
+              </p>
+            )}
+
+            <Button
+              onClick={saveSet}
+              disabled={saving}
+              className="bg-[#E9424C] text-white font-black text-xs border-2 border-[#151313] rounded-xl px-4 py-2 shadow-[2px_2px_0px_#151313] shrink-0 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 md:px-6 pt-6">
+          <Tabs
+            value={selectedPart.toString()}
+            onValueChange={(v) => {
+              const part = parseInt(v)
+              setSelectedPart(part)
+              loadPassageStateForPart(part, allQuestions)
+            }}
+          >
+            <TabsList className="bg-white border-2 border-[#151313] rounded-xl shadow-[2px_2px_0px_#151313] h-auto p-1 w-full mb-6 flex flex-wrap">
+              {[1, 2, 3, 4, 5, 6, 7].map((p) => (
+                <TabsTrigger
+                  key={p}
+                  value={p.toString()}
+                  className="text-[10px] font-black rounded-lg px-3 py-1.5 data-[state=active]:bg-[#151313] data-[state=active]:text-white data-[state=active]:shadow-[2px_2px_0px_#E9424C] transition-all flex-1"
+                >
+                  Part {p}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            <TabsContent value={selectedPart.toString()} className="space-y-6">
+              <span className="inline-block bg-[#151313] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                Part {selectedPart}
+              </span>
+
+              <Card className="border-2 border-[#151313] rounded-2xl shadow-[3px_3px_0px_#151313] overflow-hidden">
+                <CardHeader className="border-b-2 border-[#151313] bg-white py-3">
+                  <CardTitle className="text-xs font-black text-[#151313] uppercase tracking-widest">
+                    Passage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-5">
+                  {renderPassageEditor()}
+                </CardContent>
+              </Card>
+
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black text-[#151313] uppercase tracking-widest">
-                    Questions
-                  </h3>
+                <span className="text-xs font-black text-[#151313] uppercase tracking-widest">
+                  QUESTIONS ({currentPartQuestions.length}/
+                  {PART_CONFIG[selectedPart].questions})
+                </span>
+
+                <div className="space-y-4">
+                  {currentPartQuestions.map((q, idx) => (
+                    <QuestionCard
+                      key={`${q.part_number}-${q.question_number}`}
+                      q={q}
+                      idx={idx}
+                      total={currentPartQuestions.length}
+                      selectedPart={selectedPart}
+                      fieldErrors={fieldErrors}
+                      updateQuestion={updateQuestion}
+                      updateOption={updateOption}
+                      updateCorrectAnswer={updateCorrectAnswer}
+                      removeQuestion={removeQuestion}
+                      moveQuestion={moveQuestion}
+                      errKey={errKey}
+                      labelErr={labelErr}
+                      ErrMsg={ErrMsg}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex justify-center pt-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={addQuestion}
-                    className="border-2 border-[#151313] rounded-xl text-xs font-black"
+                    disabled={
+                      currentPartQuestions.length >=
+                      PART_CONFIG[selectedPart].questions
+                    }
+                    className={`border-2 rounded-xl text-xs font-black px-6 ${currentPartQuestions.length >= PART_CONFIG[selectedPart].questions ? 'border-[#151313]/30 text-[#151313]/30 cursor-not-allowed' : 'border-[#151313] text-[#151313] hover:bg-[#151313] hover:text-white'}`}
                   >
-                    <Plus size={14} className="mr-1" /> Add Question
+                    <Plus size={14} className="mr-2" /> Add Question
                   </Button>
                 </div>
-
-                {questions.map((q, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white border-2 border-[#151313] rounded-2xl p-5 shadow-[3px_3px_0px_#151313]"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-sm font-black text-[#151313]">
-                        <span className="text-[#E9424C] mr-2">
-                          {q.question_number}.
-                        </span>
-                        Question
-                      </h4>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const newQ = { ...q, id: undefined }
-                            setQuestions([...questions, newQ])
-                          }}
-                          className="text-[#151313] hover:text-[#E9424C]"
-                        >
-                          <Copy size={14} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeQuestion(idx)}
-                          className="text-[#E9424C] hover:text-[#E9424C]"
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Input
-                        value={q.question_text}
-                        onChange={(e) =>
-                          updateQuestion(idx, 'question_text', e.target.value)
-                        }
-                        className="border-2 border-[#151313] rounded-xl text-sm"
-                        placeholder="Enter question text..."
-                      />
-
-                      <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(q.options).map(([key, value]) => (
-                          <div key={key} className="flex items-center gap-2">
-                            <span className="font-black text-sm w-6">
-                              {key}.
-                            </span>
-                            <Input
-                              value={value}
-                              onChange={(e) =>
-                                updateOption(idx, key, e.target.value)
-                              }
-                              className="border-2 border-[#151313] rounded-xl text-sm"
-                              placeholder={`Option ${key}`}
-                            />
-                          </div>
-                        ))}
-                      </div>
-
-                      <div>
-                        <Label className="text-xs font-black text-[#151313] uppercase tracking-wide">
-                          Correct Answer
-                        </Label>
-                        <Select
-                          value={q.correct_answer}
-                          onValueChange={(v) =>
-                            updateQuestion(idx, 'correct_answer', v)
-                          }
-                        >
-                          <SelectTrigger className="border-2 border-[#151313] rounded-xl">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.keys(q.options).map((key) => (
-                              <SelectItem key={key} value={key}>
-                                Option {key}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
-            </>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }

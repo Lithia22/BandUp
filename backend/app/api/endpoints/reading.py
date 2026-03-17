@@ -51,7 +51,7 @@ def get_set_questions(set_number: int):
     try:
         result = (
             supabase.table("questions")
-            .select("id, part_number, question_number, passage_title, passage, question_text, options")
+            .select("id, part_number, question_number, passage_title, passage, question_text, options, correct_answer, year")
             .eq("component", "reading")
             .eq("set_number", set_number)
             .order("question_number")
@@ -141,7 +141,7 @@ def submit_answers(data: SubmitRequest):
             )
 
         skipped_note = (
-            "• You left uestions unanswered — remember there is no penalty for wrong answers in MUET, so always attempt every question even if you are unsure."
+            "• You left questions unanswered — remember there is no penalty for wrong answers in MUET, so always attempt every question even if you are unsure."
             if skipped_parts else ""
         )
 

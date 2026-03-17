@@ -2,8 +2,91 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime, timezone
 from app.config import supabase
 from app.services.clustering import run_kmeans
+from pydantic import BaseModel
+from typing import Optional, Any
+import uuid
 
 router = APIRouter()
+
+
+class QuestionCreate(BaseModel):
+    component: str
+    set_number: int
+    part_number: int
+    question_number: int
+    question_text: Optional[str] = None
+    options: Optional[Any] = None
+    correct_answer: Optional[str] = None
+    passage: Optional[str] = None
+    passage_title: Optional[str] = None
+    audio_url: Optional[str] = None
+    year: Optional[int] = None
+
+
+class QuestionUpdate(BaseModel):
+    component: Optional[str] = None
+    set_number: Optional[int] = None
+    part_number: Optional[int] = None
+    question_number: Optional[int] = None
+    question_text: Optional[str] = None
+    options: Optional[Any] = None
+    correct_answer: Optional[str] = None
+    passage: Optional[str] = None
+    passage_title: Optional[str] = None
+    audio_url: Optional[str] = None
+    year: Optional[int] = None
+
+
+@router.get("/questions")
+def get_questions(component: Optional[str] = None, set_number: Optional[int] = None):
+    try:
+        query = supabase.table("questions").select("*")
+        if component:
+            query = query.eq("component", component)
+        if set_number:
+            query = query.eq("set_number", set_number)
+        result = query.order("part_number").order("question_number").execute()
+        return {"questions": result.data, "total": len(result.data)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/questions")
+def create_question(data: QuestionCreate):
+    try:
+        payload = data.model_dump(exclude_none=True)
+        payload["id"] = str(uuid.uuid4())
+        result = supabase.table("questions").insert(payload).execute()
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Insert failed")
+        return {"message": "Question created", "question": result.data[0]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/questions/{question_id}")
+def update_question(question_id: str, data: QuestionUpdate):
+    try:
+        payload = data.model_dump(exclude_none=True)
+        if not payload:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        result = supabase.table("questions").update(payload).eq("id", question_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Question not found")
+        return {"message": "Question updated", "question": result.data[0]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/questions/{question_id}")
+def delete_question(question_id: str):
+    try:
+        result = supabase.table("questions").delete().eq("id", question_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Question not found")
+        return {"message": "Question deleted", "id": question_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/clusters")
@@ -19,8 +102,7 @@ def get_clusters():
 
         if not bands:
             return {"clusters": [], "summary": {}, "total_students": 0}
-
-        # Fetch student → user join to get full_name and email
+        # Fetch student
         student_ids = [b["student_id"] for b in bands]
         chunk_size = 20
         student_info = {}
@@ -45,7 +127,6 @@ def get_clusters():
                 user_map = {u["id"]: u for u in (users_res.data or [])}
                 for sid, uid in student_id_to_user.items():
                     student_info[sid] = user_map.get(uid, {})
-
         # Prepare data for clustering
         students = [
             {
@@ -60,11 +141,9 @@ def get_clusters():
             }
             for b in bands
         ]
-
-        # Run K-means (no fallback — requires real data)
+        # Run K-means
         results = run_kmeans(students, k=4)
         label_map = {r["student_band_id"]: r["cluster_label"] for r in results}
-
         # Upsert cluster assignments
         now = datetime.now(timezone.utc).isoformat()
         for r in results:

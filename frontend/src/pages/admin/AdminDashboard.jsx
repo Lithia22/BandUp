@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/sidebar'
 import { CLUSTER_CONFIG } from '../../components/layouts/AdminCharts'
 import SidebarLayout from '../../components/layouts/SidebarLayout'
+import { ChevronRight } from 'lucide-react'
 import api from '../../services/api'
 
 export default function AdminDashboard() {
@@ -114,38 +115,49 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <a
-              href="/admin/questions"
-              className="block border-2 border-[#151313] rounded-2xl bg-white shadow-[3px_3px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-black text-[#151313]">
-                    Go Manage Questions
-                  </p>
-                  <p className="text-[10px] text-[#151313]/40 font-medium mt-0.5">
-                    Create new set of practice or edit existing ones for each
-                    component
-                  </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a
+                href="/admin/questions"
+                className="group block border-2 border-[#151313] rounded-2xl bg-white shadow-[3px_3px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black text-[#151313]">
+                      Manage Questions
+                    </p>
+                    <p className="text-[10px] text-[#151313]/40 font-medium mt-0.5">
+                      Create new practice sets or edit existing questions for
+                      all MUET components
+                    </p>
+                  </div>
+                  <ChevronRight
+                    size={16}
+                    className="text-[#151313]/30 group-hover:text-[#151313] group-hover:translate-x-0.5 transition-all shrink-0 ml-2"
+                  />
                 </div>
-              </div>
-            </a>
+              </a>
 
-            <a
-              href="/admin/analytics"
-              className="block border-2 border-[#151313] rounded-2xl bg-white shadow-[3px_3px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-black text-[#151313]">
-                    View Full Cluster Analysis
-                  </p>
-                  <p className="text-[10px] text-[#151313]/40 font-medium mt-0.5">
-                    See detailed breakdown, charts and individual student data
-                  </p>
+              <a
+                href="/admin/analytics"
+                className="group block border-2 border-[#151313] rounded-2xl bg-white shadow-[3px_3px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black text-[#151313]">
+                      Cluster Analysis
+                    </p>
+                    <p className="text-[10px] text-[#151313]/40 font-medium mt-0.5">
+                      View detailed breakdown of student clusters, charts and
+                      individual performance data
+                    </p>
+                  </div>
+                  <ChevronRight
+                    size={16}
+                    className="text-[#151313]/30 group-hover:text-[#151313] group-hover:translate-x-0.5 transition-all shrink-0 ml-2"
+                  />
                 </div>
-              </div>
-            </a>
+              </a>
+            </div>
 
             <div className="pb-6" />
           </main>

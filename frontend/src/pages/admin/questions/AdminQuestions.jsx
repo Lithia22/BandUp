@@ -57,11 +57,10 @@ export default function AdminQuestions() {
     Promise.all(
       COMPONENTS.map(async (c) => {
         try {
-          const res = await api.get(`/admin/questions?component=${c.key}`)
-          const questions = res.data.questions || []
-          const uniqueSets = [...new Set(questions.map((q) => q.set_number))]
-          return { key: c.key, count: uniqueSets.length }
-        } catch {
+          const res = await api.get(`/${c.key}/sets`)
+          return { key: c.key, count: res.data.sets?.length || 0 }
+        } catch (error) {
+          console.error(`Error loading ${c.key} sets:`, error)
           return { key: c.key, count: 0 }
         }
       })
@@ -95,7 +94,7 @@ export default function AdminQuestions() {
               <CardContent className="p-6">
                 <Badge
                   variant="outline"
-                  className="bg-[#E9424C] text-white border-2 border-[#151313] mb-2"
+                  className="bg-[#E9424C] text-white border-2 border-[#151313] mb-2 text-[10px]"
                 >
                   Admin Panel
                 </Badge>
@@ -118,32 +117,32 @@ export default function AdminQuestions() {
                   <Card
                     key={key}
                     className="group cursor-pointer border-2 border-[#151313] rounded-2xl shadow-[4px_4px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 w-full"
-                    style={{ minHeight: 160 }}
+                    style={{ minHeight: 140 }}
                     onClick={() => navigate(path)}
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-[#E9424C] border-2 border-[#151313] flex items-center justify-center shadow-[2px_2px_0px_#151313]">
-                          <Icon size={22} className="text-white" />
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#E9424C] border-2 border-[#151313] flex items-center justify-center shadow-[2px_2px_0px_#151313]">
+                          <Icon size={18} className="text-white" />
                         </div>
-                        <div>
-                          <h3 className="text-lg font-black text-[#151313]">
+                        <div className="mt-2">
+                          <h3 className="text-base font-black text-[#151313]">
                             {label}
                           </h3>
-                          <p className="text-xs font-semibold text-[#151313]/40">
+                          <p className="text-[10px] font-semibold text-[#151313]/40">
                             {description}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-[#151313]/10">
-                        <span className="text-xs font-black text-[#151313]/30 uppercase tracking-widest">
+                      <div className="flex items-center justify-between pt-3 mt-4 border-t border-[#151313]/10">
+                        <span className="text-[10px] font-black text-[#151313]/30 uppercase tracking-widest">
                           {loading
                             ? '—'
                             : `${setCounts[key] ?? 0} practice sets`}
                         </span>
                         <ChevronRight
-                          size={16}
+                          size={14}
                           className="text-[#151313]/30 group-hover:text-[#151313] group-hover:translate-x-0.5 transition-all"
                         />
                       </div>

@@ -184,7 +184,7 @@ export default function AdminReading() {
                                 e.stopPropagation()
                                 navigate(
                                   `/admin/reading/editor?draft=${draft.id}`
-                                ) 
+                                )
                               }}
                             >
                               <Edit size={14} />
