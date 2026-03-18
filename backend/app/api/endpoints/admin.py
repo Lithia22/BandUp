@@ -89,6 +89,40 @@ def delete_question(question_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.delete("/questions")
+def delete_questions(component: Optional[str] = None, set_number: Optional[int] = None):
+    """
+    Delete all questions for a given component and set number
+    """
+    try:
+        if not component or not set_number:
+            raise HTTPException(status_code=400, detail="Component and set_number are required")
+        
+        # First, get all questions for this set to know how many we're deleting
+        result = supabase.table("questions") \
+            .select("id") \
+            .eq("component", component) \
+            .eq("set_number", set_number) \
+            .execute()
+        
+        if not result.data:
+            return {"message": f"No questions found for {component} set {set_number}", "deleted_count": 0}
+        
+        # Delete all questions for this set
+        delete_result = supabase.table("questions") \
+            .delete() \
+            .eq("component", component) \
+            .eq("set_number", set_number) \
+            .execute()
+        
+        return {
+            "message": f"Deleted {len(result.data)} questions from {component} set {set_number}",
+            "deleted_count": len(result.data)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/clusters")
 def get_clusters():
     try:
@@ -102,6 +136,7 @@ def get_clusters():
 
         if not bands:
             return {"clusters": [], "summary": {}, "total_students": 0}
+        
         # Fetch student
         student_ids = [b["student_id"] for b in bands]
         chunk_size = 20
@@ -127,6 +162,7 @@ def get_clusters():
                 user_map = {u["id"]: u for u in (users_res.data or [])}
                 for sid, uid in student_id_to_user.items():
                     student_info[sid] = user_map.get(uid, {})
+        
         # Prepare data for clustering
         students = [
             {
@@ -141,9 +177,11 @@ def get_clusters():
             }
             for b in bands
         ]
+        
         # Run K-means
         results = run_kmeans(students, k=4)
         label_map = {r["student_band_id"]: r["cluster_label"] for r in results}
+        
         # Upsert cluster assignments
         now = datetime.now(timezone.utc).isoformat()
         for r in results:

@@ -1,13 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import {
-  ChevronLeft,
-  Plus,
-  Trash2,
-  Check,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-react'
+import { ChevronLeft, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,6 +18,7 @@ import api from '../../../../services/api'
 import { toast } from 'sonner'
 import { QuestionCardSkeleton } from '../../../../components/layouts/Skeletons'
 import { ExitWarningDialog } from '../../../../components/layouts/Dialog'
+import { QuestionCard } from './QuestionCard'
 
 const PART_CONFIG = {
   1: { questions: 4, startQ: 1 },
@@ -91,148 +85,6 @@ const extractPart4Texts = (questions) => {
     } catch {}
   }
   return { text1, text2 }
-}
-
-function QuestionCard({
-  q,
-  idx,
-  total,
-  selectedPart,
-  fieldErrors,
-  updateQuestion,
-  updateOption,
-  updateCorrectAnswer,
-  removeQuestion,
-  moveQuestion,
-  errKey,
-  labelErr,
-  ErrMsg,
-}) {
-  return (
-    <Card className="border-2 border-[#151313] rounded-2xl shadow-[3px_3px_0px_#151313] overflow-hidden">
-      <CardHeader className="border-b-2 border-[#151313] bg-white py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <div className="flex flex-col gap-0.5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => moveQuestion(idx, -1)}
-                disabled={idx === 0}
-                className="w-6 h-5 p-0 text-[#151313]/30 hover:text-[#151313] disabled:opacity-20"
-              >
-                <ArrowUp size={10} />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => moveQuestion(idx, 1)}
-                disabled={idx === total - 1}
-                className="w-6 h-5 p-0 text-[#151313]/30 hover:text-[#151313] disabled:opacity-20"
-              >
-                <ArrowDown size={10} />
-              </Button>
-            </div>
-            <CardTitle className="text-sm font-black text-[#151313]">
-              <span className="text-[#E9424C] mr-2">{q.question_number}.</span>
-              Question
-            </CardTitle>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => removeQuestion(q.question_number)}
-            className="text-[#E9424C] hover:text-[#E9424C]"
-          >
-            <Trash2 size={14} />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="p-5 space-y-4">
-        <div className="space-y-1">
-          <Label
-            className={`text-xs font-black uppercase tracking-widest ${labelErr(`q${q.question_number}_text`)}`}
-          >
-            Question Text
-          </Label>
-          <Input
-            value={q.question_text}
-            onChange={(e) =>
-              updateQuestion(q.question_number, 'question_text', e.target.value)
-            }
-            className={`border-2 rounded-xl text-sm ${errKey(`q${q.question_number}_text`)}`}
-            placeholder="Enter question text..."
-          />
-          <ErrMsg k={`q${q.question_number}_text`} />
-        </div>
-        {selectedPart !== 5 && (
-          <div className="space-y-2">
-            <Label className="text-xs font-black text-[#151313] uppercase tracking-widest">
-              Options
-            </Label>
-            {Object.entries(q.options).map(([key, value]) => {
-              const isCorrect = q.correct_answer === key
-              const hk = `q${q.question_number}_opt_${key}`
-              return (
-                <div key={key} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        updateCorrectAnswer(q.question_number, key)
-                      }
-                      className={`w-8 h-8 p-0 rounded-full border-2 shrink-0 ${isCorrect ? 'bg-[#22c55e] border-[#22c55e] text-white hover:bg-[#22c55e] hover:text-white' : 'border-[#151313] text-[#151313] hover:bg-[#151313] hover:text-white'}`}
-                    >
-                      {isCorrect ? <Check size={14} /> : key}
-                    </Button>
-                    <Input
-                      value={value}
-                      onChange={(e) =>
-                        updateOption(q.question_number, key, e.target.value)
-                      }
-                      className={`flex-1 border-2 rounded-xl text-sm ${fieldErrors[hk] ? 'border-[#E9424C]' : isCorrect ? 'border-[#22c55e] bg-[#22c55e]/5' : 'border-[#151313]'}`}
-                      placeholder={`Option ${key}`}
-                    />
-                  </div>
-                  <ErrMsg k={hk} />
-                </div>
-              )
-            })}
-            <ErrMsg k={`q${q.question_number}_correct`} />
-          </div>
-        )}
-        {selectedPart === 5 && (
-          <div className="space-y-2">
-            <Label className="text-xs font-black text-[#151313] uppercase tracking-widest">
-              Correct Answer
-            </Label>
-            <div className="flex gap-2 flex-wrap">
-              {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((key) => {
-                const isCorrect = q.correct_answer === key
-                return (
-                  <Button
-                    key={key}
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => updateCorrectAnswer(q.question_number, key)}
-                    className={`w-9 h-9 p-0 rounded-full border-2 text-xs font-black ${isCorrect ? 'bg-[#22c55e] border-[#22c55e] text-white hover:bg-[#22c55e] hover:text-white' : 'border-[#151313] text-[#151313] hover:bg-[#151313] hover:text-white'}`}
-                  >
-                    {isCorrect ? <Check size={12} /> : key}
-                  </Button>
-                )
-              })}
-            </div>
-            <ErrMsg k={`q${q.question_number}_correct`} />
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
 }
 
 export default function AdminReadingEditor() {
@@ -314,23 +166,36 @@ export default function AdminReadingEditor() {
     if (loading || setNumber || draftId || draftLoaded.current) return
     if (currentPartQuestions.length === 0) {
       const config = PART_CONFIG[selectedPart]
-      const defaultOptions =
-        selectedPart === 5
-          ? { ...PART5_OPTIONS }
-          : selectedPart >= 6
+
+      if (selectedPart === 5) {
+        setAllQuestions((prev) => [
+          ...prev,
+          ...Array.from({ length: config.questions }, (_, i) => ({
+            question_number: config.startQ + i,
+            question_text: '',
+            options: {},
+            correct_answer: '',
+            part_number: selectedPart,
+            passage: null,
+          })),
+        ])
+      } else {
+        const defaultOptions =
+          selectedPart >= 6
             ? { A: '', B: '', C: '', D: '' }
             : { A: '', B: '', C: '' }
-      setAllQuestions((prev) => [
-        ...prev,
-        ...Array.from({ length: config.questions }, (_, i) => ({
-          question_number: config.startQ + i,
-          question_text: '',
-          options: defaultOptions,
-          correct_answer: '',
-          part_number: selectedPart,
-          passage: null,
-        })),
-      ])
+        setAllQuestions((prev) => [
+          ...prev,
+          ...Array.from({ length: config.questions }, (_, i) => ({
+            question_number: config.startQ + i,
+            question_text: '',
+            options: defaultOptions,
+            correct_answer: '',
+            part_number: selectedPart,
+            passage: null,
+          })),
+        ])
+      }
     }
   }, [selectedPart, loading])
 
@@ -417,13 +282,74 @@ export default function AdminReadingEditor() {
       setText2(t2)
       const p4 = questions.filter((q) => q.part_number === 4)
       const q1516 = p4.find((q) => q.question_number <= 16)
+      if (q1516?.passage_title) setInstruction4Text1(q1516.passage_title)
+
       const q1718 = p4.find(
         (q) => q.question_number >= 17 && q.question_number <= 18
       )
-      const q1920 = p4.find((q) => q.question_number >= 19)
-      if (q1516?.passage_title) setInstruction4Text1(q1516.passage_title)
       if (q1718?.passage_title) setInstruction4Text2(q1718.passage_title)
-      if (q1920?.passage_title) setInstruction4Both(q1920.passage_title)
+
+      const q1920 = p4.find((q) => q.question_number >= 19)
+      if (q1920?.passage_title) {
+        setInstruction4Both(q1920.passage_title)
+      }
+
+      return
+    }
+
+    if (partNumber === 5) {
+      const q = questions.find((q) => q.part_number === 5)
+      if (q?.passage_title)
+        setInstructionMap((prev) => ({
+          ...prev,
+          [partNumber]: q.passage_title,
+        }))
+
+      if (q?.passage) {
+        try {
+          const parsed = JSON.parse(q.passage)
+          if (parsed.type === 'gapped_text') {
+            setPassageMap((prev) => ({
+              ...prev,
+              [partNumber]: parsed.main_text || '',
+            }))
+            if (parsed.sentences) {
+              const options = {}
+              parsed.sentences.forEach((s) => {
+                options[s.key] = s.text
+              })
+              setPart5Options({ ...PART5_OPTIONS, ...options })
+            }
+          }
+        } catch {}
+      }
+      return
+    }
+
+    if (partNumber === 6 || partNumber === 7) {
+      const q = questions.find((q) => q.part_number === partNumber)
+      if (q?.passage_title)
+        setInstructionMap((prev) => ({
+          ...prev,
+          [partNumber]: q.passage_title,
+        }))
+
+      if (q?.passage) {
+        try {
+          const parsed = JSON.parse(q.passage)
+          if (parsed.type === 'lined_text') {
+            const formatted = parsed.paragraphs
+              .map((p) => `[Lines ${p.lines}] ${p.text}`)
+              .join('\n\n')
+
+            const finalText = parsed.citation
+              ? formatted + '\n\n' + parsed.citation
+              : formatted
+
+            setPassageMap((prev) => ({ ...prev, [partNumber]: finalText }))
+          }
+        } catch {}
+      }
       return
     }
     const q = questions.find((q) => q.part_number === partNumber)
@@ -436,27 +362,10 @@ export default function AdminReadingEditor() {
         setColumnA(extractColumnText(parsed.columns[0]))
         setColumnB(extractColumnText(parsed.columns[1]))
         setColumnC(extractColumnText(parsed.columns[2]))
-        return
       }
-      if (parsed.type === 'gapped_text') {
-        setPassageMap((prev) => ({
-          ...prev,
-          [partNumber]: parsed.main_text || '',
-        }))
-        return
-      }
-      if (parsed.type === 'lined_text') {
-        setPassageMap((prev) => ({
-          ...prev,
-          [partNumber]:
-            parsed.paragraphs
-              ?.map((p) => `[Lines ${p.lines}] ${p.text}`)
-              .join('\n\n') || '',
-        }))
-        return
-      }
-    } catch {}
-    setPassageMap((prev) => ({ ...prev, [partNumber]: q.passage }))
+    } catch {
+      setPassageMap((prev) => ({ ...prev, [partNumber]: q.passage }))
+    }
   }
 
   const loadAllPassageStates = (questions) => {
@@ -478,23 +387,65 @@ export default function AdminReadingEditor() {
         newText1 = t1
         newText2 = t2
         const p4 = questions.filter((q) => q.part_number === 4)
+
         const q1516 = p4.find((q) => q.question_number <= 16)
         const q1718 = p4.find(
           (q) => q.question_number >= 17 && q.question_number <= 18
         )
         const q1920 = p4.find((q) => q.question_number >= 19)
+
         if (q1516?.passage_title) newI4T1 = q1516.passage_title
         if (q1718?.passage_title) newI4T2 = q1718.passage_title
         if (q1920?.passage_title) newI4B = q1920.passage_title
         continue
       }
+
       if (part === 5) {
         const p5q = questions.find((q) => q.part_number === 5)
         if (p5q?.options) newPart5Options = { ...PART5_OPTIONS, ...p5q.options }
         if (p5q?.passage_title) newInstructionMap[5] = p5q.passage_title
-        if (p5q?.passage) newPassageMap[5] = p5q.passage
+
+        if (p5q?.passage) {
+          try {
+            const parsed = JSON.parse(p5q.passage)
+            if (parsed.type === 'gapped_text') {
+              newPassageMap[5] = parsed.main_text || ''
+              if (parsed.sentences) {
+                const options = {}
+                parsed.sentences.forEach((s) => {
+                  options[s.key] = s.text
+                })
+                newPart5Options = { ...PART5_OPTIONS, ...options }
+              }
+            }
+          } catch {}
+        }
         continue
       }
+
+      if (part === 6 || part === 7) {
+        const q = questions.find((q) => q.part_number === part)
+        if (!q) continue
+
+        if (q.passage_title) newInstructionMap[part] = q.passage_title
+
+        if (q.passage) {
+          try {
+            const parsed = JSON.parse(q.passage)
+            if (parsed.type === 'lined_text') {
+              const formatted = parsed.paragraphs
+                .map((p) => `[Lines ${p.lines}] ${p.text}`)
+                .join('\n\n')
+
+              newPassageMap[part] = parsed.citation
+                ? formatted + '\n\n' + parsed.citation
+                : formatted
+            }
+          } catch {}
+        }
+        continue
+      }
+
       const q = questions.find((q) => q.part_number === part)
       if (!q) continue
       if (q.passage_title) newInstructionMap[part] = q.passage_title
@@ -549,8 +500,8 @@ export default function AdminReadingEditor() {
         const mapped = questions.map((q) => ({
           id: q.id,
           question_number: q.question_number,
-          question_text: q.question_text,
-          options: q.options,
+          question_text: q.question_text || '',
+          options: q.options || {},
           correct_answer: q.correct_answer
             ? String(q.correct_answer).trim()
             : '',
@@ -623,7 +574,7 @@ export default function AdminReadingEditor() {
     }
   }, [setNumber, draftId])
 
-  const updateQuestion = (questionNumber, field, value) => {
+  const updateOption = (questionNumber, field, value) => {
     setAllQuestions((prev) =>
       prev.map((q) =>
         q.part_number === selectedPart && q.question_number === questionNumber
@@ -636,16 +587,6 @@ export default function AdminReadingEditor() {
       delete next[`q${questionNumber}_${field}`]
       return next
     })
-  }
-
-  const updateOption = (questionNumber, optKey, value) => {
-    setAllQuestions((prev) =>
-      prev.map((q) =>
-        q.part_number === selectedPart && q.question_number === questionNumber
-          ? { ...q, options: { ...q.options, [optKey]: value } }
-          : q
-      )
-    )
   }
 
   const updateCorrectAnswer = (questionNumber, value) => {
@@ -666,23 +607,36 @@ export default function AdminReadingEditor() {
       )
       return
     }
-    const defaultOptions =
-      selectedPart === 5
-        ? { ...PART5_OPTIONS }
-        : selectedPart >= 6
+
+    if (selectedPart === 5) {
+      setAllQuestions((prev) => [
+        ...prev,
+        {
+          question_number: config.startQ + currentPartQuestions.length,
+          question_text: '',
+          options: {},
+          correct_answer: '',
+          part_number: selectedPart,
+          passage: null,
+        },
+      ])
+    } else {
+      const defaultOptions =
+        selectedPart >= 6
           ? { A: '', B: '', C: '', D: '' }
           : { A: '', B: '', C: '' }
-    setAllQuestions((prev) => [
-      ...prev,
-      {
-        question_number: config.startQ + currentPartQuestions.length,
-        question_text: '',
-        options: defaultOptions,
-        correct_answer: '',
-        part_number: selectedPart,
-        passage: null,
-      },
-    ])
+      setAllQuestions((prev) => [
+        ...prev,
+        {
+          question_number: config.startQ + currentPartQuestions.length,
+          question_text: '',
+          options: defaultOptions,
+          correct_answer: '',
+          part_number: selectedPart,
+          passage: null,
+        },
+      ])
+    }
   }
 
   const removeQuestion = (questionNumber) => {
@@ -727,27 +681,29 @@ export default function AdminReadingEditor() {
       if (!passageMap[part]?.trim())
         errors[`passage_${part}`] = `Passage text for Part ${part} is required`
     })
-    if (selectedPart === 5) {
-      Object.entries(part5Options).forEach(([key, val]) => {
-        if (!val?.trim())
-          errors[`part5_opt_${key}`] = `Option ${key} is required`
-      })
-    }
+
+    Object.entries(part5Options).forEach(([key, val]) => {
+      if (!val?.trim()) errors[`part5_opt_${key}`] = `Option ${key} is required`
+    })
+
     allQuestions.forEach((q) => {
-      if (!q.question_text?.trim())
-        errors[`q${q.question_number}_text`] =
-          `Question ${q.question_number} text is required`
       if (q.part_number !== 5) {
+        if (!q.question_text?.trim())
+          errors[`q${q.question_number}_text`] =
+            `Question ${q.question_number} text is required`
+
         Object.entries(q.options).forEach(([key, val]) => {
           if (!val?.trim())
             errors[`q${q.question_number}_opt_${key}`] =
               `Option ${key} for Q${q.question_number} is required`
         })
       }
+
       if (!q.correct_answer?.trim())
         errors[`q${q.question_number}_correct`] =
           `Select correct answer for Q${q.question_number}`
     })
+
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -795,9 +751,11 @@ export default function AdminReadingEditor() {
           Math.max(...(res.data.sets?.map((s) => s.set_number) || [0]), 0) + 1
         ).toString()
       }
+
       for (const q of allQuestions) {
         const part = q.part_number
         let passage, passage_title
+
         if (part === 4) {
           const t1Json = JSON.stringify({
             type: 'numbered_paragraphs',
@@ -816,6 +774,7 @@ export default function AdminReadingEditor() {
               { label: 'Text 2', paragraphs: parseTextToParagraphs(text2) },
             ],
           })
+
           if (q.question_number <= 16) {
             passage = t1Json
             passage_title = instruction4Text1
@@ -836,33 +795,96 @@ export default function AdminReadingEditor() {
             ],
           })
           passage_title = instructionMap[1] || ''
+        } else if (part === 5) {
+          const mainText = passageMap[5] || ''
+
+          const paragraphs = mainText
+            .split('\n\n')
+            .map((para, index) => {
+              const number = index + 1
+              const cleanText = para.replace(/^\d+\s+/, '')
+              return `${number}\t${cleanText}`
+            })
+            .join('\n\n')
+
+          passage = JSON.stringify({
+            type: 'gapped_text',
+            main_text: paragraphs,
+            sentences: Object.entries(part5Options)
+              .filter(([_, text]) => text.trim())
+              .map(([key, text]) => ({
+                key,
+                text: text.trim(),
+              })),
+          })
+          passage_title = instructionMap[5] || ''
+        } else if (part === 6 || part === 7) {
+          const text = passageMap[part] || ''
+          const lines = text.split('\n').filter((line) => line.trim())
+          const paragraphs = []
+          let citation = ''
+
+          lines.forEach((line) => {
+            if (line.includes('Adapted from')) {
+              citation = line.trim()
+              return
+            }
+
+            const lineMatch = line.match(/\[Lines ([\d-]+)\]\s*(.*)/)
+            if (lineMatch) {
+              paragraphs.push({
+                number: paragraphs.length + 1,
+                lines: lineMatch[1],
+                text: lineMatch[2].trim(),
+              })
+            }
+          })
+
+          const passageObj = {
+            type: 'lined_text',
+            paragraphs: paragraphs,
+          }
+
+          if (citation) {
+            passageObj.citation = citation
+          }
+
+          passage = JSON.stringify(passageObj)
+          passage_title = instructionMap[part] || ''
         } else {
           passage = passageMap[part] || ''
           passage_title = instructionMap[part] || ''
         }
-        const finalOptions = part === 5 ? { ...part5Options } : q.options
+
         const payload = {
           component: 'reading',
           set_number: parseInt(targetSetNumber),
           part_number: part,
           question_number: q.question_number,
-          question_text: q.question_text,
-          options: finalOptions,
+          question_text: q.question_text || '',
+          options: q.options || {},
           correct_answer: q.correct_answer,
           passage,
           passage_title,
           year: parseInt(year),
         }
-        if (q.id) await api.put(`/admin/questions/${q.id}`, payload)
-        else await api.post('/admin/questions', payload)
+
+        if (q.id) {
+          await api.put(`/admin/questions/${q.id}`, payload)
+        } else {
+          await api.post('/admin/questions', payload)
+        }
       }
+
       if (isMounted.current) {
         localStorage.removeItem(`reading_draft_${sessionDraftId.current}`)
         toast.success(`Set ${targetSetNumber} saved successfully!`)
         navigate('/admin/reading')
       }
     } catch {
-      if (isMounted.current) toast.error('Failed to save set')
+      if (isMounted.current) {
+        toast.error('Failed to save set')
+      }
     } finally {
       if (isMounted.current) setSaving(false)
       isSaving.current = false
@@ -928,7 +950,7 @@ export default function AdminReadingEditor() {
                   }}
                   rows={12}
                   className={`font-mono text-sm border-2 rounded-xl ${errKey(ek)} focus-visible:border-[#E9424C]`}
-                  placeholder={`Paste Notice ${label} here, e.g.:\nGo Clean\nThe Education Dept is going to have a project...\nDate : 23 October 2021\nTime : 9 a.m. – 11 a.m.\nPlace : Library\nHelp us to think clean and go green!`}
+                  placeholder={`Paste Notice ${label} here...`}
                 />
                 <ErrMsg k={ek} />
               </div>
@@ -988,7 +1010,7 @@ export default function AdminReadingEditor() {
             >
               Text 2 Instruction
             </Label>
-            <Input
+            <Textarea
               value={instruction4Text2}
               onChange={(e) => {
                 setInstruction4Text2(e.target.value)
@@ -998,6 +1020,7 @@ export default function AdminReadingEditor() {
                   return n
                 })
               }}
+              rows={3}
               className={`border-2 rounded-xl text-sm ${errKey('instruction4Text2')}`}
               placeholder="e.g. Read two texts about..."
             />
@@ -1030,7 +1053,7 @@ export default function AdminReadingEditor() {
             >
               Both Texts Instruction (Q19–20)
             </Label>
-            <Input
+            <Textarea
               value={instruction4Both}
               onChange={(e) => {
                 setInstruction4Both(e.target.value)
@@ -1040,6 +1063,7 @@ export default function AdminReadingEditor() {
                   return n
                 })
               }}
+              rows={3}
               className={`border-2 rounded-xl text-sm ${errKey('instruction4Both')}`}
               placeholder="e.g. Read two texts about..."
             />
@@ -1048,13 +1072,102 @@ export default function AdminReadingEditor() {
         </div>
       )
 
-    const ek = `passage_${selectedPart}`
-    const ik = `instruction_${selectedPart}`
+    if (selectedPart === 5) {
+      return (
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <Label
+              className={`text-xs font-black uppercase tracking-widest ${labelErr('instruction_5')}`}
+            >
+              Instruction Text
+            </Label>
+            <Input
+              value={instruction}
+              onChange={(e) => {
+                setInstruction(e.target.value)
+                setFieldErrors((p) => {
+                  const n = { ...p }
+                  delete n.instruction_5
+                  return n
+                })
+              }}
+              className={`border-2 rounded-xl text-sm ${errKey('instruction_5')}`}
+              placeholder="e.g. Six sentences have been removed from the text..."
+            />
+            <ErrMsg k="instruction_5" />
+          </div>
+          <Separator className="bg-[#151313]/10" />
+          <div className="space-y-2">
+            <Label
+              className={`text-xs font-black uppercase tracking-widest ${labelErr('passage_5')}`}
+            >
+              Main Text with Gaps
+            </Label>
+            <Textarea
+              value={passageText}
+              onChange={(e) => {
+                setPassageText(e.target.value)
+                setFieldErrors((p) => {
+                  const n = { ...p }
+                  delete n.passage_5
+                  return n
+                })
+              }}
+              rows={12}
+              className={`font-mono text-sm border-2 rounded-xl ${errKey('passage_5')} focus-visible:border-[#E9424C]`}
+              placeholder="Paste the text with numbered paragraphs and _____ gaps here..."
+            />
+            <ErrMsg k="passage_5" />
+          </div>
+          <Separator className="bg-[#151313]/10" />
+          <div className="space-y-3">
+            <Label className="text-xs font-black uppercase tracking-widest text-[#151313]">
+              Sentences A to G
+            </Label>
+            <p className="text-[10px] text-[#151313]/50 font-medium">
+              These 7 options apply to all 6 questions in Part 5. One will be
+              the extra sentence students do not need to use.
+            </p>
+            {Object.keys(part5Options).map((key) => (
+              <div key={key} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-[#151313] w-4 shrink-0">
+                    {key}
+                  </span>
+                  <Input
+                    value={part5Options[key]}
+                    onChange={(e) => {
+                      setPart5Options((p) => ({
+                        ...p,
+                        [key]: e.target.value,
+                      }))
+                      setFieldErrors((p) => {
+                        const n = { ...p }
+                        delete n[`part5_opt_${key}`]
+                        return n
+                      })
+                    }}
+                    className={`flex-1 border-2 rounded-xl text-sm ${
+                      fieldErrors[`part5_opt_${key}`]
+                        ? 'border-[#E9424C]'
+                        : 'border-[#151313]'
+                    }`}
+                    placeholder={`Sentence ${key}`}
+                  />
+                </div>
+                <ErrMsg k={`part5_opt_${key}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="space-y-5">
         <div className="space-y-2">
           <Label
-            className={`text-xs font-black uppercase tracking-widest ${labelErr(ik)}`}
+            className={`text-xs font-black uppercase tracking-widest ${labelErr(`instruction_${selectedPart}`)}`}
           >
             Instruction Text
           </Label>
@@ -1064,19 +1177,19 @@ export default function AdminReadingEditor() {
               setInstruction(e.target.value)
               setFieldErrors((p) => {
                 const n = { ...p }
-                delete n[ik]
+                delete n[`instruction_${selectedPart}`]
                 return n
               })
             }}
-            className={`border-2 rounded-xl text-sm ${errKey(ik)}`}
+            className={`border-2 rounded-xl text-sm ${errKey(`instruction_${selectedPart}`)}`}
             placeholder="e.g. Read a text about..."
           />
-          <ErrMsg k={ik} />
+          <ErrMsg k={`instruction_${selectedPart}`} />
         </div>
         <Separator className="bg-[#151313]/10" />
         <div className="space-y-2">
           <Label
-            className={`text-xs font-black uppercase tracking-widest ${labelErr(ek)}`}
+            className={`text-xs font-black uppercase tracking-widest ${labelErr(`passage_${selectedPart}`)}`}
           >
             Passage Text
           </Label>
@@ -1086,56 +1199,16 @@ export default function AdminReadingEditor() {
               setPassageText(e.target.value)
               setFieldErrors((p) => {
                 const n = { ...p }
-                delete n[ek]
+                delete n[`passage_${selectedPart}`]
                 return n
               })
             }}
             rows={12}
-            className={`font-mono text-sm border-2 rounded-xl ${errKey(ek)} focus-visible:border-[#E9424C]`}
+            className={`font-mono text-sm border-2 rounded-xl ${errKey(`passage_${selectedPart}`)} focus-visible:border-[#E9424C]`}
             placeholder="Paste the passage here..."
           />
-          <ErrMsg k={ek} />
+          <ErrMsg k={`passage_${selectedPart}`} />
         </div>
-        {selectedPart === 5 && (
-          <>
-            <Separator className="bg-[#151313]/10" />
-            <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-[#151313]">
-                Sentences A to G
-              </Label>
-              <p className="text-[10px] text-[#151313]/50 font-medium">
-                These 7 options apply to all 6 questions in Part 5. One will be
-                the extra sentence students do not need to use.
-              </p>
-              {Object.keys(part5Options).map((key) => (
-                <div key={key} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-[#151313] w-4 shrink-0">
-                      {key}
-                    </span>
-                    <Input
-                      value={part5Options[key]}
-                      onChange={(e) => {
-                        setPart5Options((p) => ({
-                          ...p,
-                          [key]: e.target.value,
-                        }))
-                        setFieldErrors((p) => {
-                          const n = { ...p }
-                          delete n[`part5_opt_${key}`]
-                          return n
-                        })
-                      }}
-                      className={`flex-1 border-2 rounded-xl text-sm ${fieldErrors[`part5_opt_${key}`] ? 'border-[#E9424C]' : 'border-[#151313]'}`}
-                      placeholder={`Sentence ${key}`}
-                    />
-                  </div>
-                  <ErrMsg k={`part5_opt_${key}`} />
-                </div>
-              ))}
-            </div>
-          </>
-        )}
       </div>
     )
   }
@@ -1345,7 +1418,6 @@ export default function AdminReadingEditor() {
                       total={currentPartQuestions.length}
                       selectedPart={selectedPart}
                       fieldErrors={fieldErrors}
-                      updateQuestion={updateQuestion}
                       updateOption={updateOption}
                       updateCorrectAnswer={updateCorrectAnswer}
                       removeQuestion={removeQuestion}
@@ -1366,7 +1438,12 @@ export default function AdminReadingEditor() {
                       currentPartQuestions.length >=
                       PART_CONFIG[selectedPart].questions
                     }
-                    className={`border-2 rounded-xl text-xs font-black px-6 ${currentPartQuestions.length >= PART_CONFIG[selectedPart].questions ? 'border-[#151313]/30 text-[#151313]/30 cursor-not-allowed' : 'border-[#151313] text-[#151313] hover:bg-[#151313] hover:text-white'}`}
+                    className={`border-2 rounded-xl text-xs font-black px-6 ${
+                      currentPartQuestions.length >=
+                      PART_CONFIG[selectedPart].questions
+                        ? 'border-[#151313]/30 text-[#151313]/30 cursor-not-allowed'
+                        : 'border-[#151313] text-[#151313] hover:bg-[#151313] hover:text-white'
+                    }`}
                   >
                     <Plus size={14} className="mr-2" /> Add Question
                   </Button>

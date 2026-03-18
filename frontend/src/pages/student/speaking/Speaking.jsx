@@ -68,14 +68,14 @@ export default function Speaking() {
             </p>
 
             {loading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 <PracticeSetSkeleton />
                 <PracticeSetSkeleton />
               </div>
             )}
 
             {error && !loading && (
-              <div className="bg-red-50 border-2 border-[#E9424C] rounded-2xl p-6 max-w-2xl">
+              <div className="bg-red-50 border-2 border-[#E9424C] rounded-2xl p-6 w-full">
                 <p className="text-sm font-semibold text-[#E9424C]">{error}</p>
                 <Button
                   variant="link"
@@ -88,7 +88,7 @@ export default function Speaking() {
             )}
 
             {!loading && !error && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 {sets.map((set) => (
                   <div
                     key={set.set_number}

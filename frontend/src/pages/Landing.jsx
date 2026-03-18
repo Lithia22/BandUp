@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Menu, X, ArrowUpRight } from 'lucide-react'
@@ -44,6 +44,7 @@ export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [email, setEmail] = useState('')
+  const subscribeInputRef = useRef(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,9 +57,20 @@ export default function Landing() {
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const closeMenu = () => setMenuOpen(false)
 
+  const focusSubscribeInput = () => {
+    if (subscribeInputRef.current) {
+      subscribeInputRef.current.focus()
+    }
+  }
+
   const scrollTo = (e, id) => {
     e.preventDefault()
     document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' })
+
+    if (id === '#footer') {
+      setTimeout(focusSubscribeInput, 300)
+    }
+
     closeMenu()
   }
 
@@ -299,11 +311,13 @@ export default function Landing() {
             </div>
             <div className="w-full md:w-auto flex gap-2">
               <Input
+                ref={subscribeInputRef}
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-[#f7f7f5]/10 border-[#f7f7f5]/20 text-[#f7f7f5] placeholder:text-[#f7f7f5]/40 focus-visible:border-[#E9424C] w-full md:w-40"
+                className="bg-[#f7f7f5]/10 border-[#f7f7f5]/20 text-[#f7f7f5] placeholder:text-[#f7f7f5]/40 focus-visible:border-[#E9424C] focus-visible:ring-0 w-full md:w-40 cursor-text"
+                style={{ caretColor: '#E9424C' }}
               />
               <Button
                 onClick={handleSubscribe}

@@ -314,6 +314,11 @@ export function LinedTextPassage({ data }) {
           </div>
         ))}
       </div>
+      {data.citation && (
+        <p className="text-xs text-[#151313]/60 mt-4 pt-2 border-t border-[#151313]/10">
+          {data.citation}
+        </p>
+      )}
     </div>
   )
 }
@@ -396,14 +401,11 @@ export function QuestionCard({ q, answers, onSelect, disabled }) {
 }
 
 export function Part4Section({ groups, answers, onSelect, disabled }) {
-  const introTitle = (groups[0]?.passageTitle || '').split('.')[0] + '.'
-
   let twoTexts = null
   try {
     const parsed = JSON.parse(groups[0]?.passage)
     if (parsed?.type === 'two_texts') twoTexts = parsed
-  } catch {
-  }
+  } catch {}
 
   if (!twoTexts) {
     return (
@@ -412,10 +414,8 @@ export function Part4Section({ groups, answers, onSelect, disabled }) {
           <span className="inline-block bg-[#151313] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2">
             Part 4
           </span>
-          <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed mt-1">
-            {introTitle}
-          </p>
         </div>
+
         {groups.map((group) => {
           const pType = (() => {
             try {
@@ -424,14 +424,19 @@ export function Part4Section({ groups, answers, onSelect, disabled }) {
               return null
             }
           })()
-          const sub = group.passageTitle?.split(/\.\s+/).slice(1).join('. ')
+
+          const instruction = group.passageTitle || ''
+
           return (
             <div key={group.key} className="mb-8">
-              {sub && (
-                <p className="text-xs font-semibold text-[#151313]/60 italic mb-3">
-                  {sub}
-                </p>
+              {instruction && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed text-justify">
+                    {instruction}
+                  </p>
+                </div>
               )}
+
               {pType !== 'two_texts' && (
                 <PassageRenderer
                   passage={group.passage}
@@ -466,8 +471,8 @@ export function Part4Section({ groups, answers, onSelect, disabled }) {
         <span className="inline-block bg-[#151313] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2">
           Part 4
         </span>
-        <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed mt-1">
-          {introTitle}
+        <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed mt-1 text-justify">
+          {groups[0]?.passageTitle?.split('.')[0] + '.'}
         </p>
       </div>
 
