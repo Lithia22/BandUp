@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from datetime import datetime, timezone
 from app.config import supabase
 from app.services.clustering import run_kmeans
 from pydantic import BaseModel
 from typing import Optional, Any
 import uuid
+import httpx
+import os
 
 router = APIRouter()
 
@@ -21,6 +23,14 @@ class QuestionCreate(BaseModel):
     passage_title: Optional[str] = None
     audio_url: Optional[str] = None
     year: Optional[int] = None
+    passage_text: Optional[str] = None
+    passage_type: Optional[str] = None
+    col_a: Optional[str] = None
+    col_b: Optional[str] = None
+    col_c: Optional[str] = None
+    text1: Optional[str] = None
+    text2: Optional[str] = None
+    sentences: Optional[Any] = None
 
 
 class QuestionUpdate(BaseModel):
@@ -35,6 +45,14 @@ class QuestionUpdate(BaseModel):
     passage_title: Optional[str] = None
     audio_url: Optional[str] = None
     year: Optional[int] = None
+    passage_text: Optional[str] = None
+    passage_type: Optional[str] = None
+    col_a: Optional[str] = None
+    col_b: Optional[str] = None
+    col_c: Optional[str] = None
+    text1: Optional[str] = None
+    text2: Optional[str] = None
+    sentences: Optional[Any] = None
 
 
 @router.get("/questions")
@@ -70,7 +88,12 @@ def update_question(question_id: str, data: QuestionUpdate):
         payload = data.model_dump(exclude_none=True)
         if not payload:
             raise HTTPException(status_code=400, detail="No fields to update")
-        result = supabase.table("questions").update(payload).eq("id", question_id).execute()
+        result = (
+            supabase.table("questions")
+            .update(payload)
+            .eq("id", question_id)
+            .execute()
+        )
         if not result.data:
             raise HTTPException(status_code=404, detail="Question not found")
         return {"message": "Question updated", "question": result.data[0]}
@@ -81,7 +104,12 @@ def update_question(question_id: str, data: QuestionUpdate):
 @router.delete("/questions/{question_id}")
 def delete_question(question_id: str):
     try:
-        result = supabase.table("questions").delete().eq("id", question_id).execute()
+        result = (
+            supabase.table("questions")
+            .delete()
+            .eq("id", question_id)
+            .execute()
+        )
         if not result.data:
             raise HTTPException(status_code=404, detail="Question not found")
         return {"message": "Question deleted", "id": question_id}
@@ -91,35 +119,65 @@ def delete_question(question_id: str):
 
 @router.delete("/questions")
 def delete_questions(component: Optional[str] = None, set_number: Optional[int] = None):
-    """
-    Delete all questions for a given component and set number
-    """
     try:
         if not component or not set_number:
             raise HTTPException(status_code=400, detail="Component and set_number are required")
-        
-        # First, get all questions for this set to know how many we're deleting
-        result = supabase.table("questions") \
-            .select("id") \
-            .eq("component", component) \
-            .eq("set_number", set_number) \
+        result = (
+            supabase.table("questions")
+            .select("id")
+            .eq("component", component)
+            .eq("set_number", set_number)
             .execute()
-        
+        )
         if not result.data:
             return {"message": f"No questions found for {component} set {set_number}", "deleted_count": 0}
-        
-        # Delete all questions for this set
-        delete_result = supabase.table("questions") \
-            .delete() \
-            .eq("component", component) \
-            .eq("set_number", set_number) \
-            .execute()
-        
-        return {
-            "message": f"Deleted {len(result.data)} questions from {component} set {set_number}",
-            "deleted_count": len(result.data)
-        }
+        supabase.table("questions").delete().eq("component", component).eq("set_number", set_number).execute()
+        return {"message": f"Deleted {len(result.data)} questions from {component} set {set_number}", "deleted_count": len(result.data)}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    bucket: str = Form(...),
+    path: str = Form(...),
+):
+    try:
+        supabase_url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+        service_key = os.environ.get("SUPABASE_SERVICE_KEY")
+
+        if not supabase_url or not service_key:
+            raise HTTPException(status_code=500, detail="Supabase credentials not configured")
+
+        file_bytes = await file.read()
+        content_type = file.content_type or "application/octet-stream"
+        upload_url = f"{supabase_url}/storage/v1/object/{bucket}/{path}"
+
+        print(f"[upload] uploading to {upload_url}, size={len(file_bytes)}, type={content_type}")
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            res = await client.post(
+                upload_url,
+                content=file_bytes,
+                headers={
+                    "Authorization": f"Bearer {service_key}",
+                    "Content-Type": content_type,
+                    "x-upsert": "true",
+                },
+            )
+            print(f"[upload] response status={res.status_code}, body={res.text[:200]}")
+            if res.status_code not in (200, 201):
+                raise HTTPException(status_code=500, detail=f"Supabase upload failed ({res.status_code}): {res.text}")
+
+        public_url = f"{supabase_url}/storage/v1/object/public/{bucket}/{path}"
+        return {"url": public_url, "path": path, "bucket": bucket}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -136,7 +194,6 @@ def get_clusters():
 
         if not bands:
             return {"clusters": [], "summary": {}, "total_students": 0}
-        
         # Fetch student
         student_ids = [b["student_id"] for b in bands]
         chunk_size = 20
@@ -162,7 +219,7 @@ def get_clusters():
                 user_map = {u["id"]: u for u in (users_res.data or [])}
                 for sid, uid in student_id_to_user.items():
                     student_info[sid] = user_map.get(uid, {})
-        
+
         # Prepare data for clustering
         students = [
             {
@@ -177,11 +234,11 @@ def get_clusters():
             }
             for b in bands
         ]
-        
+
         # Run K-means
         results = run_kmeans(students, k=4)
         label_map = {r["student_band_id"]: r["cluster_label"] for r in results}
-        
+
         # Upsert cluster assignments
         now = datetime.now(timezone.utc).isoformat()
         for r in results:

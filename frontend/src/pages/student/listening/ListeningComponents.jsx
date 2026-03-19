@@ -116,7 +116,7 @@ export function AudioPlayer({
               !src
                 ? 'opacity-40 cursor-not-allowed'
                 : isBlocked
-                  ? 'bg-white/10 border-white/10 hover:bg-white/10 cursor-pointer' // Make it clickable even when blocked
+                  ? 'bg-white/10 border-white/10 hover:bg-white/10 cursor-pointer'
                   : 'bg-[#E9424C] border-[#E9424C] hover:bg-[#c73540]'
             }`}
           >
@@ -389,7 +389,7 @@ export function PartSection({
         <span className="inline-block bg-[#151313] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2">
           Part {partNumber}
         </span>
-        {partTitle && (
+        {!isPart5 && partTitle && (
           <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed mt-1 italic">
             {partTitle}
           </p>

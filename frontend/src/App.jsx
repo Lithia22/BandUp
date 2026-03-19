@@ -14,6 +14,8 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminQuestions from './pages/admin/questions/AdminQuestions'
 import AdminReading from './pages/admin/questions/reading/AdminReading'
 import AdminReadingEditor from './pages/admin/questions/reading/AdminReadingEditor'
+import AdminListening from './pages/admin/questions/listening/AdminListening'
+import AdminListeningEditor from './pages/admin/questions/listening/AdminListeningEditor'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import StudentAnalytics from './pages/student/StudentAnalytics'
 import Reading from './pages/student/reading/Reading'
@@ -41,18 +43,16 @@ function ProtectedRoute() {
         setIsValid(false)
         return
       }
-
       try {
         await api.get('/auth/verify')
         setIsValid(true)
-      } catch (error) {
+      } catch {
         localStorage.removeItem('bandup_token')
         localStorage.removeItem('bandup_role')
         localStorage.removeItem('bandup_name')
         setIsValid(false)
       }
     }
-
     verifyToken()
   }, [token])
 
@@ -63,21 +63,13 @@ function ProtectedRoute() {
 
 function AdminRoute() {
   const role = localStorage.getItem('bandup_role')
-
-  if (role !== 'admin') {
-    return <Navigate to="/student" replace />
-  }
-
+  if (role !== 'admin') return <Navigate to="/student" replace />
   return <Outlet />
 }
 
 function StudentRoute() {
   const role = localStorage.getItem('bandup_role')
-
-  if (role !== 'student') {
-    return <Navigate to="/admin" replace />
-  }
-
+  if (role !== 'student') return <Navigate to="/admin" replace />
   return <Outlet />
 }
 
@@ -96,7 +88,6 @@ const router = createBrowserRouter([
     children: [
       { path: '/dashboard', element: <DashboardRedirect /> },
       { path: '/profile', element: <Profile /> },
-
       {
         element: <AdminRoute />,
         children: [
@@ -109,9 +100,17 @@ const router = createBrowserRouter([
             path: '/admin/reading/editor/:setNumber',
             element: <AdminReadingEditor />,
           },
+          { path: '/admin/listening', element: <AdminListening /> },
+          {
+            path: '/admin/listening/editor',
+            element: <AdminListeningEditor />,
+          },
+          {
+            path: '/admin/listening/editor/:setNumber',
+            element: <AdminListeningEditor />,
+          },
         ],
       },
-
       {
         element: <StudentRoute />,
         children: [

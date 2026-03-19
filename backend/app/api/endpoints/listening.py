@@ -49,7 +49,7 @@ def get_set_questions(set_number: int):
     try:
         result = (
             supabase.table("questions")
-            .select("id, part_number, question_number, passage_title, passage, question_text, options, audio_url")
+            .select("id, part_number, question_number, passage_title, passage, question_text, options, correct_answer, audio_url, year")
             .eq("component", "listening")
             .eq("set_number", set_number)
             .order("question_number")
@@ -166,7 +166,6 @@ IMPORTANT: Use ONLY these labels. Only mention STRONG parts as positives. Only m
         structured_feedback = rag_result["structured_feedback"]
         estimated_band      = rag_result["estimated_band"]
         top_descriptor_id   = rag_result["top_descriptor_id"]
-
         # 5. Save to DB
         if data.student_id:
             try:
