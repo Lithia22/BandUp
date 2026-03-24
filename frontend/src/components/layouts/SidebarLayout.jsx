@@ -11,6 +11,7 @@ import {
   ScatterChart,
   BarChart2,
   User,
+  ClipboardList,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -39,7 +40,7 @@ const STUDENT_NAV = [
 
 const ADMIN_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-  { label: 'Manage Questions', icon: BookOpenCheck, href: '/admin/questions' },
+  { label: 'Manage Questions', icon: ClipboardList, href: '/admin/questions' },
   { label: 'Analytics', icon: ScatterChart, href: '/admin/analytics' },
   { label: 'Profile', icon: User, href: '/profile' },
 ]

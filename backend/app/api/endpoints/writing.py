@@ -19,18 +19,18 @@ def get_sets():
         )
         seen = {}
         for row in result.data:
-            sn = row["set_number"]
-            if sn not in seen:
-                seen[sn] = row["year"]
+            key = (row["set_number"], row["year"])
+            if key not in seen:
+                seen[key] = True
         sets = [
             {
                 "set_number": sn,
-                "year": year,
-                "label": f"Practice Set {sn} ({year})",
+                "year": yr,
+                "label": f"Practice Set {sn} ({yr})",
                 "duration_mins": 25,
                 "min_words": 100,
             }
-            for sn, year in sorted(seen.items())
+            for sn, yr in sorted(seen.keys())
         ]
         return {"sets": sets}
     except Exception as e:
@@ -38,23 +38,35 @@ def get_sets():
 
 
 @router.get("/sets/{set_number}")
-def get_set_question(set_number: int):
-    try:
-        result = (
-            supabase.table("questions")
-            .select("id, part_number, question_number, question_text, passage, options")
-            .eq("component", "writing")
-            .eq("set_number", set_number)
-            .single()
-            .execute()
-        )
-        if not result.data:
-            raise HTTPException(status_code=404, detail="Set not found")
-        return {"set_number": set_number, "question": result.data}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+def get_set_question(set_number: int, year: Optional[int] = None):
+   try:
+       query = (
+           supabase.table("questions")
+           .select("id, part_number, question_number, question_text, passage, options, year")
+           .eq("component", "writing")
+           .eq("set_number", set_number)
+       )
+       if year:
+           query = query.eq("year", year)
+       else:
+           query = query.order("year", desc=True).limit(1)
+
+       result = query.execute()
+
+       if not result.data:
+           raise HTTPException(status_code=404, detail="Set not found")
+       
+       question = result.data[0]
+       
+       return {
+           "set_number": set_number,
+           "year": question.get("year"),
+           "question": question
+       }
+   except HTTPException:
+       raise
+   except Exception as e:
+       raise HTTPException(status_code=500, detail=str(e))
 
 
 class SubmitRequest(BaseModel):
@@ -69,7 +81,6 @@ class SubmitRequest(BaseModel):
 def submit_answer(data: SubmitRequest):
     try:
         now = datetime.now(timezone.utc).isoformat()
-
         # 1. Fetch question to get notes
         result = (
             supabase.table("questions")
@@ -86,7 +97,6 @@ def submit_answer(data: SubmitRequest):
 
         # 2. Count words in student answer
         word_count = len(data.student_answer.strip().split()) if data.student_answer.strip() else 0
-
         # 3. Build performance summary for RAG
         notes_text = "\n".join([f"  - {v}" for v in notes.values()])
         performance_summary = f"""Student completed MUET Writing Task 1 (Set {data.set_number}).

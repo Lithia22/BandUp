@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 import { ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   parseBullets,
@@ -9,6 +14,8 @@ import { Button } from '@/components/ui/button'
 
 export default function WritingResults() {
   const { setNumber } = useParams()
+  const [searchParams] = useSearchParams()
+  const year = searchParams.get('year')
   const navigate = useNavigate()
   const location = useLocation()
   const [showFeedback, setShowFeedback] = useState(false)
@@ -19,14 +26,19 @@ export default function WritingResults() {
     location.state ||
     (() => {
       try {
-        return JSON.parse(localStorage.getItem(`writing_results_${setNumber}`))
+        return JSON.parse(
+          localStorage.getItem(`writing_results_${setNumber}_${year}`)
+        )
       } catch {
         return null
       }
     })()
 
   useEffect(() => {
-    if (!results) navigate(`/writing/${setNumber}`, { replace: true })
+    if (!results)
+      navigate(`/writing/${setNumber}${year ? `?year=${year}` : ''}`, {
+        replace: true,
+      })
   }, [])
 
   if (!results) return null
@@ -251,7 +263,6 @@ export default function WritingResults() {
             )}
           </div>
         )}
-
         <div className="pb-8" />
       </div>
     </div>

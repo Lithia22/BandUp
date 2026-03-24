@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams, useBlocker } from 'react-router-dom'
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+  useBlocker,
+} from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import QuizTimer from '../../../components/layouts/QuizTimer'
@@ -15,7 +20,6 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 
 const QUIZ_DURATION = 25 * 60
-const storageKey = (n) => `writing_quiz_${n}`
 const MIN_WORDS = 100
 
 function EmailDisplay({ passage }) {
@@ -93,6 +97,8 @@ function EmailDisplay({ passage }) {
 
 export default function WritingQuiz() {
   const { setNumber } = useParams()
+  const [searchParams] = useSearchParams()
+  const year = searchParams.get('year')
   const navigate = useNavigate()
   const [question, setQuestion] = useState(null)
   const [answer, setAnswer] = useState('')
@@ -105,7 +111,8 @@ export default function WritingQuiz() {
 
   const submittingRef = useRef(false)
   const answerRef = useRef('')
-  const key = storageKey(setNumber)
+
+  const getStorageKey = () => `writing_quiz_${setNumber}_${year}`
 
   const wordCount = answer.trim()
     ? answer.trim().split(/\s+/).filter(Boolean).length
@@ -114,37 +121,41 @@ export default function WritingQuiz() {
   useEffect(() => {
     const saved = (() => {
       try {
+        const key = getStorageKey()
         return JSON.parse(localStorage.getItem(key))
       } catch {
         return null
       }
     })()
+
     if (saved?.answer) {
       setAnswer(saved.answer)
       answerRef.current = saved.answer
     }
+
     const hasAnswer = (saved?.answer || '').trim().length > 0
     if (hasAnswer && saved?.timeLeft > 0 && saved?.timeLeft <= QUIZ_DURATION) {
       setTimeLeft(saved.timeLeft)
     }
 
     api
-      .get(`/writing/sets/${setNumber}`)
+      .get(`/writing/sets/${setNumber}?year=${year}`)
       .then((res) => setQuestion(res.data.question))
       .catch(() => setError('Failed to load question.'))
       .finally(() => setLoading(false))
-  }, [setNumber, key])
+  }, [setNumber, year])
 
   useEffect(() => {
     if (loading) return
     answerRef.current = answer
     try {
+      const key = getStorageKey()
       localStorage.setItem(
         key,
         JSON.stringify({ answer, timeLeft, timestamp: Date.now() })
       )
     } catch {}
-  }, [answer, timeLeft, loading, key])
+  }, [answer, timeLeft, loading])
 
   useEffect(() => {
     const handler = (e) => {
@@ -178,6 +189,7 @@ export default function WritingQuiz() {
           return null
         }
       })()
+
       const res = await api.post('/writing/submit', {
         set_number: parseInt(setNumber),
         question_id: question.id,
@@ -187,13 +199,17 @@ export default function WritingQuiz() {
           Date.now() - (QUIZ_DURATION - timeLeft) * 1000
         ).toISOString(),
       })
+
       const resultsData = res.data
       localStorage.setItem(
-        `writing_results_${setNumber}`,
+        `writing_results_${setNumber}_${year}`,
         JSON.stringify(resultsData)
       )
+
+      const key = getStorageKey()
       localStorage.removeItem(key)
-      navigate(`/writing/${setNumber}/results`, {
+
+      navigate(`/writing/${setNumber}/results?year=${year}`, {
         state: resultsData,
         replace: true,
       })
@@ -279,9 +295,7 @@ export default function WritingQuiz() {
             Task 1
           </span>
           <p className="text-xs font-semibold text-[#151313]/60 italic mb-4">
-            You are advised to spend about
-            <strong className="text-[#151313] not-italic">25 minutes</strong> on
-            this task.
+            You are advised to spend about 25 minutes on this task.
           </p>
         </div>
 
@@ -289,8 +303,7 @@ export default function WritingQuiz() {
 
         <p className="text-sm font-medium text-[#151313] leading-relaxed">
           Using <strong>all the notes given</strong>, write a reply of
-          <strong>at least {MIN_WORDS} words</strong> in an appropriate style.
-          <span className="text-[#151313]/40">[30]</span>
+          <strong> at least {MIN_WORDS} words</strong> in an appropriate style.
         </p>
 
         <div className="bg-white border-2 border-[#151313] rounded-2xl overflow-hidden shadow-[3px_3px_0px_#151313]">

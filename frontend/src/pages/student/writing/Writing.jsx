@@ -12,7 +12,7 @@ import api from '../../../services/api'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 
-const storageKey = (setNumber) => `writing_quiz_${setNumber}`
+const storageKey = (setNumber, year) => `writing_quiz_${setNumber}_${year}`
 
 export default function Writing() {
   const navigate = useNavigate()
@@ -23,7 +23,6 @@ export default function Writing() {
 
   useEffect(() => {
     let isMounted = true
-
     const initializeData = async () => {
       try {
         const savedProgress = {}
@@ -31,45 +30,44 @@ export default function Writing() {
           const key = localStorage.key(i)
           if (key?.startsWith('writing_quiz_')) {
             try {
-              const setNumber = key.replace('writing_quiz_', '')
               const data = JSON.parse(localStorage.getItem(key))
+              const id = key.replace('writing_quiz_', '')
               if (data?.answer && data.answer.trim().length > 0) {
-                savedProgress[setNumber] = {
+                savedProgress[id] = {
                   wordCount: data.answer.trim().split(/\s+/).filter(Boolean)
                     .length,
                   timestamp: data.timestamp || Date.now(),
                 }
               }
-            } catch (e) {}
+            } catch {}
           }
         }
         if (isMounted) setProgress(savedProgress)
-
         const res = await api.get('/writing/sets')
         if (isMounted) setSets(res.data.sets)
-      } catch (err) {
+      } catch {
         if (isMounted) setError('Failed to load practice sets.')
       } finally {
         if (isMounted) setLoading(false)
       }
     }
-
     initializeData()
     return () => {
       isMounted = false
     }
   }, [])
 
-  const handleStartSet = (setNumber, action = 'start') => {
+  const handleStartSet = (setNumber, year, action = 'start') => {
+    const key = storageKey(setNumber, year)
     if (action === 'restart') {
-      localStorage.removeItem(storageKey(setNumber))
+      localStorage.removeItem(key)
       setProgress((prev) => {
         const next = { ...prev }
-        delete next[setNumber]
+        delete next[`${setNumber}_${year}`]
         return next
       })
     }
-    navigate(`/writing/${setNumber}`)
+    navigate(`/writing/${setNumber}?year=${year}`)
   }
 
   const formatTimestamp = (timestamp) => {
@@ -120,6 +118,7 @@ export default function Writing() {
                 </p>
               </div>
             </div>
+
             <p className="text-[10px] font-black text-[#151313]/60 uppercase tracking-widest mb-3">
               Choose a Practice Set
             </p>
@@ -130,7 +129,6 @@ export default function Writing() {
                 <PracticeSetSkeleton />
               </div>
             )}
-
             {error && !loading && (
               <div className="bg-red-50 border-2 border-[#E9424C] rounded-2xl p-6 w-full">
                 <p className="text-sm font-semibold text-[#E9424C]">{error}</p>
@@ -143,22 +141,20 @@ export default function Writing() {
                 </Button>
               </div>
             )}
-
             {!loading && !error && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 {sets.map((set) => {
-                  const hasProgress = progress[set.set_number]
+                  const progressKey = `${set.set_number}_${set.year}`
+                  const hasProgress = progress[progressKey]
                   const wordCount = hasProgress?.wordCount || 0
-
                   return (
                     <div
-                      key={set.set_number}
+                      key={progressKey}
                       className="group bg-white rounded-2xl border-2 border-[#151313] p-5 shadow-[4px_4px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200"
                     >
                       <p className="text-base font-black text-[#151313] mb-1">
                         {set.label}
                       </p>
-
                       <div className="flex items-center gap-3 mt-2 mb-4">
                         <span className="flex items-center gap-1 text-[10px] font-semibold text-[#151313]/50">
                           <Clock size={10} /> 25 mins
@@ -170,7 +166,6 @@ export default function Writing() {
                           <SquarePen size={10} /> 100 words min
                         </span>
                       </div>
-
                       {hasProgress && (
                         <div className="mb-4">
                           <div className="flex items-center justify-between text-[10px] font-semibold mb-1">
@@ -185,7 +180,7 @@ export default function Writing() {
                           </div>
                           <Progress
                             value={Math.min((wordCount / 100) * 100, 100)}
-                            className={`h-1.5 ${wordCount >= 100 ? 'bg-[#22c55e]' : 'bg-[#E9424C]'}`}
+                            className="h-1.5"
                           />
                           <p className="text-[8px] font-medium text-[#151313]/30 mt-1">
                             Last active:
@@ -193,13 +188,16 @@ export default function Writing() {
                           </p>
                         </div>
                       )}
-
                       <div className="flex gap-2 mt-2">
                         {hasProgress ? (
                           <>
                             <Button
                               onClick={() =>
-                                handleStartSet(set.set_number, 'resume')
+                                handleStartSet(
+                                  set.set_number,
+                                  set.year,
+                                  'resume'
+                                )
                               }
                               className="flex-1 bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-3 py-2 h-auto text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-1"
                             >
@@ -208,7 +206,11 @@ export default function Writing() {
                             <Button
                               variant="outline"
                               onClick={() =>
-                                handleStartSet(set.set_number, 'restart')
+                                handleStartSet(
+                                  set.set_number,
+                                  set.year,
+                                  'restart'
+                                )
                               }
                               className="flex-1 bg-white text-[#151313] border-2 border-[#151313] rounded-xl px-3 py-2 h-auto text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#151313] hover:text-white transition-all flex items-center justify-center gap-1"
                             >
@@ -218,7 +220,7 @@ export default function Writing() {
                         ) : (
                           <Button
                             onClick={() =>
-                              handleStartSet(set.set_number, 'start')
+                              handleStartSet(set.set_number, set.year, 'start')
                             }
                             className="w-full bg-[#151313] text-white border-2 border-[#151313] rounded-xl px-4 py-2 h-auto text-xs font-black shadow-[2px_2px_0px_#151313] hover:bg-[#333] transition-all flex items-center justify-center gap-2"
                           >

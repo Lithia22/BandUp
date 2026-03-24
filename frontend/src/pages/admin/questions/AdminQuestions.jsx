@@ -43,7 +43,7 @@ const COMPONENTS = [
     key: 'speaking',
     label: 'Speaking',
     icon: Mic,
-    description: 'booklets • candidates • discussion',
+    description: 'booklets • individual • presentation',
     path: '/admin/speaking',
   },
 ]
@@ -82,9 +82,14 @@ export default function AdminQuestions() {
       <div className="flex min-h-screen w-full bg-[#f7f7f5]">
         <SidebarLayout role="admin" />
         <SidebarInset className="flex-1 min-w-0">
-          <main className="h-full overflow-y-auto p-4 md:p-6">
-            <div className="flex items-center mb-4 md:hidden">
-              <SidebarTrigger />
+          <main className="h-full overflow-y-auto p-4 md:p-6 space-y-5">
+            <div className="flex items-center justify-between mb-2 md:hidden">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <h2 className="text-lg font-black text-[#151313]">
+                  Manage Questions
+                </h2>
+              </div>
             </div>
 
             <Card
@@ -107,50 +112,54 @@ export default function AdminQuestions() {
               </CardContent>
             </Card>
 
-            <p className="text-[10px] font-black text-[#151313]/60 uppercase tracking-widest mb-3">
-              Choose a Component
-            </p>
+            <div>
+              <p className="text-[10px] font-black text-[#151313]/60 uppercase tracking-widest mb-3">
+                Choose a Component
+              </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl">
-              {COMPONENTS.map(
-                ({ key, label, icon: Icon, description, path }) => (
-                  <Card
-                    key={key}
-                    className="group cursor-pointer border-2 border-[#151313] rounded-2xl shadow-[4px_4px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 w-full"
-                    style={{ minHeight: 140 }}
-                    onClick={() => navigate(path)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#E9424C] border-2 border-[#151313] flex items-center justify-center shadow-[2px_2px_0px_#151313]">
-                          <Icon size={18} className="text-white" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl">
+                {COMPONENTS.map(
+                  ({ key, label, icon: Icon, description, path }) => (
+                    <Card
+                      key={key}
+                      className="group cursor-pointer border-2 border-[#151313] rounded-2xl shadow-[4px_4px_0px_#151313] hover:shadow-[6px_6px_0px_#151313] hover:-translate-y-1 transition-all duration-200 w-full"
+                      style={{ minHeight: 140 }}
+                      onClick={() => navigate(path)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-[#E9424C] border-2 border-[#151313] flex items-center justify-center shadow-[2px_2px_0px_#151313]">
+                            <Icon size={18} className="text-white" />
+                          </div>
+                          <div className="mt-2">
+                            <h3 className="text-base font-black text-[#151313]">
+                              {label}
+                            </h3>
+                            <p className="text-[10px] font-semibold text-[#151313]/40">
+                              {description}
+                            </p>
+                          </div>
                         </div>
-                        <div className="mt-2">
-                          <h3 className="text-base font-black text-[#151313]">
-                            {label}
-                          </h3>
-                          <p className="text-[10px] font-semibold text-[#151313]/40">
-                            {description}
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center justify-between pt-3 mt-4 border-t border-[#151313]/10">
-                        <span className="text-[10px] font-black text-[#151313]/30 uppercase tracking-widest">
-                          {loading
-                            ? '—'
-                            : `${setCounts[key] ?? 0} practice sets`}
-                        </span>
-                        <ChevronRight
-                          size={14}
-                          className="text-[#151313]/30 group-hover:text-[#151313] group-hover:translate-x-0.5 transition-all"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              )}
+                        <div className="flex items-center justify-between pt-3 mt-4 border-t border-[#151313]/10">
+                          <span className="text-[10px] font-black text-[#151313]/30 uppercase tracking-widest">
+                            {loading
+                              ? '—'
+                              : `${setCounts[key] ?? 0} practice sets`}
+                          </span>
+                          <ChevronRight
+                            size={14}
+                            className="text-[#151313]/30 group-hover:text-[#151313] group-hover:translate-x-0.5 transition-all"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                )}
+              </div>
             </div>
+
+            <div className="pb-6" />
           </main>
         </SidebarInset>
       </div>
