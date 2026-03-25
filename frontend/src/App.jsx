@@ -18,6 +18,8 @@ import AdminListening from './pages/admin/questions/listening/AdminListening'
 import AdminListeningEditor from './pages/admin/questions/listening/AdminListeningEditor'
 import AdminWriting from './pages/admin/questions/writing/AdminWriting'
 import AdminWritingEditor from './pages/admin/questions/writing/AdminWritingEditor'
+import AdminSpeaking from './pages/admin/questions/speaking/AdminSpeaking'
+import AdminSpeakingEditor from './pages/admin/questions/speaking/AdminSpeakingEditor'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import StudentAnalytics from './pages/student/StudentAnalytics'
 import Reading from './pages/student/reading/Reading'
@@ -116,6 +118,12 @@ const router = createBrowserRouter([
           {
             path: '/admin/writing/editor/:setNumber',
             element: <AdminWritingEditor />,
+          },
+          { path: '/admin/speaking', element: <AdminSpeaking /> },
+          { path: '/admin/speaking/editor', element: <AdminSpeakingEditor /> },
+          {
+            path: '/admin/speaking/editor/:setNumber',
+            element: <AdminSpeakingEditor />,
           },
         ],
       },

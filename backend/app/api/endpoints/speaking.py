@@ -13,26 +13,29 @@ def get_sets():
     try:
         result = (
             supabase.table("questions")
-            .select("set_number, year")
+            .select("set_number, year, part_number")
             .eq("component", "speaking")
             .order("set_number")
             .execute()
         )
+
         seen = {}
         for row in result.data:
-            sn = row["set_number"]
-            if sn not in seen:
-                seen[sn] = row["year"]
+            key = (row["set_number"], row["year"])
+            if key not in seen:
+                seen[key] = {"parts": set()}
+            seen[key]["parts"].add(row["part_number"])
 
         sets = [
             {
                 "set_number": sn,
-                "year": year,
-                "label": f"Practice Set {sn} ({year})",
+                "year": yr,
+                "label": f"Practice Set {sn} ({yr})",
+                "total_booklets": len(info["parts"]),
                 "duration_prep_secs": 120,
                 "duration_speak_secs": 120,
             }
-            for sn, year in sorted(seen.items())
+            for (sn, yr), info in sorted(seen.items())
         ]
         return {"sets": sets}
     except Exception as e:
@@ -40,18 +43,22 @@ def get_sets():
 
 
 @router.get("/sets/{set_number}")
-def get_booklets(set_number: int):
+def get_booklets(set_number: int, year: Optional[int] = None):
     try:
-        result = (
+        query = (
             supabase.table("questions")
-            .select("part_number, passage_title, passage")
+            .select("part_number, passage_title, passage, year")
             .eq("component", "speaking")
             .eq("set_number", set_number)
             .order("part_number")
-            .execute()
         )
+        if year:
+            query = query.eq("year", year)
+
+        result = query.execute()
+
         if not result.data:
-            raise HTTPException(status_code=404, detail="Session not found")
+            raise HTTPException(status_code=404, detail="Set not found")
 
         seen = {}
         for row in result.data:
@@ -68,17 +75,21 @@ def get_booklets(set_number: int):
 
 
 @router.get("/sets/{set_number}/{booklet_number}")
-def get_candidates(set_number: int, booklet_number: int):
+def get_candidates(set_number: int, booklet_number: int, year: Optional[int] = None):
     try:
-        result = (
+        query = (
             supabase.table("questions")
-            .select("id, question_number, passage_title, passage, question_text")
+            .select("id, question_number, passage_title, passage, question_text, year")
             .eq("component", "speaking")
             .eq("set_number", set_number)
             .eq("part_number", booklet_number)
             .order("question_number")
-            .execute()
         )
+        if year:
+            query = query.eq("year", year)
+
+        result = query.execute()
+
         if not result.data:
             raise HTTPException(status_code=404, detail="Booklet not found")
 
