@@ -42,18 +42,33 @@ export function ThreeColumnPassage({ data }) {
                 {col.label}
               </span>
             </div>
-            <p className="text-xs font-black text-[#151313] text-center">
-              {col.title}
-            </p>
-            <p className="text-xs text-[#151313] leading-relaxed font-medium text-justify">
+            {col.title && (
+              <p className="text-xs font-black text-[#151313] text-center">
+                {col.title}
+              </p>
+            )}
+            <p
+              className="text-xs text-[#151313] leading-relaxed font-medium whitespace-pre-wrap"
+              style={{ textAlign: 'justify' }}
+            >
               {col.body}
             </p>
-            <div className="text-xs text-[#151313] font-medium whitespace-pre-line border-t border-[#151313]/20 pt-2">
-              {col.details}
-            </div>
-            <p className="text-xs text-[#151313] italic font-medium mt-auto pt-2 text-justify">
-              {col.footer}
-            </p>
+            {col.details && col.details.trim() && (
+              <div
+                className="text-xs text-[#151313] font-medium whitespace-pre-wrap border-t border-[#151313]/20 pt-2"
+                style={{ textAlign: 'justify' }}
+              >
+                {col.details}
+              </div>
+            )}
+            {col.footer && col.footer.trim() && (
+              <p
+                className="text-xs text-[#151313] italic font-medium mt-auto pt-2 whitespace-pre-wrap"
+                style={{ textAlign: 'justify' }}
+              >
+                {col.footer}
+              </p>
+            )}
           </div>
         ))}
       </div>

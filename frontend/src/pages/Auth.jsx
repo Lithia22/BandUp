@@ -168,7 +168,7 @@ export default function Auth({ mode = 'login' }) {
                   </Button>
                 </div>
                 {!isLogin && form.password && (
-                  <p className="text-[10px] text-[#E9424C] mt-1">
+                  <p className="text-[10px] text-[#151313] opacity-50 mt-1">
                     Use 8+ chars with uppercase, lowercase, number & special
                     characters
                   </p>
