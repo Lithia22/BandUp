@@ -42,18 +42,33 @@ export function ThreeColumnPassage({ data }) {
                 {col.label}
               </span>
             </div>
-            <p className="text-xs font-black text-[#151313] text-center">
-              {col.title}
-            </p>
-            <p className="text-xs text-[#151313] leading-relaxed font-medium text-justify">
+            {col.title && (
+              <p className="text-xs font-black text-[#151313] text-center">
+                {col.title}
+              </p>
+            )}
+            <p
+              className="text-xs text-[#151313] leading-relaxed font-medium whitespace-pre-wrap"
+              style={{ textAlign: 'justify' }}
+            >
               {col.body}
             </p>
-            <div className="text-xs text-[#151313] font-medium whitespace-pre-line border-t border-[#151313]/20 pt-2">
-              {col.details}
-            </div>
-            <p className="text-xs text-[#151313] italic font-medium mt-auto pt-2 text-justify">
-              {col.footer}
-            </p>
+            {col.details && col.details.trim() && (
+              <div
+                className="text-xs text-[#151313] font-medium whitespace-pre-wrap border-t border-[#151313]/20 pt-2"
+                style={{ textAlign: 'justify' }}
+              >
+                {col.details}
+              </div>
+            )}
+            {col.footer && col.footer.trim() && (
+              <p
+                className="text-xs text-[#151313] italic font-medium mt-auto pt-2 whitespace-pre-wrap"
+                style={{ textAlign: 'justify' }}
+              >
+                {col.footer}
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -314,6 +329,11 @@ export function LinedTextPassage({ data }) {
           </div>
         ))}
       </div>
+      {data.citation && (
+        <p className="text-xs text-[#151313]/60 mt-4 pt-2 border-t border-[#151313]/10">
+          {data.citation}
+        </p>
+      )}
     </div>
   )
 }
@@ -396,43 +416,110 @@ export function QuestionCard({ q, answers, onSelect, disabled }) {
 }
 
 export function Part4Section({ groups, answers, onSelect, disabled }) {
-  const introTitle = (groups[0]?.passageTitle || '').split('.')[0] + '.'
+  let twoTexts = null
+  try {
+    const parsed = JSON.parse(groups[0]?.passage)
+    if (parsed?.type === 'two_texts') twoTexts = parsed
+  } catch {}
+
+  if (!twoTexts) {
+    return (
+      <div>
+        <div className="mb-4">
+          <span className="inline-block bg-[#151313] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2">
+            Part 4
+          </span>
+        </div>
+
+        {groups.map((group) => {
+          const pType = (() => {
+            try {
+              return JSON.parse(group.passage)?.type
+            } catch {
+              return null
+            }
+          })()
+
+          const instruction = group.passageTitle || ''
+
+          return (
+            <div key={group.key} className="mb-8">
+              {instruction && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed text-justify">
+                    {instruction}
+                  </p>
+                </div>
+              )}
+
+              {pType !== 'two_texts' && (
+                <PassageRenderer
+                  passage={group.passage}
+                  partNumber={4}
+                  gapQuestions={group.questions}
+                  answers={answers}
+                  onSelect={onSelect}
+                  disabled={disabled}
+                />
+              )}
+              <div className="space-y-4">
+                {group.questions.map((q) => (
+                  <QuestionCard
+                    key={q.id}
+                    q={q}
+                    answers={answers}
+                    onSelect={onSelect}
+                    disabled={disabled}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div>
       <div className="mb-4">
         <span className="inline-block bg-[#151313] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2">
           Part 4
         </span>
-        <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed mt-1">
-          {introTitle}
+        <p className="text-xs font-semibold text-[#151313]/60 leading-relaxed mt-1 text-justify">
+          {groups[0]?.passageTitle?.split('.')[0] + '.'}
         </p>
       </div>
-      {groups.map((group) => {
-        const pType = (() => {
-          try {
-            return JSON.parse(group.passage)?.type
-          } catch {
-            return null
-          }
-        })()
+
+      {groups.map((group, groupIdx) => {
         const sub = group.passageTitle?.split(/\.\s+/).slice(1).join('. ')
+
         return (
           <div key={group.key} className="mb-8">
+            {groupIdx === 0 && twoTexts.texts[0] && (
+              <div className={`${box} mb-4`}>
+                <p className="text-sm font-black text-[#151313] mb-4">
+                  {twoTexts.texts[0].label}
+                </p>
+                <NumberedParagraphs paragraphs={twoTexts.texts[0].paragraphs} />
+              </div>
+            )}
+
+            {groupIdx === 1 && twoTexts.texts[1] && (
+              <div className={`${box} mb-4`}>
+                <p className="text-sm font-black text-[#151313] mb-4">
+                  {twoTexts.texts[1].label}
+                </p>
+                <NumberedParagraphs paragraphs={twoTexts.texts[1].paragraphs} />
+              </div>
+            )}
+
             {sub && (
               <p className="text-xs font-semibold text-[#151313]/60 italic mb-3">
                 {sub}
               </p>
             )}
-            {pType !== 'two_texts' && (
-              <PassageRenderer
-                passage={group.passage}
-                partNumber={4}
-                gapQuestions={group.questions}
-                answers={answers}
-                onSelect={onSelect}
-                disabled={disabled}
-              />
-            )}
+
             <div className="space-y-4">
               {group.questions.map((q) => (
                 <QuestionCard

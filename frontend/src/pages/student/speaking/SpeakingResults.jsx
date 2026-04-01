@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 import { ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   parseBullets,
@@ -9,6 +14,8 @@ import { Button } from '@/components/ui/button'
 
 export default function SpeakingResults() {
   const { setNumber, partNumber, candidateNumber } = useParams()
+  const [searchParams] = useSearchParams()
+  const year = searchParams.get('year') || ''
   const navigate = useNavigate()
   const location = useLocation()
   const [showFeedback, setShowFeedback] = useState(false)
@@ -18,7 +25,8 @@ export default function SpeakingResults() {
   const results = location.state || null
 
   useEffect(() => {
-    if (!results) navigate(`/speaking/${setNumber}`, { replace: true })
+    if (!results)
+      navigate(`/speaking/${setNumber}?year=${year}`, { replace: true })
   }, [])
 
   if (!results) return null
@@ -32,6 +40,7 @@ export default function SpeakingResults() {
     speaking_script,
     filler_words,
   } = results
+
   const timelineSections = buildTimelineSections(
     structured_feedback || {},
     estimated_band
@@ -43,13 +52,15 @@ export default function SpeakingResults() {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => navigate(`/speaking/${setNumber}/${partNumber}`)}
+          onClick={() =>
+            navigate(`/speaking/${setNumber}/${partNumber}?year=${year}`)
+          }
           className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors shrink-0"
         >
           <ChevronLeft size={16} />
         </Button>
         <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest">
-          Speaking • Set {setNumber} • Booklet {partNumber} • Candidate
+          Speaking • Set {setNumber} ({year}) • Booklet {partNumber} • Candidate{' '}
           {String.fromCharCode(64 + parseInt(candidateNumber))}
         </p>
       </div>
@@ -142,7 +153,9 @@ export default function SpeakingResults() {
                     {timelineSections.map((s) => (
                       <div key={s.num} className="flex gap-4">
                         <div
-                          className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center shrink-0 z-10 ${s.isLast ? 'bg-[#E9424C]' : 'bg-[#151313]'}`}
+                          className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center shrink-0 z-10 ${
+                            s.isLast ? 'bg-[#E9424C]' : 'bg-[#151313]'
+                          }`}
                         >
                           <span className="text-[8px] font-black text-white">
                             {s.num}
@@ -162,12 +175,12 @@ export default function SpeakingResults() {
                                   <span className="text-[#151313] font-black shrink-0">
                                     •
                                   </span>
-                                  <span>{pt}</span>
+                                  <span className="text-justify">{pt}</span>
                                 </li>
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-sm font-medium text-[#151313] leading-relaxed">
+                            <p className="text-sm font-medium text-[#151313] leading-relaxed text-justify">
                               {s.content}
                             </p>
                           )}
@@ -177,7 +190,7 @@ export default function SpeakingResults() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-[#151313] leading-relaxed">
+                <p className="text-sm text-[#151313] leading-relaxed text-justify">
                   {feedback}
                 </p>
               )}
@@ -197,7 +210,7 @@ export default function SpeakingResults() {
                   Suggested Answer
                 </span>
                 <span className="text-[9px] font-black text-white bg-[#E9424C] px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Band 5
+                  Band 5+
                 </span>
               </div>
               {showScript ? (
@@ -209,10 +222,10 @@ export default function SpeakingResults() {
             {showScript && (
               <div className="border-t-2 border-[#151313] px-5 py-5 space-y-3">
                 <p className="text-[10px] font-semibold text-[#151313]/50 italic">
-                  An improved version of your response at Band 5 level — same
+                  An improved version of your response at Band 5+ level — same
                   ideas, stronger language.
                 </p>
-                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap text-justify">
                   {speaking_script}
                 </p>
               </div>
@@ -238,7 +251,7 @@ export default function SpeakingResults() {
             </Button>
             {showTranscript && (
               <div className="border-t-2 border-[#151313] px-5 py-5">
-                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap text-justify">
                   {transcript}
                 </p>
               </div>

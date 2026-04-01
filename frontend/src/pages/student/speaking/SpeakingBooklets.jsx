@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import api from '../../../services/api'
 import { PracticeSetSkeleton } from '../../../components/layouts/Skeletons'
 import { Button } from '@/components/ui/button'
 
-function BookletList({ setNumber, navigate }) {
+function BookletList({ setNumber, year, navigate }) {
   const [booklets, setBooklets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     api
-      .get(`/speaking/sets/${setNumber}`)
+      .get(`/speaking/sets/${setNumber}?year=${year}`)
       .then((res) => setBooklets(res.data.booklets))
       .catch(() => setError('Failed to load booklets.'))
       .finally(() => setLoading(false))
-  }, [setNumber])
+  }, [setNumber, year])
 
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
@@ -30,7 +30,7 @@ function BookletList({ setNumber, navigate }) {
           <ChevronLeft size={16} />
         </Button>
         <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest">
-          Speaking • Practice Set {setNumber}
+          Speaking • Practice Set {setNumber} ({year})
         </p>
       </div>
 
@@ -61,7 +61,9 @@ function BookletList({ setNumber, navigate }) {
                 key={booklet.part_number}
                 variant="outline"
                 onClick={() =>
-                  navigate(`/speaking/${setNumber}/${booklet.part_number}`)
+                  navigate(
+                    `/speaking/${setNumber}/${booklet.part_number}?year=${year}`
+                  )
                 }
                 className="w-full h-auto justify-start bg-white rounded-2xl border-2 border-[#151313] p-4 shadow-[3px_3px_0px_#151313] hover:shadow-[5px_5px_0px_#151313] hover:-translate-y-0.5 transition-all text-left"
               >
@@ -77,18 +79,19 @@ function BookletList({ setNumber, navigate }) {
   )
 }
 
-function CandidateList({ setNumber, partNumber, navigate }) {
+
+function CandidateList({ setNumber, partNumber, year, navigate }) {
   const [candidates, setCandidates] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     api
-      .get(`/speaking/sets/${setNumber}/${partNumber}`)
+      .get(`/speaking/sets/${setNumber}/${partNumber}?year=${year}`)
       .then((res) => setCandidates(res.data.candidates))
       .catch(() => setError('Failed to load candidates.'))
       .finally(() => setLoading(false))
-  }, [setNumber, partNumber])
+  }, [setNumber, partNumber, year])
 
   return (
     <div className="min-h-screen bg-[#f7f7f5]">
@@ -96,13 +99,13 @@ function CandidateList({ setNumber, partNumber, navigate }) {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => navigate(`/speaking/${setNumber}`)}
+          onClick={() => navigate(`/speaking/${setNumber}?year=${year}`)}
           className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors"
         >
           <ChevronLeft size={16} />
         </Button>
         <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest">
-          Speaking • Set {setNumber} • Booklet {partNumber}
+          Speaking • Set {setNumber} ({year}) • Booklet {partNumber}
         </p>
       </div>
 
@@ -134,7 +137,7 @@ function CandidateList({ setNumber, partNumber, navigate }) {
                 variant="outline"
                 onClick={() =>
                   navigate(
-                    `/speaking/${setNumber}/${partNumber}/${c.question_number}`
+                    `/speaking/${setNumber}/${partNumber}/${c.question_number}?year=${year}`
                   )
                 }
                 className="w-full h-auto justify-start bg-white rounded-2xl border-2 border-[#151313] p-4 shadow-[3px_3px_0px_#151313] hover:shadow-[5px_5px_0px_#151313] hover:-translate-y-0.5 transition-all text-left flex items-start gap-4"
@@ -158,6 +161,8 @@ function CandidateList({ setNumber, partNumber, navigate }) {
 
 export default function SpeakingBooklets() {
   const { setNumber, partNumber } = useParams()
+  const [searchParams] = useSearchParams()
+  const year = searchParams.get('year') || ''
   const navigate = useNavigate()
 
   if (partNumber) {
@@ -165,9 +170,10 @@ export default function SpeakingBooklets() {
       <CandidateList
         setNumber={setNumber}
         partNumber={partNumber}
+        year={year}
         navigate={navigate}
       />
     )
   }
-  return <BookletList setNumber={setNumber} navigate={navigate} />
+  return <BookletList setNumber={setNumber} year={year} navigate={navigate} />
 }

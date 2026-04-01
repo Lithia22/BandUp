@@ -3,14 +3,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import api from '../../../services/api'
 import { ResultsPage } from '../../../components/layouts/ResultCard'
 
-function getPartForQuestion(qNum) {
-  if (qNum <= 7) return 1
-  if (qNum <= 14) return 2
-  if (qNum <= 17) return 3
-  if (qNum <= 24) return 4
-  return 5
-}
-
 export default function ListeningResults() {
   const { setNumber } = useParams()
   const navigate = useNavigate()
@@ -44,11 +36,16 @@ export default function ListeningResults() {
 
   const enriched = results.results.map((r) => {
     const q = questions.find((q) => q.id === r.question_id) || {}
-    return { ...r, question_text: q.question_text, options: q.options }
+    return {
+      ...r,
+      question_text: q.question_text,
+      options: q.options,
+      part_number: q.part_number,
+    }
   })
 
   const byPart = enriched.reduce((acc, r) => {
-    const part = r.part_number || getPartForQuestion(r.question_number)
+    const part = r.part_number
     if (!acc[part]) acc[part] = []
     acc[part].push(r)
     return acc

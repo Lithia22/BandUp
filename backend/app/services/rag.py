@@ -1,3 +1,4 @@
+import time
 from app.config import supabase, LLM_MODEL, GEMINI_API_KEY
 from app.services.embedding import embed_text
 from app.services.knn import knn_search
@@ -18,6 +19,7 @@ def get_llm():
 
 
 def load_descriptors(component: str) -> list[dict]:
+    start = time.time()
     result = (
         supabase.table("muet_descriptors")
         .select("id, band_level, descriptor_text, embedding_vector")
@@ -35,6 +37,7 @@ def load_descriptors(component: str) -> list[dict]:
             "descriptor_text": row["descriptor_text"],
             "embedding_vector": vec,
         })
+    print(f"[TIMING] Load descriptors: {time.time() - start:.2f}s")
     return descriptors
 
 
@@ -78,20 +81,29 @@ COMPONENT_RESOURCES = {
 
 
 def rag_generate_feedback(component: str, performance_summary: str, k: int = 3, skipped_note: str = "") -> dict:
+    total_start = time.time()
+    print(f"\n[TIMING] Starting feedback generation for {component}...")
+    
     # Step 1 — Embed
+    embed_start = time.time()
     query_vector = embed_text(performance_summary)
-
+    print(f"[TIMING] Embedding (Gemini API): {time.time() - embed_start:.2f}s")
+    
     # Step 2 — Retrieval (KNN search)
+    knn_start = time.time()
     descriptors = load_descriptors(component)
     top_matches = knn_search(query_vector, descriptors, k=k)
-
-    # Step 3 — Augment
+    print(f"[TIMING] KNN search: {time.time() - knn_start:.2f}s")
+    
+    # Step 3 — Augment (build prompt)
+    augment_start = time.time()
     descriptor_context = "\n\n".join([
         f"[{m['band_level']}] (similarity: {m['similarity']:.3f})\n{m['descriptor_text']}"
         for m in top_matches
     ])
-
-    # Step 4 — Generate
+    print(f"[TIMING] Build prompt: {time.time() - augment_start:.2f}s")
+    
+    # Step 4 — Generate (LLM call)
     component_label = component.capitalize()
     resource_guidance = COMPONENT_RESOURCES.get(component, COMPONENT_RESOURCES["reading"])
 
@@ -107,22 +119,24 @@ Official MUET band descriptors (use ONLY these to estimate the band):
 Rules:
 - Write in simple, friendly English — like a teacher talking directly to the student. Do NOT use any markdown formatting — no asterisks, no bold, no italics, no symbols
 - Base the estimated band strictly on the MUET descriptors above
-- Evaluate based on these 4 criteria from MUET Writing descriptors and test specifications:
-  1. Task Fulfillment — did the student address all notes? Did they use appropriate language functions?
+- CRITICAL: Evaluate based on these 4 criteria, with Task Fulfillment being the most important:
+  1. Task Fulfillment — did the student address the CORRECT prompt? If they answered a completely different question/topic, this is a FAILURE regardless of language quality.
   2. Language Accuracy — grammar, vocabulary, sentence structure
   3. Organisation & Coherence — are ideas logically ordered and well-connected?
   4. Style & Register — is the tone appropriate for the reader-writer relationship?
+- If the student's response does NOT match the original email context (they answered the wrong question), give Band 1 immediately.
 - Never mention scores, fractions or percentages
 - If word count is below 100, always mention this in WHERE TO FOCUS
 - Keep the tone encouraging and kind
-- For SUGGESTED ANSWER: rewrite the student's response at Band 5 level — keep their exact same ideas, notes and structure but improve the grammar, vocabulary, sentence variety and style. Do NOT invent new ideas. Keep it as a natural email reply. Do not add any explanation or commentary — just the improved email text only.
+- For SUGGESTED ANSWER: rewrite the student's response at Band 5+ level (the highest band) — keep their exact same ideas, notes and structure but improve the grammar, vocabulary, sentence variety and style to demonstrate excellence. Use the student's real name (provided in the performance summary) in the signature. If no name is provided, use "[Your Name]". Do NOT invent new ideas. Keep it as a natural email reply. Do not add any explanation or commentary — just the improved email text only.
+- For YOUR NEXT GOAL: The next band is calculated by moving up one level from the current band. If current band is Band 1, next is Band 2. If current is Band 2, next is Band 3. If current is Band 3, next is Band 4. If current is Band 4, next is Band 5. If current is Band 5, next is Band 5+.
 
 Format EXACTLY:
 
 ESTIMATED BAND: [Band 1 / Band 2 / Band 3 / Band 4 / Band 5 / Band 5+]
 
 YOUR BAND RESULT:
-[2 simple sentences on what this band means for a Writing student based on the descriptor]
+[2 simple sentences. If Task Fulfillment was completely wrong, say: "You answered a different question, which is why you received Band 1. Always read the prompt carefully." Otherwise, explain what this band means based on the descriptor.]
 
 WHAT YOU DID WELL:
 [One • bullet per criteria the student handled well — name the criteria and explain briefly what they did well]
@@ -130,6 +144,7 @@ WHAT YOU DID WELL:
 
 WHERE TO FOCUS:
 [One • bullet per criteria that needs improvement — name the criteria and explain specifically what was weak]
+[If the student answered the wrong question, add: • Task Fulfillment — You answered a different question. Always check who the email is from and what the topic is before writing.]
 [If word count below 100, add one bullet about meeting the minimum word count]
 [One final short sentence on what to prioritise]
 
@@ -139,10 +154,10 @@ YOUR STUDY PLAN:
 [{resource_guidance}]
 
 YOUR NEXT GOAL:
-[2 sentences on what the next band looks like based on the descriptors and one simple first step]
+[2 sentences. First sentence: describe what the next band (Band X) looks like in simple English based on its official MUET descriptor. Use the correct next band based on the current band. Second sentence: give one simple first step to start moving toward that band.]
 
 SUGGESTED ANSWER:
-[Rewrite the student's response at Band 5 level — same ideas, improved language. Natural email format only, no commentary.]"""
+[Rewrite the student's response at Band 5+ level — same ideas, improved language to demonstrate excellence. Use the student's real name in the signature. Natural email format only, no commentary.]"""
 
     elif component == "speaking":
         prompt = f"""You are a friendly MUET Speaking coach giving personalised feedback to a Malaysian student.
@@ -156,23 +171,25 @@ Official MUET band descriptors (use ONLY these to estimate the band):
 Rules:
 - Write in simple, friendly English — like a teacher talking directly to the student. Do NOT use any markdown formatting — no asterisks, no bold, no italics, no symbols
 - Base the estimated band strictly on the MUET descriptors above
-- Evaluate based on these 4 criteria from MUET Speaking test specifications and band descriptors:
-  1. Task Fulfillment — did the student address the prompt? Did they express opinions, give reasons, elaborate and conclude?
+- CRITICAL: Evaluate based on these 4 criteria, with Task Fulfillment being the most important:
+  1. Task Fulfillment — did the student address the CORRECT prompt? If they spoke about a completely different topic, this is a FAILURE regardless of language quality.
   2. Accuracy — grammar, vocabulary correctness as reflected in the transcript
   3. Range — varied sentence structures and vocabulary
   4. Fluency — natural flow, confidence, minimal filler words and hesitation
+- CRITICAL: If the student's response does NOT match the given prompt (they answered the wrong topic), you MUST give Band 1. This is non-negotiable. Task Fulfillment is the most important criteria, and answering the wrong question is an automatic Band 1 regardless of language quality.
 - Never mention scores, fractions or percentages
 - If filler words were detected in the performance summary, always mention this specifically under Fluency in WHERE TO FOCUS
 - If word count seems very low (under 100 words), mention the student may not have spoken for the full 2 minutes
 - Keep the tone encouraging and kind
-- For SPEAKING SCRIPT: rewrite the student's transcript as a stronger Band 5 spoken presentation — keep their exact same ideas and topic but improve the vocabulary, sentence variety, flow and structure. Write it as natural spoken English, not written English. No bullet points, no headers — just flowing spoken paragraphs the student can read aloud and practise. Do not add any explanation or commentary — just the improved script only.
+- For SPEAKING SCRIPT: Provide a model answer based on the CORRECT topic (the prompt the student SHOULD have answered). Write it as a Band 5+ spoken presentation that demonstrates excellence. Use natural spoken English, not written English. No bullet points, no headers — just flowing spoken paragraphs the student can read aloud and practise. Do not add any explanation or commentary — just the improved script only.
+- For YOUR NEXT GOAL: The next band is calculated by moving up one level from the current band. If current band is Band 1, next is Band 2. If current is Band 2, next is Band 3. If current is Band 3, next is Band 4. If current is Band 4, next is Band 5. If current is Band 5, next is Band 5+.
 
 Format EXACTLY:
 
 ESTIMATED BAND: [Band 1 / Band 2 / Band 3 / Band 4 / Band 5 / Band 5+]
 
 YOUR BAND RESULT:
-[2 simple sentences on what this band means for a Speaking student based on the descriptor]
+[2 simple sentences. If the student answered the wrong topic, write: "You spoke about the wrong topic, which is why you received Band 1. Always read the prompt carefully before speaking." Otherwise, explain what this band means based on the descriptor.]
 
 WHAT YOU DID WELL:
 [One • bullet per criteria the student handled well — name the criteria and explain briefly]
@@ -180,7 +197,9 @@ WHAT YOU DID WELL:
 
 WHERE TO FOCUS:
 [One • bullet per criteria that needs improvement — name the criteria and explain specifically what was weak]
+[If the student answered the wrong topic, add: • Task Fulfillment — You spoke about [wrong topic] instead of [correct topic]. Always check the task before speaking. This is the most important thing to fix.]
 [If filler words detected, one bullet specifically about filler words under Fluency]
+[If word count below 100, one bullet about speaking for the full 2 minutes]
 [One final short sentence on what to prioritise]
 
 YOUR STUDY PLAN:
@@ -189,10 +208,10 @@ YOUR STUDY PLAN:
 [{resource_guidance}]
 
 YOUR NEXT GOAL:
-[2 sentences on what the next band looks like based on the descriptors and one simple first step]
+[2 sentences. First sentence: describe what the next band (Band X) looks like in simple English based on its official MUET descriptor. Use the correct next band based on the current band. Second sentence: give one simple first step to start moving toward that band.]
 
 SPEAKING SCRIPT:
-[Rewrite the student's transcript as a Band 5 spoken presentation — same ideas, stronger language. Natural spoken English only, no commentary.]"""
+[Provide a model answer based on the CORRECT topic (the prompt the student SHOULD have answered). Write it as a Band 5+ spoken presentation that demonstrates excellence. Use natural spoken English, not written English. No bullet points, no headers — just flowing spoken paragraphs.]"""
 
     else:
         prompt = f"""You are a friendly MUET {component_label} coach giving personalised feedback to a Malaysian student.
@@ -213,6 +232,7 @@ Rules:
 - WHERE TO FOCUS: explain WHY each part is challenging — no study tips here
 - If two parts test the same text type, combine into one bullet
 - WHAT YOU DID WELL: if no parts stand out, write one honest encouraging bullet about their effort — do NOT mention whether they completed the test or how many questions they answered
+- For YOUR NEXT GOAL: The next band is calculated by moving up one level from the current band. If current band is Band 1, next is Band 2. If current is Band 2, next is Band 3. If current is Band 3, next is Band 4. If current is Band 4, next is Band 5. If current is Band 5, next is Band 5+.
 
 Format EXACTLY:
 
@@ -237,9 +257,12 @@ YOUR STUDY PLAN:
 [{resource_guidance}]
 
 YOUR NEXT GOAL:
-[2 sentences on what the next band looks like and one simple first step]"""
+[2 sentences. First sentence: describe what the next band (Band X) looks like in simple English based on its official MUET descriptor. Use the correct next band based on the current band. Second sentence: give one simple first step to start moving toward that band.]"""
 
+    llm_start = time.time()
     response = get_llm().invoke([HumanMessage(content=prompt)])
+    print(f"[TIMING] LLM generation (Gemini API): {time.time() - llm_start:.2f}s")
+    
     raw = parse_response_content(response.content).strip()
 
     # Parse estimated band
@@ -294,6 +317,8 @@ YOUR NEXT GOAL:
     elif component == "speaking":
         structured_feedback["speaking_script"] = sections.get("SPEAKING SCRIPT", "")
 
+    print(f"[TIMING] TOTAL: {time.time() - total_start:.2f}s")
+    
     return {
         "feedback": raw,
         "structured_feedback": structured_feedback,

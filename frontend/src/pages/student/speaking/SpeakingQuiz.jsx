@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import RecordRTC from 'recordrtc'
@@ -9,12 +9,15 @@ import { ExitWarningDialog } from '../../../components/layouts/Dialog'
 import QuizTimer from '../../../components/layouts/QuizTimer'
 import { Textarea } from '@/components/ui/textarea'
 
-const PREP_DURATION = 2 * 60
-const SPEAK_DURATION = 2 * 60
+const PREP_DURATION = 6 // originally 120 seconds (just for demo purposes)
+const SPEAK_DURATION = 30 // originally 120 seconds (just for demo purposes)
 
 export default function SpeakingQuiz() {
   const { setNumber, partNumber, candidateNumber } = useParams()
+  const [searchParams] = useSearchParams()
+  const year = searchParams.get('year') || ''
   const navigate = useNavigate()
+
   const [question, setQuestion] = useState(null)
   const [loading, setLoading] = useState(true)
   const [phase, setPhase] = useState('prep')
@@ -31,7 +34,7 @@ export default function SpeakingQuiz() {
 
   useEffect(() => {
     api
-      .get(`/speaking/sets/${setNumber}/${partNumber}`)
+      .get(`/speaking/sets/${setNumber}/${partNumber}?year=${year}`)
       .then((res) => {
         const q = res.data.candidates.find(
           (c) => c.question_number === parseInt(candidateNumber)
@@ -102,7 +105,7 @@ export default function SpeakingQuiz() {
       })
 
       navigate(
-        `/speaking/${setNumber}/${partNumber}/${candidateNumber}/results`,
+        `/speaking/${setNumber}/${partNumber}/${candidateNumber}/results?year=${year}`,
         { state: res.data, replace: true }
       )
     } catch (err) {
@@ -135,7 +138,7 @@ export default function SpeakingQuiz() {
             recorderRef.current?.stopRecording()
           } catch {}
           streamRef.current?.getTracks().forEach((t) => t.stop())
-          navigate(`/speaking/${setNumber}/${partNumber}`)
+          navigate(`/speaking/${setNumber}/${partNumber}?year=${year}`)
         }}
         onCancel={() => setShowExitDialog(false)}
       />
@@ -147,14 +150,14 @@ export default function SpeakingQuiz() {
           onClick={() =>
             phase === 'prep' || phase === 'speak'
               ? setShowExitDialog(true)
-              : navigate(`/speaking/${setNumber}/${partNumber}`)
+              : navigate(`/speaking/${setNumber}/${partNumber}?year=${year}`)
           }
           className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#151313] hover:text-white transition-colors"
         >
           <ChevronLeft size={16} />
         </Button>
         <p className="text-[10px] font-black text-[#151313]/40 uppercase tracking-widest flex-1">
-          Speaking • Set {setNumber} • Booklet {partNumber} • Candidate
+          Speaking • Set {setNumber} ({year}) • Booklet {partNumber} • Candidate{' '}
           {String.fromCharCode(64 + parseInt(candidateNumber))}
         </p>
         {phase === 'prep' && (

@@ -247,11 +247,26 @@ export function BandOverTimeChart({ bandTrend }) {
 const radarConfig = { band: { label: 'Band', color: '#E9424C' } }
 
 export function BandRadarChart({ componentBands }) {
-  const radarData = components.map((c) => ({
-    component: c.charAt(0).toUpperCase() + c.slice(1),
-    band: componentBands[c] ?? 0,
-    fullMark: 6,
-  }))
+  const radarData = components.map((c) => {
+    const bandValue = componentBands[c] ?? 0
+    let numericValue = bandValue
+    if (bandValue === 'Band 5+' || bandValue === 6 || bandValue === '6') {
+      numericValue = 6
+    } else if (typeof bandValue === 'string' && bandValue.startsWith('Band')) {
+      numericValue = parseInt(bandValue.replace('Band ', '')) || 0
+    }
+
+    return {
+      component: c.charAt(0).toUpperCase() + c.slice(1),
+      band: numericValue,
+      displayBand:
+        bandValue === 6 || bandValue === 'Band 5+'
+          ? 'Band 5+'
+          : `Band ${numericValue}`,
+      fullMark: 6,
+    }
+  })
+  
   return (
     <Card className="border-2 border-[#151313] shadow-[3px_3px_0px_#151313] rounded-2xl bg-white">
       <CardHeader className="pb-2 px-5 pt-5">
@@ -274,6 +289,7 @@ export function BandRadarChart({ componentBands }) {
               angle={90}
               domain={[0, 6]}
               tick={{ fontSize: 8, fill: '#15131340' }}
+              tickFormatter={(value) => (value === 6 ? '5+' : value)}
               tickCount={4}
             />
             <Radar
@@ -284,7 +300,19 @@ export function BandRadarChart({ componentBands }) {
               strokeWidth={2}
               dot={{ fill: '#E9424C', r: 3, strokeWidth: 2, stroke: '#151313' }}
             />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  formatter={(value, name, props) => {
+                    const item = props?.payload
+                    return (
+                      item?.displayBand ||
+                      (value === 6 ? 'Band 5+' : `Band ${value}`)
+                    )
+                  }}
+                />
+              }
+            />
           </RadarChart>
         </ChartContainer>
       </CardContent>

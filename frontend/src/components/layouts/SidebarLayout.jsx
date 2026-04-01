@@ -8,9 +8,10 @@ import {
   ChevronLeft,
   ChevronRight,
   BookOpenCheck,
-  Users,
+  ScatterChart,
   BarChart2,
   User,
+  ClipboardList,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -29,18 +30,18 @@ import { Button } from '@/components/ui/button'
 
 const STUDENT_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
-  { label: 'Analytics', icon: BarChart2, href: '/analytics' },
   { label: 'Reading', icon: BookOpen, href: '/reading' },
   { label: 'Listening', icon: Headphones, href: '/listening' },
   { label: 'Writing', icon: SquarePen, href: '/writing' },
   { label: 'Speaking', icon: Mic, href: '/speaking' },
+  { label: 'Analytics', icon: BarChart2, href: '/analytics' },
   { label: 'Profile', icon: User, href: '/profile' },
 ]
 
 const ADMIN_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-  { label: 'Analytics', icon: Users, href: '/admin/analytics' },
-  { label: 'Manage Questions', icon: BookOpenCheck, href: '/admin/questions' },
+  { label: 'Manage Questions', icon: ClipboardList, href: '/admin/questions' },
+  { label: 'Analytics', icon: ScatterChart, href: '/admin/analytics' },
   { label: 'Profile', icon: User, href: '/profile' },
 ]
 

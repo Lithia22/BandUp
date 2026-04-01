@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import datetime, timezone
 from app.config import supabase
 from app.services.rag import rag_generate_feedback
+import json
 
 router = APIRouter()
 
@@ -19,18 +20,18 @@ def get_sets():
         )
         seen = {}
         for row in result.data:
-            sn = row["set_number"]
-            if sn not in seen:
-                seen[sn] = row["year"]
+            key = (row["set_number"], row["year"])
+            if key not in seen:
+                seen[key] = True
         sets = [
             {
                 "set_number": sn,
-                "year": year,
-                "label": f"Practice Set {sn} ({year})",
+                "year": yr,
+                "label": f"Practice Set {sn} ({yr})",
                 "duration_mins": 25,
                 "min_words": 100,
             }
-            for sn, year in sorted(seen.items())
+            for sn, yr in sorted(seen.keys())
         ]
         return {"sets": sets}
     except Exception as e:
@@ -38,19 +39,31 @@ def get_sets():
 
 
 @router.get("/sets/{set_number}")
-def get_set_question(set_number: int):
+def get_set_question(set_number: int, year: Optional[int] = None):
     try:
-        result = (
+        query = (
             supabase.table("questions")
-            .select("id, part_number, question_number, question_text, passage, options")
+            .select("id, part_number, question_number, question_text, passage, options, year")
             .eq("component", "writing")
             .eq("set_number", set_number)
-            .single()
-            .execute()
         )
+        if year:
+            query = query.eq("year", year)
+        else:
+            query = query.order("year", desc=True).limit(1)
+
+        result = query.execute()
+
         if not result.data:
             raise HTTPException(status_code=404, detail="Set not found")
-        return {"set_number": set_number, "question": result.data}
+        
+        question = result.data[0]
+        
+        return {
+            "set_number": set_number,
+            "year": question.get("year"),
+            "question": question
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -69,11 +82,11 @@ class SubmitRequest(BaseModel):
 def submit_answer(data: SubmitRequest):
     try:
         now = datetime.now(timezone.utc).isoformat()
-
-        # 1. Fetch question to get notes
+        
+        # 1. Fetch question to get notes and passage
         result = (
             supabase.table("questions")
-            .select("id, options, passage")
+            .select("id, options, passage, question_text")
             .eq("id", data.question_id)
             .single()
             .execute()
@@ -83,14 +96,61 @@ def submit_answer(data: SubmitRequest):
 
         question = result.data
         notes = question["options"]
+        passage = question.get("passage", "")
+        question_text = question.get("question_text", "")
 
-        # 2. Count words in student answer
+        # 2. Get student name if student_id exists
+        student_name = ""
+        if data.student_id:
+            try:
+                user_res = (
+                    supabase.table("users")
+                    .select("full_name")
+                    .eq("id", data.student_id)
+                    .single()
+                    .execute()
+                )
+                if user_res.data:
+                    student_name = user_res.data["full_name"]
+            except Exception as e:
+                print(f"Error fetching student name: {e}")
+
+        # 3. Parse passage to get email context
+        email_preview = ""
+        try:
+            if passage:
+                passage_data = json.loads(passage)
+                email_context = passage_data.get("context", "")
+                email_from = passage_data.get("from", "")
+                email_subject = passage_data.get("subject", "")
+                email_paragraphs = passage_data.get("paragraphs", [])
+                
+                email_preview = f"""
+Original Email:
+From: {email_from}
+Subject: {email_subject}
+{email_context}
+"""
+                for p in email_paragraphs:
+                    email_preview += f"\n{p.get('text', '')}"
+                    if p.get('note'):
+                        email_preview += f"\nNote: {p['note']}"
+        except:
+            email_preview = f"Task: {question_text}"
+
+        # 4. Count words in student answer
         word_count = len(data.student_answer.strip().split()) if data.student_answer.strip() else 0
-
-        # 3. Build performance summary for RAG
+        
+        # 5. Build notes text
         notes_text = "\n".join([f"  - {v}" for v in notes.values()])
+        
+        # 6. Build performance summary for RAG (with full email context and student name)
         performance_summary = f"""Student completed MUET Writing Task 1 (Set {data.set_number}).
-Task: Guided email/letter reply — write at least 100 words using all 4 notes given.
+Student name: {student_name if student_name else '[Your Name]'}
+
+{email_preview}
+
+Task: Write a reply of at least 100 words using all 4 notes given.
 Word count: {word_count} words (minimum required: 100 words).
 
 Notes the student was required to address:
@@ -99,25 +159,25 @@ Notes the student was required to address:
 Student's response:
 {data.student_answer}
 
-Evaluate the student's response based on these 4 criteria derived from MUET Writing descriptors and test specifications:
-1. Task Fulfillment — did the student address all 4 notes given? Did they use appropriate language functions (expressing thanks, giving reasons, making suggestions etc.)?
-2. Language Accuracy — grammar, vocabulary, sentence structure. Are there errors that make it hard to understand?
-3. Organisation & Coherence — are ideas logically ordered and well-connected? Does the text flow naturally?
-4. Style & Register — is the tone appropriate for the reader-writer relationship (informal to semi-formal for a teacher or friend)?"""
+Evaluate the student's response based on these 4 criteria:
+1. Task Fulfillment — did the student address all 4 notes given? Did they use appropriate language functions?
+2. Language Accuracy — grammar, vocabulary, sentence structure.
+3. Organisation & Coherence — are ideas logically ordered and well-connected?
+4. Style & Register — is the tone appropriate for the reader-writer relationship?"""
 
-        # 4. RAG: embed → KNN → LLM
+        # 7. RAG: embed → KNN → LLM
         rag_result = rag_generate_feedback(
             component="writing",
             performance_summary=performance_summary,
             k=3,
         )
-        feedback            = rag_result["feedback"]
+        feedback = rag_result["feedback"]
         structured_feedback = rag_result["structured_feedback"]
-        estimated_band      = rag_result["estimated_band"]
-        top_descriptor_id   = rag_result["top_descriptor_id"]
-        suggested_answer    = structured_feedback.get("suggested_answer", "")
+        estimated_band = rag_result["estimated_band"]
+        top_descriptor_id = rag_result["top_descriptor_id"]
+        suggested_answer = structured_feedback.get("suggested_answer", "")
 
-        # 5. Save to DB
+        # 8. Save to DB
         if data.student_id:
             try:
                 student_res = (

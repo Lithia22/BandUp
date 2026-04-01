@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 import { ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   parseBullets,
@@ -9,6 +14,8 @@ import { Button } from '@/components/ui/button'
 
 export default function WritingResults() {
   const { setNumber } = useParams()
+  const [searchParams] = useSearchParams()
+  const year = searchParams.get('year')
   const navigate = useNavigate()
   const location = useLocation()
   const [showFeedback, setShowFeedback] = useState(false)
@@ -19,14 +26,19 @@ export default function WritingResults() {
     location.state ||
     (() => {
       try {
-        return JSON.parse(localStorage.getItem(`writing_results_${setNumber}`))
+        return JSON.parse(
+          localStorage.getItem(`writing_results_${setNumber}_${year}`)
+        )
       } catch {
         return null
       }
     })()
 
   useEffect(() => {
-    if (!results) navigate(`/writing/${setNumber}`, { replace: true })
+    if (!results)
+      navigate(`/writing/${setNumber}${year ? `?year=${year}` : ''}`, {
+        replace: true,
+      })
   }, [])
 
   if (!results) return null
@@ -148,7 +160,9 @@ export default function WritingResults() {
                     {timelineSections.map((s) => (
                       <div key={s.num} className="flex gap-4">
                         <div
-                          className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center shrink-0 z-10 ${s.isLast ? 'bg-[#E9424C]' : 'bg-[#151313]'}`}
+                          className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center shrink-0 z-10 ${
+                            s.isLast ? 'bg-[#E9424C]' : 'bg-[#151313]'
+                          }`}
                         >
                           <span className="text-[8px] font-black text-white">
                             {s.num}
@@ -168,12 +182,12 @@ export default function WritingResults() {
                                   <span className="text-[#151313] font-black shrink-0">
                                     •
                                   </span>
-                                  <span>{pt}</span>
+                                  <span className="text-justify">{pt}</span>
                                 </li>
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-sm font-medium text-[#151313] leading-relaxed">
+                            <p className="text-sm font-medium text-[#151313] leading-relaxed text-justify">
                               {s.content}
                             </p>
                           )}
@@ -183,7 +197,7 @@ export default function WritingResults() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-[#151313] leading-relaxed">
+                <p className="text-sm text-[#151313] leading-relaxed text-justify">
                   {feedback}
                 </p>
               )}
@@ -203,7 +217,7 @@ export default function WritingResults() {
                   Suggested Answer
                 </span>
                 <span className="text-[9px] font-black text-white bg-[#E9424C] px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Band 5
+                  Band 5+
                 </span>
               </div>
               {showSuggested ? (
@@ -215,10 +229,10 @@ export default function WritingResults() {
             {showSuggested && (
               <div className="border-t-2 border-[#151313] px-5 py-5 space-y-3">
                 <p className="text-[10px] font-semibold text-[#151313]/50 italic">
-                  This is an improved version of your answer at Band 5 level —
+                  This is an improved version of your answer at Band 5+ level —
                   same ideas, stronger language.
                 </p>
-                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap text-justify">
                   {suggestedText}
                 </p>
               </div>
@@ -244,14 +258,13 @@ export default function WritingResults() {
             </Button>
             {showAnswer && (
               <div className="border-t-2 border-[#151313] px-5 py-5">
-                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap text-justify">
                   {student_answer}
                 </p>
               </div>
             )}
           </div>
         )}
-
         <div className="pb-8" />
       </div>
     </div>

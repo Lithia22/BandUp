@@ -7,7 +7,9 @@ router = APIRouter()
 def band_to_num(band_str):
     if not band_str:
         return None
-    mapping = {"Band 1": 1, "Band 2": 2, "Band 3": 3, "Band 4": 4, "Band 5": 5, "Band 5+": 6}
+    if band_str == "Band 1":
+        return 1
+    mapping = {"Band 2": 2, "Band 3": 3, "Band 4": 4, "Band 5": 5, "Band 5+": 6}
     return mapping.get(band_str)
 
 
@@ -26,18 +28,24 @@ def get_dashboard(user_id: str):
 
         student_id = student_res.data["id"]
 
+        # Get latest bands from student_bands
         try:
             bands_res = (
                 supabase.table("student_bands")
                 .select("reading_band, listening_band, writing_band, speaking_band")
                 .eq("student_id", student_id)
-                .single()
+                .order("calculated_at", desc=True)
+                .limit(1)
                 .execute()
             )
-            bands = bands_res.data or {}
+            if bands_res.data:
+                bands = bands_res.data[0]
+            else:
+                bands = {}
         except Exception:
             bands = {}
 
+        # Get all sessions
         all_sessions_res = (
             supabase.table("practice_sessions")
             .select("id, component, end_time")
@@ -56,19 +64,20 @@ def get_dashboard(user_id: str):
             if comp in attempts:
                 attempts[comp] += 1
 
-        # Pick sessions we actually need: top 10 per component for history/trend
+        # Get latest 20 sessions per component
         top_per_comp = {}
         for comp in components:
-            top_per_comp[comp] = [s for s in all_sessions if s.get("component") == comp][-10:]
+            comp_sessions = [s for s in all_sessions if s.get("component") == comp]
+            top_per_comp[comp] = comp_sessions[-20:] if comp_sessions else []
 
+        # Get answers and feedback
         target_sessions = [s for sessions in top_per_comp.values() for s in sessions]
         target_ids = [s["id"] for s in target_sessions]
 
-        # Bulk fetch answers + feedback in chunks of 20
-        chunk_size = 20
-        session_to_answer = {}
-        for i in range(0, len(target_ids), chunk_size):
-            chunk = target_ids[i:i + chunk_size]
+        # Get answers
+        session_to_answers = {}
+        for i in range(0, len(target_ids), 20):
+            chunk = target_ids[i:i+20]
             ans_res = (
                 supabase.table("student_answers")
                 .select("id, session_id, question_id")
@@ -77,15 +86,38 @@ def get_dashboard(user_id: str):
             )
             for a in (ans_res.data or []):
                 sid = a["session_id"]
-                if sid not in session_to_answer:
-                    session_to_answer[sid] = a
+                if sid not in session_to_answers:
+                    session_to_answers[sid] = []
+                session_to_answers[sid].append(a)
 
-        answer_ids = [a["id"] for a in session_to_answer.values()]
-        question_ids = [a["question_id"] for a in session_to_answer.values() if a.get("question_id")]
+        # Get all question IDs and build question_map with set_number and year
+        all_question_ids = []
+        for answers in session_to_answers.values():
+            for a in answers:
+                if a.get("question_id"):
+                    all_question_ids.append(a["question_id"])
+        
+        # Remove duplicates
+        all_question_ids = list(set(all_question_ids))
+        
+        question_map = {}
+        if all_question_ids:
+            for i in range(0, len(all_question_ids), 20):
+                chunk = all_question_ids[i:i+20]
+                q_res = (
+                    supabase.table("questions")
+                    .select("id, set_number, year")
+                    .in_("id", chunk)
+                    .execute()
+                )
+                for q in (q_res.data or []):
+                    question_map[q["id"]] = {"set_number": q["set_number"], "year": q["year"]}
 
+        # Get feedback
+        all_answer_ids = [a["id"] for answers in session_to_answers.values() for a in answers]
         feedback_map = {}
-        for i in range(0, len(answer_ids), chunk_size):
-            chunk = answer_ids[i:i + chunk_size]
+        for i in range(0, len(all_answer_ids), 20):
+            chunk = all_answer_ids[i:i+20]
             fb_res = (
                 supabase.table("ai_feedback")
                 .select("answer_id, estimated_band")
@@ -95,72 +127,81 @@ def get_dashboard(user_id: str):
             for fb in (fb_res.data or []):
                 feedback_map[fb["answer_id"]] = fb["estimated_band"]
 
-        question_map = {}
-        if question_ids:
-            for i in range(0, len(question_ids), chunk_size):
-                chunk = question_ids[i:i + chunk_size]
-                q_res = (
-                    supabase.table("questions")
-                    .select("id, set_number")
-                    .in_("id", chunk)
-                    .execute()
-                )
-                for q in (q_res.data or []):
-                    question_map[q["id"]] = q["set_number"]
-
-        # History (for dashboard recent history tab)
+        # Build history (ONE entry per session)
         history = []
         for comp in components:
             for s in reversed(top_per_comp[comp]):
-                ans = session_to_answer.get(s["id"])
-                band_str = None
+                answers = session_to_answers.get(s["id"], [])
+                
+                # Get band from first answer that has feedback
+                session_band = None
+                for ans in answers:
+                    band = feedback_map.get(ans["id"])
+                    if band:
+                        session_band = band
+                        break
+                
+                # Get set number and year from first answer that has a question
                 set_number = None
-                if ans:
-                    band_str = feedback_map.get(ans["id"])
-                    set_number = question_map.get(ans.get("question_id"))
+                set_year = None
+                for ans in answers:
+                    q_id = ans.get("question_id")
+                    if q_id and q_id in question_map:
+                        set_number = question_map[q_id]["set_number"]
+                        set_year = question_map[q_id]["year"]
+                        break
+                
+                # Build label with year
+                if set_number and set_year:
+                    set_label = f"Practice Set {set_number} ({set_year})"
+                elif set_number:
+                    set_label = f"Practice Set {set_number}"
+                else:
+                    set_label = "—"
+                
                 history.append({
                     "component": comp,
-                    "set_label": f"Practice Set {set_number}" if set_number else "—",
-                    "band": band_str,
+                    "set_label": set_label,
+                    "band": session_band,
                     "end_time": s.get("end_time", ""),
                 })
 
-        # Band trend (for analytics — last 10 per component oldest→newest)
+        # Band trend
         band_trend = {}
         for comp in components:
             trend = []
-            for i, s in enumerate(top_per_comp[comp]):
-                ans = session_to_answer.get(s["id"])
-                band_num = band_to_num(feedback_map.get(ans["id"]) if ans else None)
+            session_index = 1
+            for s in top_per_comp[comp]:
+                answers = session_to_answers.get(s["id"], [])
+                band_num = None
+                for ans in answers:
+                    band_str = feedback_map.get(ans["id"])
+                    if band_str:
+                        band_num = band_to_num(band_str)
+                        break
                 if band_num is not None:
                     trend.append({
-                        "session": i + 1,
+                        "session": session_index,
                         "band": band_num,
                         "date": s["end_time"][:10],
                     })
+                session_index += 1
             band_trend[comp] = trend
 
-        # Latest band per component (for analytics radar)
+        # Latest band per component (from student_bands table)
         component_bands = {}
         for comp in components:
-            latest = None
-            for s in reversed(top_per_comp[comp]):
-                ans = session_to_answer.get(s["id"])
-                if ans:
-                    num = band_to_num(feedback_map.get(ans["id"]))
-                    if num is not None:
-                        latest = num
-                        break
-            component_bands[comp] = latest
+            band_key = f"{comp}_band"
+            component_bands[comp] = bands.get(band_key)
 
-        # Calendar sessions_by_day
+        # Calendar
         sessions_by_day = {}
         for s in all_sessions:
             if s.get("end_time"):
                 date_key = s["end_time"][:10]
                 sessions_by_day[date_key] = sessions_by_day.get(date_key, 0) + 1
 
-        # Rolling 7 days (MYT UTC+8)
+        # Weekly data
         MYT = timezone(timedelta(hours=8))
         now = datetime.now(MYT)
         days_map = {}

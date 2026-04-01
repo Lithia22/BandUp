@@ -84,7 +84,7 @@ export default function Auth({ mode = 'login' }) {
           variant="outline"
           size="icon"
           asChild
-          className="w-8 h-8 rounded-full border-2 border-[#151313] hover:bg-[#E9424C] hover:text-white transition-colors"
+          className="w-8 h-8 rounded-full border-2 border-[#151313] bg-white text-[#151313] hover:bg-[#E9424C] hover:text-white transition-colors"
         >
           <a href="/">
             <X size={16} />
@@ -168,7 +168,7 @@ export default function Auth({ mode = 'login' }) {
                   </Button>
                 </div>
                 {!isLogin && form.password && (
-                  <p className="text-[10px] text-[#E9424C] mt-1">
+                  <p className="text-[10px] text-[#151313] opacity-50 mt-1">
                     Use 8+ chars with uppercase, lowercase, number & special
                     characters
                   </p>
