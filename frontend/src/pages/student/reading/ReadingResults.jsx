@@ -3,16 +3,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import api from '../../../services/api'
 import { ResultsPage } from '../../../components/layouts/ResultCard'
 
-function getPartForQuestion(qNum) {
-  if (qNum <= 8) return 1
-  if (qNum <= 14) return 2
-  if (qNum <= 20) return 3
-  if (qNum <= 26) return 4
-  if (qNum <= 30) return 5
-  if (qNum <= 33) return 6
-  return 7
-}
-
 export default function ReadingResults() {
   const { setNumber } = useParams()
   const navigate = useNavigate()
@@ -44,11 +34,16 @@ export default function ReadingResults() {
 
   const enriched = results.results.map((r) => {
     const q = questions.find((q) => q.id === r.question_id) || {}
-    return { ...r, question_text: q.question_text, options: q.options }
+    return {
+      ...r,
+      question_text: q.question_text,
+      options: q.options,
+      part_number: q.part_number,
+    }
   })
 
   const byPart = enriched.reduce((acc, r) => {
-    const part = getPartForQuestion(r.question_number)
+    const part = r.part_number
     if (!acc[part]) acc[part] = []
     acc[part].push(r)
     return acc

@@ -75,11 +75,11 @@ export function SubmitDialog({
             {isWriting ? (
               belowMinimum ? (
                 <>
-                  Your response is only
+                  Your response is only{' '}
                   <span className="text-[#E9424C] font-black">
                     {wordCount} words
                   </span>
-                  . You need at least
+                  . You need at least{' '}
                   <span className="text-[#E9424C] font-black">
                     {minWords} words
                   </span>
@@ -90,10 +90,10 @@ export function SubmitDialog({
               )
             ) : unansweredCount > 0 ? (
               <>
-                You still have
+                You still have{' '}
                 <span className="text-[#E9424C] font-black">
                   {unansweredCount}
-                </span>
+                </span>{' '}
                 unanswered question{unansweredCount > 1 ? 's' : ''}. Once
                 submitted, you cannot change your answers.
               </>

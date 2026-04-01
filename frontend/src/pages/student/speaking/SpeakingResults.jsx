@@ -175,12 +175,12 @@ export default function SpeakingResults() {
                                   <span className="text-[#151313] font-black shrink-0">
                                     •
                                   </span>
-                                  <span>{pt}</span>
+                                  <span className="text-justify">{pt}</span>
                                 </li>
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-sm font-medium text-[#151313] leading-relaxed">
+                            <p className="text-sm font-medium text-[#151313] leading-relaxed text-justify">
                               {s.content}
                             </p>
                           )}
@@ -190,7 +190,7 @@ export default function SpeakingResults() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-[#151313] leading-relaxed">
+                <p className="text-sm text-[#151313] leading-relaxed text-justify">
                   {feedback}
                 </p>
               )}
@@ -210,7 +210,7 @@ export default function SpeakingResults() {
                   Suggested Answer
                 </span>
                 <span className="text-[9px] font-black text-white bg-[#E9424C] px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Band 5
+                  Band 5+
                 </span>
               </div>
               {showScript ? (
@@ -222,10 +222,10 @@ export default function SpeakingResults() {
             {showScript && (
               <div className="border-t-2 border-[#151313] px-5 py-5 space-y-3">
                 <p className="text-[10px] font-semibold text-[#151313]/50 italic">
-                  An improved version of your response at Band 5 level — same
+                  An improved version of your response at Band 5+ level — same
                   ideas, stronger language.
                 </p>
-                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap text-justify">
                   {speaking_script}
                 </p>
               </div>
@@ -251,7 +251,7 @@ export default function SpeakingResults() {
             </Button>
             {showTranscript && (
               <div className="border-t-2 border-[#151313] px-5 py-5">
-                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm font-medium text-[#151313] leading-relaxed whitespace-pre-wrap text-justify">
                   {transcript}
                 </p>
               </div>

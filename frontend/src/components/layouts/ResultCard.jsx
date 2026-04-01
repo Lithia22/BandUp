@@ -78,7 +78,7 @@ export function ResultCard({ r }) {
           >
             {r.question_number}
           </span>
-          <p className="text-sm font-medium text-[#151313] text-left line-clamp-1">
+          <p className="text-sm font-medium text-[#151313] text-justify line-clamp-1">
             {r.question_text || `Question ${r.question_number}`}
           </p>
         </div>
@@ -155,7 +155,7 @@ export function ResultCard({ r }) {
                     key={key}
                     className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm ${isCorrect ? 'bg-[#22c55e]/5 border-[#22c55e]' : isWrong ? 'bg-[#E9424C]/5 border-[#E9424C]' : 'bg-white border-[#151313]/20'}`}
                   >
-                    <span className="font-medium">
+                    <span className="font-medium text-justify">
                       <span className="font-black mr-2">{key}.</span>
                       {value}
                     </span>
@@ -220,8 +220,10 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
   const sf = structured_feedback || {}
 
   const correct = answerResults.filter((r) => r.is_correct).length
-  const wrong = answerResults.filter((r) => !r.is_correct).length
-  const skipped = answerResults.filter((r) => !r.student_answer).length
+  const attempted = answerResults.filter((r) => r.student_answer).length
+  const wrong = attempted - correct
+  const skipped = total - attempted
+
   const timelineSections = buildTimelineSections(sf, estimated_band)
 
   return (
@@ -268,17 +270,19 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
                     {correct}/{total}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#E9424C]" />
-                    <span className="text-xs font-semibold text-[#151313]">
-                      Wrong
+                {wrong > 0 && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#E9424C]" />
+                      <span className="text-xs font-semibold text-[#151313]">
+                        Wrong
+                      </span>
+                    </div>
+                    <span className="text-sm font-black text-[#E9424C]">
+                      {wrong}/{total}
                     </span>
                   </div>
-                  <span className="text-sm font-black text-[#E9424C]">
-                    {wrong}/{total}
-                  </span>
-                </div>
+                )}
                 {skipped > 0 && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -298,10 +302,12 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
                   className="h-full bg-[#22c55e]"
                   style={{ width: `${(correct / total) * 100}%` }}
                 />
-                <div
-                  className="h-full bg-[#E9424C]"
-                  style={{ width: `${(wrong / total) * 100}%` }}
-                />
+                {wrong > 0 && (
+                  <div
+                    className="h-full bg-[#E9424C]"
+                    style={{ width: `${(wrong / total) * 100}%` }}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -327,7 +333,9 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
                     {timelineSections.map((s) => (
                       <div key={s.num} className="flex gap-4">
                         <div
-                          className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center shrink-0 z-10 ${s.isLast ? 'bg-[#E9424C]' : 'bg-[#151313]'}`}
+                          className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center shrink-0 z-10 ${
+                            s.isLast ? 'bg-[#E9424C]' : 'bg-[#151313]'
+                          }`}
                         >
                           <span className="text-[8px] font-black text-white">
                             {s.num}
@@ -347,12 +355,12 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
                                   <span className="text-[#151313] font-black shrink-0">
                                     •
                                   </span>
-                                  <span>{pt}</span>
+                                  <span className="text-justify">{pt}</span>
                                 </li>
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-sm font-medium text-[#151313] leading-relaxed">
+                            <p className="text-sm font-medium text-[#151313] leading-relaxed text-justify">
                               {cleanText(s.content)}
                             </p>
                           )}
@@ -362,7 +370,7 @@ export function ResultsPage({ backPath, heroImage, results, byPart }) {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-[#151313] leading-relaxed">
+                <p className="text-sm text-[#151313] leading-relaxed text-justify">
                   {feedback}
                 </p>
               )}

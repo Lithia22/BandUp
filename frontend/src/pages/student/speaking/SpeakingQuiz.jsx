@@ -9,8 +9,8 @@ import { ExitWarningDialog } from '../../../components/layouts/Dialog'
 import QuizTimer from '../../../components/layouts/QuizTimer'
 import { Textarea } from '@/components/ui/textarea'
 
-const PREP_DURATION = 2 * 60
-const SPEAK_DURATION = 2 * 60
+const PREP_DURATION = 6 // originally 120 seconds (just for demo purposes)
+const SPEAK_DURATION = 30 // originally 120 seconds (just for demo purposes)
 
 export default function SpeakingQuiz() {
   const { setNumber, partNumber, candidateNumber } = useParams()

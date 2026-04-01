@@ -30,11 +30,11 @@ import { Button } from '@/components/ui/button'
 
 const STUDENT_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
-  { label: 'Analytics', icon: BarChart2, href: '/analytics' },
   { label: 'Reading', icon: BookOpen, href: '/reading' },
   { label: 'Listening', icon: Headphones, href: '/listening' },
   { label: 'Writing', icon: SquarePen, href: '/writing' },
   { label: 'Speaking', icon: Mic, href: '/speaking' },
+  { label: 'Analytics', icon: BarChart2, href: '/analytics' },
   { label: 'Profile', icon: User, href: '/profile' },
 ]
 

@@ -153,9 +153,7 @@ Per-part breakdown:
 
 STRONG parts (most questions correct): {", ".join(f"Part {p}" for p in strong_parts) or "None"}
 WEAK parts (few or no correct answers): {", ".join(f"Part {p}" for p in weak_parts) or "None"}
-HEAVILY SKIPPED parts (skipped most or all questions): {", ".join(f"Part {p}" for p in skipped_parts) or "None"}
-
-IMPORTANT: Use ONLY these labels. Only mention STRONG parts as positives. Only mention WEAK or HEAVILY SKIPPED parts as areas to improve. Do not contradict them."""
+HEAVILY SKIPPED parts (skipped most or all questions): {", ".join(f"Part {p}" for p in skipped_parts) or "None"}"""
 
         # 4. RAG: embed → KNN → LLM
         rag_result = rag_generate_feedback(
@@ -164,10 +162,10 @@ IMPORTANT: Use ONLY these labels. Only mention STRONG parts as positives. Only m
             k=3,
             skipped_note=skipped_note,
         )
-        feedback            = rag_result["feedback"]
+        feedback = rag_result["feedback"]
         structured_feedback = rag_result["structured_feedback"]
-        estimated_band      = rag_result["estimated_band"]
-        top_descriptor_id   = rag_result["top_descriptor_id"]
+        estimated_band = rag_result["estimated_band"]
+        top_descriptor_id = rag_result["top_descriptor_id"]
 
         # 5. Save to DB
         if data.student_id:
@@ -225,9 +223,7 @@ IMPORTANT: Use ONLY these labels. Only mention STRONG parts as positives. Only m
 
         return {
             "set_number": data.set_number,
-            "score": correct_count,
             "total": total,
-            "score_percent": round(correct_count / total * 100, 1),
             "results": results,
             "feedback": feedback,
             "structured_feedback": structured_feedback,
