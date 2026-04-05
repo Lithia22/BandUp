@@ -84,18 +84,18 @@ def rag_generate_feedback(component: str, performance_summary: str, k: int = 3, 
     total_start = time.time()
     print(f"\n[TIMING] Starting feedback generation for {component}...")
     
-    # Step 1 — Embed
+    # Embedding student answer
     embed_start = time.time()
     query_vector = embed_text(performance_summary)
     print(f"[TIMING] Embedding (Gemini API): {time.time() - embed_start:.2f}s")
     
-    # Step 2 — Retrieval (KNN search)
+    # Step 1 — Retrieval (KNN search)
     knn_start = time.time()
     descriptors = load_descriptors(component)
     top_matches = knn_search(query_vector, descriptors, k=k)
     print(f"[TIMING] KNN search: {time.time() - knn_start:.2f}s")
     
-    # Step 3 — Augment (build prompt)
+    # Step 2 — Augment (build prompt)
     augment_start = time.time()
     descriptor_context = "\n\n".join([
         f"[{m['band_level']}] (similarity: {m['similarity']:.3f})\n{m['descriptor_text']}"
@@ -103,7 +103,7 @@ def rag_generate_feedback(component: str, performance_summary: str, k: int = 3, 
     ])
     print(f"[TIMING] Build prompt: {time.time() - augment_start:.2f}s")
     
-    # Step 4 — Generate (LLM call)
+    # Step 3 — Generate (LLM)
     component_label = component.capitalize()
     resource_guidance = COMPONENT_RESOURCES.get(component, COMPONENT_RESOURCES["reading"])
 
@@ -120,23 +120,23 @@ Rules:
 - Write in simple, friendly English — like a teacher talking directly to the student. Do NOT use any markdown formatting — no asterisks, no bold, no italics, no symbols
 - Base the estimated band strictly on the MUET descriptors above
 - CRITICAL: Evaluate based on these 4 criteria, with Task Fulfillment being the most important:
-  1. Task Fulfillment — did the student address the CORRECT prompt? If they answered a completely different question/topic, this is a FAILURE regardless of language quality.
-  2. Language Accuracy — grammar, vocabulary, sentence structure
-  3. Organisation & Coherence — are ideas logically ordered and well-connected?
-  4. Style & Register — is the tone appropriate for the reader-writer relationship?
+  • Task Fulfillment: Did the student use ALL notes given and write at least 100 words? Did they use appropriate language functions as required by MUET Task 1: expressing thanks, apologies, reactions, and preferences; accepting, declining or rejecting invitations or offers; making requests; giving precise information; describing experiences, feelings, and events; providing advice, reasons, opinions, and justifications
+  • Language (Organisational Knowledge): vocabulary, morphology, grammar, syntax, spelling, cohesion, and rhetorical organisation
+  • Style and Register (Pragmatic Knowledge): functions, dialect, register, naturalness, cultural references, and figures of speech — is the tone appropriate for the reader-writer relationship? (register can range from informal to formal depending on the relationship)
 - If the student's response does NOT match the original email context (they answered the wrong question), give Band 1 immediately.
 - Never mention scores, fractions or percentages
 - If word count is below 100, always mention this in WHERE TO FOCUS
 - Keep the tone encouraging and kind
 - For SUGGESTED ANSWER: rewrite the student's response at Band 5+ level (the highest band) — keep their exact same ideas, notes and structure but improve the grammar, vocabulary, sentence variety and style to demonstrate excellence. Use the student's real name (provided in the performance summary) in the signature. If no name is provided, use "[Your Name]". Do NOT invent new ideas. Keep it as a natural email reply. Do not add any explanation or commentary — just the improved email text only.
 - For YOUR NEXT GOAL: The next band is calculated by moving up one level from the current band. If current band is Band 1, next is Band 2. If current is Band 2, next is Band 3. If current is Band 3, next is Band 4. If current is Band 4, next is Band 5. If current is Band 5, next is Band 5+.
+- CRITICAL: Do NOT skip Band 5. Band 4 must go to Band 5, not Band 5+.
 
 Format EXACTLY:
 
 ESTIMATED BAND: [Band 1 / Band 2 / Band 3 / Band 4 / Band 5 / Band 5+]
 
 YOUR BAND RESULT:
-[2 simple sentences. If Task Fulfillment was completely wrong, say: "You answered a different question, which is why you received Band 1. Always read the prompt carefully." Otherwise, explain what this band means based on the descriptor.]
+[2 simple sentences. If Task Fulfillment was completely wrong, say: "You answered a different question, which is why you received Band 1. Always read the question and notes carefully." Otherwise, explain what this band means based on the descriptor.]
 
 WHAT YOU DID WELL:
 [One • bullet per criteria the student handled well — name the criteria and explain briefly what they did well]
@@ -171,11 +171,12 @@ Official MUET band descriptors (use ONLY these to estimate the band):
 Rules:
 - Write in simple, friendly English — like a teacher talking directly to the student. Do NOT use any markdown formatting — no asterisks, no bold, no italics, no symbols
 - Base the estimated band strictly on the MUET descriptors above
-- CRITICAL: Evaluate based on these 4 criteria, with Task Fulfillment being the most important:
-  1. Task Fulfillment — did the student address the CORRECT prompt? If they spoke about a completely different topic, this is a FAILURE regardless of language quality.
-  2. Accuracy — grammar, vocabulary correctness as reflected in the transcript
-  3. Range — varied sentence structures and vocabulary
-  4. Fluency — natural flow, confidence, minimal filler words and hesitation
+- Evaluate based on these criteria:
+  • Task Fulfillment: Did the student address the correct prompt? Did they use the required language functions for MUET Part 1 Individual Presentation: expressing opinions; giving reasons; elaborating; justifying; summarising; concluding
+  • Accuracy: Using grammatically correct language — Using correct pronunciation, stress and intonation
+  • Range: Using varied sentence structures
+  • Fluency: Speaking with confidence and without unnecessary or undue hesitation
+  • Sociolinguistic and Pragmatic Competence: Using language appropriate for the intended purpose and audience — Using varied vocabulary and expressions — Observing conventions appropriate to a specific situation
 - CRITICAL: If the student's response does NOT match the given prompt (they answered the wrong topic), you MUST give Band 1. This is non-negotiable. Task Fulfillment is the most important criteria, and answering the wrong question is an automatic Band 1 regardless of language quality.
 - Never mention scores, fractions or percentages
 - If filler words were detected in the performance summary, always mention this specifically under Fluency in WHERE TO FOCUS
@@ -228,6 +229,7 @@ Rules:
 - Never mention scores, fractions or percentages
 - Only mention STRONG parts in WHAT YOU DID WELL
 - Only mention WEAK or HEAVILY SKIPPED parts in WHERE TO FOCUS
+- If the student got 0 correct, current band is Band 1, so next target should be Band 2.
 - Always include the part number and its skill + text type in every bullet about a specific part
 - WHERE TO FOCUS: explain WHY each part is challenging — no study tips here
 - If two parts test the same text type, combine into one bullet

@@ -8,13 +8,19 @@ from app.services.rag import rag_generate_feedback
 router = APIRouter()
 
 PART_SKILLS = {
-    1: "Short texts (advertisements, notices, signs) — scanning for specific facts and details",
-    2: "Email, blog or article — understanding main ideas and making inferences",
-    3: "Short story or letter — inferencing, predicting outcomes and understanding narrative",
-    4: "Two texts — comparing information, distinguishing facts from opinions, understanding author intention",
-    5: "Gapped text — understanding text structure, cause-effect relationships and how ideas connect",
-    6: "Complex article — identifying specific details, opinions, attitudes and writer purpose",
-    7: "Complex article — recognising implication, exemplification and overall text organisation",
+    1: "Multiple matching (short texts) — reading multiple texts for specific factual information",
+
+    2: "Multiple choice — reading for main ideas and supporting details; inferencing; identifying details and examples to support an argument; predicting outcomes",
+
+    3: "Multiple choice — reading for main ideas and supporting details; inferencing; identifying details and examples to support an argument; predicting outcomes",
+
+    4: "Multiple choice (two linked texts) — understanding the main idea and supporting details, and gist; understanding text organisation features; deducing meaning from context; distinguishing facts and opinions; interpreting text for author's intention, attitudes and style; comparing and evaluating information in different texts",
+
+    5: "Gapped text — identifying the purpose of a paragraph or text; recognising the text structure of the whole text; identifying cause and effect relationships in a text",
+
+    6: "Multiple choice (complex text) — recognising text content features including detail, opinion, emotions, attitude, writer's purpose, main idea and implication; recognising text organisation features including exemplification, comparison and reference",
+
+    7: "Multiple choice (complex text) — recognising text content features including detail, opinion, emotions, attitude, writer's purpose, main idea and implication; recognising text organisation features including exemplification, comparison and reference",
 }
 
 
@@ -165,6 +171,10 @@ HEAVILY SKIPPED parts (skipped most or all questions): {", ".join(f"Part {p}" fo
         feedback = rag_result["feedback"]
         structured_feedback = rag_result["structured_feedback"]
         estimated_band = rag_result["estimated_band"]
+        
+        if correct_count == 0:
+            estimated_band = "Band 1"
+        
         top_descriptor_id = rag_result["top_descriptor_id"]
 
         # 5. Save to DB

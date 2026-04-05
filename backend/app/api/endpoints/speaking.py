@@ -166,13 +166,7 @@ Transcript of student's spoken response (transcribed via speech-to-text):
 {transcript}
 
 Word count: {word_count} words (expected: approximately 200-250 words for a 2-minute presentation).
-{filler_summary}
-
-Evaluate the student's spoken response based on these criteria from MUET Speaking test specifications and band descriptors:
-1. Task Fulfillment — did the student address the prompt? Did they express opinions, give reasons, elaborate and conclude?
-2. Accuracy — grammar, vocabulary, pronunciation (as reflected in the transcript)
-3. Range — varied sentence structures and vocabulary
-4. Fluency — confidence, natural flow, minimal unnecessary hesitation or filler words"""
+{filler_summary}"""
 
         # 7. RAG: embed → KNN → LLM
         rag_result = rag_generate_feedback(
@@ -180,11 +174,11 @@ Evaluate the student's spoken response based on these criteria from MUET Speakin
             performance_summary=performance_summary,
             k=3,
         )
-        feedback            = rag_result["feedback"]
+        feedback = rag_result["feedback"]
         structured_feedback = rag_result["structured_feedback"]
-        estimated_band      = rag_result["estimated_band"]
-        top_descriptor_id   = rag_result["top_descriptor_id"]
-        speaking_script     = structured_feedback.get("speaking_script", "")
+        estimated_band = rag_result["estimated_band"]
+        top_descriptor_id = rag_result["top_descriptor_id"]
+        speaking_script = structured_feedback.get("speaking_script", "")
 
         # 8. Save to DB
         if student_id:

@@ -8,11 +8,15 @@ from app.services.rag import rag_generate_feedback
 router = APIRouter()
 
 PART_SKILLS = {
-    1: "Dialogue — identifying specific information and understanding short exchanges between two speakers (A2-B1)",
-    2: "Monologue — understanding main ideas and following extended speech from a single speaker (B1-B2)",
-    3: "Multiple speakers — matching each speaker to their main topic or opinion (B2)",
-    4: "Dialogue — following complex arguments and understanding unfamiliar topics in a longer conversation (B2)",
-    5: "Short dialogues — understanding implied meanings, idiomatic expressions and complex ideas across three separate conversations (B2-C1)",
+    1: "Dialogue — understanding simple phrases and expressions; identifying general and specific information; understanding main ideas made in clear standard speech on familiar matters",
+
+    2: "Monologue — understanding simple phrases and expressions; identifying general and specific information; understanding main ideas in linguistically complex speech; understanding familiar and unfamiliar topics; following extended speech and complex lines of argument on reasonably familiar topics",
+
+    3: "Monologue (3 speakers) — understanding main ideas in linguistically complex speech; understanding familiar and unfamiliar topics; following extended speech and complex lines of argument on reasonably familiar topics",
+
+    4: "Dialogue — understanding main ideas in linguistically complex speech; understanding familiar and unfamiliar topics; following extended speech and complex lines of argument on reasonably familiar topics",
+
+    5: "Short dialogues — understanding main ideas in linguistically complex speech; understanding familiar and unfamiliar topics; following extended speech on abstract and complex topics outside field of study; following less structured implied messages in extended speech; understanding idiomatic expressions, colloquialisms and variation in language use",
 }
 
 
@@ -163,6 +167,10 @@ HEAVILY SKIPPED parts (skipped most or all questions): {", ".join(f"Part {p}" fo
         feedback = rag_result["feedback"]
         structured_feedback = rag_result["structured_feedback"]
         estimated_band = rag_result["estimated_band"]
+        
+        if correct_count == 0:
+            estimated_band = "Band 1"
+        
         top_descriptor_id = rag_result["top_descriptor_id"]
 
         # 5. Save to DB

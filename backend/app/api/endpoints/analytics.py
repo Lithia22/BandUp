@@ -171,7 +171,7 @@ def get_dashboard(user_id: str):
         for comp in components:
             trend = []
             session_index = 1
-            for s in top_per_comp[comp]:
+            for s in top_per_comp[comp][-10:]:
                 answers = session_to_answers.get(s["id"], [])
                 band_num = None
                 for ans in answers:

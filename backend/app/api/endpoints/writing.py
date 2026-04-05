@@ -144,7 +144,7 @@ Subject: {email_subject}
         # 5. Build notes text
         notes_text = "\n".join([f"  - {v}" for v in notes.values()])
         
-        # 6. Build performance summary for RAG (with full email context and student name)
+        # 6. Build performance summary for RAG
         performance_summary = f"""Student completed MUET Writing Task 1 (Set {data.set_number}).
 Student name: {student_name if student_name else '[Your Name]'}
 
@@ -157,13 +157,7 @@ Notes the student was required to address:
 {notes_text}
 
 Student's response:
-{data.student_answer}
-
-Evaluate the student's response based on these 4 criteria:
-1. Task Fulfillment — did the student address all 4 notes given? Did they use appropriate language functions?
-2. Language Accuracy — grammar, vocabulary, sentence structure.
-3. Organisation & Coherence — are ideas logically ordered and well-connected?
-4. Style & Register — is the tone appropriate for the reader-writer relationship?"""
+{data.student_answer}"""
 
         # 7. RAG: embed → KNN → LLM
         rag_result = rag_generate_feedback(
