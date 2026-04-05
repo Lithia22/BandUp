@@ -133,3 +133,31 @@ body {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
+
+/* ── Skeleton breathing animation ── */
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.breathe-0 {
+  animation: breathe 1.6s ease-in-out infinite;
+}
+.breathe-1 {
+  animation: breathe 1.6s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+.breathe-2 {
+  animation: breathe 1.6s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
+/* Skeleton bar colors */
+.skeleton-dark {
+  background-color: rgba(21, 19, 19, 0.25);
+  border-radius: 6px;
+}
+.skeleton-medium {
+  background-color: rgba(21, 19, 19, 0.15);
+  border-radius: 6px;
+}

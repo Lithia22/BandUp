@@ -70,30 +70,51 @@ export function ResultCard({ r }) {
       <Button
         variant="ghost"
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#f7f7f5] transition-colors h-auto"
+        className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#f7f7f5] transition-colors h-auto gap-3"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <span
-            className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center text-xs font-black shrink-0 ${r.is_correct ? 'bg-[#22c55e] text-white' : 'bg-[#E9424C] text-white'}`}
+            className={`w-6 h-6 rounded-full border-2 border-[#151313] flex items-center justify-center text-xs font-black shrink-0 ${
+              r.is_correct
+                ? 'bg-[#22c55e] text-white'
+                : 'bg-[#E9424C] text-white'
+            }`}
           >
             {r.question_number}
           </span>
-          <p className="text-sm font-medium text-[#151313] text-justify line-clamp-1">
+          <p className="text-sm font-medium text-[#151313] text-left truncate min-w-0">
             {r.question_text || `Question ${r.question_number}`}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+
+        <div className="flex items-center gap-2 shrink-0 ml-2">
           <span
-            className={`text-[10px] font-black ${r.is_correct ? 'text-[#22c55e]' : 'text-[#E9424C]'}`}
+            className={`text-[10px] font-black whitespace-nowrap ${
+              r.is_correct ? 'text-[#22c55e]' : 'text-[#E9424C]'
+            }`}
           >
-            {r.is_correct ? 'Correct' : 'Incorrect'}
+            {r.is_correct
+              ? 'Correct'
+              : r.student_answer
+                ? 'Incorrect'
+                : 'Skipped'}
           </span>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {expanded ? (
+            <ChevronUp size={14} className="text-[#151313]/40" />
+          ) : (
+            <ChevronDown size={14} className="text-[#151313]/40" />
+          )}
         </div>
       </Button>
 
       {expanded && (
         <div className="border-t-2 border-[#151313]/10 p-5 bg-[#f7f7f5]/50">
+          {r.question_text && (
+            <p className="text-sm font-semibold text-[#151313] mb-4 leading-relaxed">
+              {r.question_text}
+            </p>
+          )}
+
           {hasImageOptions ? (
             <div className="grid grid-cols-1 gap-3 mb-3 max-w-sm">
               {Object.entries(r.options).map(([key, value]) => {
@@ -103,19 +124,39 @@ export function ResultCard({ r }) {
                 return (
                   <div
                     key={key}
-                    className={`flex flex-col rounded-xl border-2 overflow-hidden ${isCorrect ? 'border-[#22c55e]' : isWrong ? 'border-[#E9424C]' : 'border-[#151313]/20'}`}
+                    className={`flex flex-col rounded-xl border-2 overflow-hidden ${
+                      isCorrect
+                        ? 'border-[#22c55e]'
+                        : isWrong
+                          ? 'border-[#E9424C]'
+                          : 'border-[#151313]/20'
+                    }`}
                   >
                     <div
-                      className={`flex items-center justify-between px-3 py-2 border-b-2 ${isCorrect ? 'bg-[#22c55e]/10 border-[#22c55e]/30' : isWrong ? 'bg-[#E9424C]/10 border-[#E9424C]/30' : 'bg-[#f7f7f5] border-[#151313]/10'}`}
+                      className={`flex items-center justify-between px-3 py-2 border-b-2 ${
+                        isCorrect
+                          ? 'bg-[#22c55e]/10 border-[#22c55e]/30'
+                          : isWrong
+                            ? 'bg-[#E9424C]/10 border-[#E9424C]/30'
+                            : 'bg-[#f7f7f5] border-[#151313]/10'
+                      }`}
                     >
                       <span
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-black ${isCorrect ? 'bg-[#22c55e] border-[#22c55e] text-white' : isWrong ? 'bg-[#E9424C] border-[#E9424C] text-white' : 'bg-white border-[#151313] text-[#151313]'}`}
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-black ${
+                          isCorrect
+                            ? 'bg-[#22c55e] border-[#22c55e] text-white'
+                            : isWrong
+                              ? 'bg-[#E9424C] border-[#E9424C] text-white'
+                              : 'bg-white border-[#151313] text-[#151313]'
+                        }`}
                       >
                         {key}
                       </span>
                       {(isCorrect || isWrong) && (
                         <span
-                          className={`text-[10px] font-black flex items-center gap-1 ${isCorrect ? 'text-[#22c55e]' : 'text-[#E9424C]'}`}
+                          className={`text-[10px] font-black flex items-center gap-1 ${
+                            isCorrect ? 'text-[#22c55e]' : 'text-[#E9424C]'
+                          }`}
                         >
                           {isCorrect && isChosen && (
                             <>
@@ -153,7 +194,13 @@ export function ResultCard({ r }) {
                 return (
                   <div
                     key={key}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm ${isCorrect ? 'bg-[#22c55e]/5 border-[#22c55e]' : isWrong ? 'bg-[#E9424C]/5 border-[#E9424C]' : 'bg-white border-[#151313]/20'}`}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm ${
+                      isCorrect
+                        ? 'bg-[#22c55e]/5 border-[#22c55e]'
+                        : isWrong
+                          ? 'bg-[#E9424C]/5 border-[#E9424C]'
+                          : 'bg-white border-[#151313]/20'
+                    }`}
                   >
                     <span className="font-medium text-justify">
                       <span className="font-black mr-2">{key}.</span>
@@ -185,7 +232,9 @@ export function ResultCard({ r }) {
               <div className="flex items-center gap-4 text-sm">
                 <span className="text-[#151313]/40">Your answer:</span>
                 <span
-                  className={`font-black ${r.is_correct ? 'text-[#22c55e]' : 'text-[#E9424C]'}`}
+                  className={`font-black ${
+                    r.is_correct ? 'text-[#22c55e]' : 'text-[#E9424C]'
+                  }`}
                 >
                   {r.student_answer || '—'}
                 </span>
