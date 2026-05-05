@@ -97,12 +97,9 @@ export default function AdminQuestions() {
               style={{ background: '#1A1A1A', minHeight: 160 }}
             >
               <CardContent className="p-6">
-                <Badge
-                  variant="outline"
-                  className="bg-[#E9424C] text-white border-2 border-[#151313] mb-2 text-[10px]"
-                >
+                <p className="text-[10px] font-black text-[#E9424C] uppercase tracking-widest mb-1">
                   Admin Panel
-                </Badge>
+                </p>
                 <h2 className="text-white text-xl md:text-2xl font-black leading-tight mb-1.5">
                   Manage Questions
                 </h2>

@@ -53,6 +53,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { toast } from 'sonner'
 
 export const CLUSTER_CONFIG = {
   'Foundation Needed': {
@@ -282,7 +283,7 @@ function StudentTable({ students, loading, search }) {
             variant="outline"
             size="icon"
             className="h-6 w-6 border border-[#151313]/20 rounded-md text-[#151313]/50 hover:bg-[#151313] hover:text-white transition-all"
-            onClick={() => goToPage(1)}
+            onClick={() => goPage(1)}
             disabled={safePage === 1}
           >
             <ChevronsLeft size={11} />
@@ -291,7 +292,7 @@ function StudentTable({ students, loading, search }) {
             variant="outline"
             size="icon"
             className="h-6 w-6 border border-[#151313]/20 rounded-md text-[#151313]/50 hover:bg-[#151313] hover:text-white transition-all"
-            onClick={() => goToPage(safePage - 1)}
+            onClick={() => goPage(safePage - 1)}
             disabled={safePage === 1}
           >
             <ChevronLeft size={11} />
@@ -305,7 +306,7 @@ function StudentTable({ students, loading, search }) {
             variant="outline"
             size="icon"
             className="h-6 w-6 border border-[#151313]/20 rounded-md text-[#151313]/50 hover:bg-[#151313] hover:text-white transition-all"
-            onClick={() => goToPage(safePage + 1)}
+            onClick={() => goPage(safePage + 1)}
             disabled={safePage === totalPages}
           >
             <ChevronRight size={11} />
@@ -314,7 +315,7 @@ function StudentTable({ students, loading, search }) {
             variant="outline"
             size="icon"
             className="h-6 w-6 border border-[#151313]/20 rounded-md text-[#151313]/50 hover:bg-[#151313] hover:text-white transition-all"
-            onClick={() => goToPage(totalPages)}
+            onClick={() => goPage(totalPages)}
             disabled={safePage === totalPages}
           >
             <ChevronsRight size={11} />

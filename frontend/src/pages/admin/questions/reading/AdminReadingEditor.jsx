@@ -148,56 +148,62 @@ export default function AdminReadingEditor() {
   const moveQuestion = (idx, direction) => {
     const partQs = [...currentPartQuestions]
     const newIdx = idx + direction
-    if (newIdx < 0 || newIdx >= partQs.length) return
-    const temp = partQs[idx]
-    partQs[idx] = partQs[newIdx]
-    partQs[newIdx] = temp
+    if (newIdx < 0 || newIdx >= partQs.length) return // Swap questions
+    ;[partQs[idx], partQs[newIdx]] = [partQs[newIdx], partQs[idx]]
+
     const startQ = PART_CONFIG[selectedPart].startQ
     partQs.forEach((q, i) => {
       q.question_number = startQ + i
     })
+
     setAllQuestions((prev) => [
       ...prev.filter((q) => q.part_number !== selectedPart),
       ...partQs,
     ])
   }
 
+  const [generatedParts, setGeneratedParts] = useState({})
+
   useEffect(() => {
-    if (loading || setNumber || draftId || draftLoaded.current) return
+    if (setNumber) return
+    if (draftId) return
+    if (loading) return
+
+    if (generatedParts[selectedPart]) return
+
     if (currentPartQuestions.length === 0) {
       const config = PART_CONFIG[selectedPart]
 
-      if (selectedPart === 5) {
-        setAllQuestions((prev) => [
-          ...prev,
-          ...Array.from({ length: config.questions }, (_, i) => ({
-            question_number: config.startQ + i,
-            question_text: '',
-            options: {},
-            correct_answer: '',
-            part_number: selectedPart,
-            passage: null,
-          })),
-        ])
-      } else {
-        const defaultOptions =
+      const newQuestions = Array.from({ length: config.questions }, (_, i) => ({
+        question_number: config.startQ + i,
+        question_text: '',
+        options:
           selectedPart >= 6
             ? { A: '', B: '', C: '', D: '' }
-            : { A: '', B: '', C: '' }
-        setAllQuestions((prev) => [
-          ...prev,
-          ...Array.from({ length: config.questions }, (_, i) => ({
-            question_number: config.startQ + i,
-            question_text: '',
-            options: defaultOptions,
-            correct_answer: '',
-            part_number: selectedPart,
-            passage: null,
-          })),
-        ])
-      }
+            : { A: '', B: '', C: '' },
+        correct_answer: '',
+        part_number: selectedPart,
+        passage: null,
+      }))
+
+      setAllQuestions((prev) => {
+        const exists = prev.some((q) => q.part_number === selectedPart)
+        if (exists) return prev
+        return [...prev, ...newQuestions]
+      })
+      setGeneratedParts((prev) => ({
+        ...prev,
+        [selectedPart]: true,
+      }))
     }
-  }, [selectedPart, loading])
+  }, [
+    selectedPart,
+    loading,
+    setNumber,
+    draftId,
+    generatedParts,
+    currentPartQuestions.length,
+  ])
 
   useEffect(() => {
     if (suppressUnsaved.current) return
@@ -608,11 +614,13 @@ export default function AdminReadingEditor() {
       return
     }
 
+    const newNumber = config.startQ + currentPartQuestions.length
+
     if (selectedPart === 5) {
       setAllQuestions((prev) => [
         ...prev,
         {
-          question_number: config.startQ + currentPartQuestions.length,
+          question_number: newNumber,
           question_text: '',
           options: {},
           correct_answer: '',
@@ -628,7 +636,7 @@ export default function AdminReadingEditor() {
       setAllQuestions((prev) => [
         ...prev,
         {
-          question_number: config.startQ + currentPartQuestions.length,
+          question_number: newNumber,
           question_text: '',
           options: defaultOptions,
           correct_answer: '',
@@ -640,20 +648,28 @@ export default function AdminReadingEditor() {
   }
 
   const removeQuestion = (questionNumber) => {
+    // Remove the question
     const remaining = allQuestions.filter(
       (q) =>
         !(
           q.part_number === selectedPart && q.question_number === questionNumber
         )
     )
-    const startQ = PART_CONFIG[selectedPart].startQ
-    remaining
+
+    // Get questions for this part and sort by current number
+    const partQuestions = remaining
       .filter((q) => q.part_number === selectedPart)
       .sort((a, b) => a.question_number - b.question_number)
-      .forEach((q, i) => {
-        q.question_number = startQ + i
-      })
-    setAllQuestions(remaining)
+
+    const startQ = PART_CONFIG[selectedPart].startQ
+    partQuestions.forEach((q, i) => {
+      q.question_number = startQ + i
+    })
+
+    setAllQuestions([
+      ...remaining.filter((q) => q.part_number !== selectedPart),
+      ...partQuestions,
+    ])
   }
 
   const validateBeforeSave = () => {
@@ -1295,7 +1311,7 @@ export default function AdminReadingEditor() {
                     })
                     setSetExistsError('')
                   }}
-                  className={`w-20 border-2 rounded-xl text-xs font-black h-8 placeholder:text-[9px] pr-7 ${
+                  className={`w-24 border-2 rounded-xl text-xs font-black h-8 placeholder:text-[11px] pr-7 ${
                     setExistsError || fieldErrors.setNumber
                       ? 'border-[#E9424C]'
                       : 'border-[#151313]'

@@ -423,7 +423,7 @@ export default function AdminWritingEditor() {
                   })
                   setSetExistsError('')
                 }}
-                className={`w-20 border-2 rounded-xl text-xs font-black h-8 placeholder:text-[9px] ${setExistsError || fieldErrors.setNumber ? 'border-[#E9424C]' : 'border-[#151313]'}`}
+                className={`w-24 border-2 rounded-xl text-xs font-black h-8 placeholder:text-[11px] ${setExistsError || fieldErrors.setNumber ? 'border-[#E9424C]' : 'border-[#151313]'}`}
                 placeholder="Enter Set"
               />
             </div>

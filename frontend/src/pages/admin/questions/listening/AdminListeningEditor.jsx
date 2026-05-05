@@ -262,23 +262,41 @@ export default function AdminListeningEditor() {
     editableSetNumber,
   ])
 
-  useEffect(() => {
-    if (loading || setNumber || draftId) return
-    if (currentPartQs.length === 0) {
-      const { questions: count, startQ } = PART_CONFIG[selectedPart]
-      setAllQuestions((prev) => [
-        ...prev,
-        ...Array.from({ length: count }, (_, i) => ({
-          question_number: startQ + i,
-          question_text: '',
-          options: defaultOptions(selectedPart),
-          correct_answer: '',
-          part_number: selectedPart,
-          has_image_options: false,
-        })),
-      ])
-    }
-  }, [selectedPart, loading])
+  const [defaultGenerated, setDefaultGenerated] = useState(false)
+
+useEffect(() => {
+  if (setNumber) return
+  if (draftId) return
+  if (loading) return
+  if (defaultGenerated) return
+
+  const existingPartQs = allQuestions.filter(
+    (q) => q.part_number === selectedPart
+  )
+
+  if (existingPartQs.length === 0) {
+    const { questions: count, startQ } = PART_CONFIG[selectedPart]
+
+    setAllQuestions((prev) => {
+      const withoutCurrentPart = prev.filter(
+        (q) => q.part_number !== selectedPart
+      )
+
+      const newQs = Array.from({ length: count }, (_, i) => ({
+        question_number: startQ + i,
+        question_text: '',
+        options: defaultOptions(selectedPart),
+        correct_answer: '',
+        part_number: selectedPart,
+        has_image_options: false,
+      }))
+
+      return [...withoutCurrentPart, ...newQs]
+    })
+
+    setDefaultGenerated(true)
+  }
+}, [selectedPart, loading, setNumber, draftId, defaultGenerated, allQuestions])
 
   const autoSave = useCallback(() => {
     if (setNumber || allQuestions.length === 0) return
@@ -888,7 +906,7 @@ export default function AdminListeningEditor() {
                   })
                   setSetExistsError('')
                 }}
-                className={`w-20 border-2 rounded-xl text-xs font-black h-8 placeholder:text-[9px] ${setExistsError || fieldErrors.setNumber ? 'border-[#E9424C]' : 'border-[#151313]'}`}
+                className={`w-24 border-2 rounded-xl text-xs font-black h-8 placeholder:text-[11px] ${setExistsError || fieldErrors.setNumber ? 'border-[#E9424C]' : 'border-[#151313]'}`}
                 placeholder="Enter Set"
               />
             </div>
@@ -937,7 +955,10 @@ export default function AdminListeningEditor() {
         <div className="max-w-5xl mx-auto px-4 md:px-6 pt-6">
           <Tabs
             value={selectedPart.toString()}
-            onValueChange={(v) => setSelectedPart(parseInt(v))}
+            onValueChange={(v) => {
+              setSelectedPart(parseInt(v))
+              setDefaultGenerated(false)
+            }}
           >
             <TabsList className="bg-white border-2 border-[#151313] rounded-xl shadow-[2px_2px_0px_#151313] h-auto p-1 w-full mb-6 flex flex-wrap">
               {[1, 2, 3, 4, 5].map((p) => (
