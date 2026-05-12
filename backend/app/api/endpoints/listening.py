@@ -156,6 +156,8 @@ Per-part breakdown:
 STRONG parts (most questions correct): {", ".join(f"Part {p}" for p in strong_parts) or "None"}
 WEAK parts (few or no correct answers): {", ".join(f"Part {p}" for p in weak_parts) or "None"}
 HEAVILY SKIPPED parts (skipped most or all questions): {", ".join(f"Part {p}" for p in skipped_parts) or "None"}"""
+        
+        print(performance_summary)
 
         # 4. RAG: embed → KNN → LLM
         rag_result = rag_generate_feedback(

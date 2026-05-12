@@ -167,6 +167,8 @@ Transcript of student's spoken response (transcribed via speech-to-text):
 
 Word count: {word_count} words (expected: approximately 200-250 words for a 2-minute presentation).
 {filler_summary}"""
+        
+        print(performance_summary)
 
         # 7. RAG: embed → KNN → LLM
         rag_result = rag_generate_feedback(

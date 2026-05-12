@@ -158,6 +158,8 @@ Notes the student was required to address:
 
 Student's response:
 {data.student_answer}"""
+        
+        print(performance_summary)
 
         # 7. RAG: embed → KNN → LLM
         rag_result = rag_generate_feedback(

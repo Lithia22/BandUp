@@ -646,7 +646,7 @@ export function ClusterMapChart({ scatterByCluster, centroids, labels }) {
                 <XAxis
                   type="number"
                   dataKey="x"
-                  name="Receptive avg"
+                  name="Understanding avg"
                   domain={[0, 6]}
                   ticks={[1, 2, 3, 4, 5, 6]}
                   tickLine={false}
