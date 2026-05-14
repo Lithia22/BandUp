@@ -28,7 +28,7 @@ llm = ChatGoogleGenerativeAI(model=LLM_MODEL, google_api_key=GEMINI_API_KEY, tem
 # ============================================================
 
 MUET_KEYWORDS = {
-    "reading": ["part", "score", "correct", "skipped", "strong", "weak", "passage", "multiple choice"],
+    "reading": ["part", "score", "correct", "skipped", "strong", "weak", "passage", "multiple choice", "simple", "factual information",],
     "listening": ["part", "dialogue", "monologue", "score", "correct", "skipped", "strong", "weak", "speaker"],
     "writing": ["task", "word count", "minimum 100 words", "notes", "grammar", "vocabulary", "tone", "suggested answer"],
     "speaking": ["fluency", "filler", "uh", "um", "presentation", "hesitation", "pronunciation", "transcript"]
@@ -47,8 +47,31 @@ def check_muet_keywords(text, component):
 # ============================================================
 
 TEST_CASES = [
-
-    # SPEAKING - Using correct session IDs
+    # READING
+    (1, "5bce6d26-b59c-40c5-b20b-ac041603cfe0", "reading", "Band 1"),
+    (2, "2b5efb8c-c1d8-464a-ad3c-2d1a433b0743", "reading", "Band 2"),
+    (3, "08852237-1980-4455-9d2d-71e887223bb4", "reading", "Band 3"),
+    (4, "17bc7829-d5d1-446c-8d8c-ea105d897554", "reading", "Band 4"),
+    (5, "55b0b754-b016-4994-a472-8bc7cbd23f4b", "reading", "Band 5"),
+    (6, "fe2a8b16-ccf4-4ee4-824d-822d014e76e0", "reading", "Band 5+"),
+    
+    # LISTENING
+    (7, "129dda84-e5d1-40bd-b89b-e0a339d8dbf6", "listening", "Band 1"),
+    (8, "aeca4d33-2681-4ef5-a5d0-1bcf146d7eb5", "listening", "Band 2"),
+    (9, "0b87957e-f8aa-4315-80de-ba2718f02169", "listening", "Band 3"),
+    (10, "02017282-9cf4-49a1-8fbc-a51182bdc183", "listening", "Band 4"),
+    (11, "a4f7d38d-8ae4-4a6e-b25b-df54851f2ec2", "listening", "Band 5"),
+    (12, "77eead30-d9d6-46fc-8a63-013e0e53a7ff", "listening", "Band 5+"),
+    
+    # WRITING
+    (13, "36376c8a-ab54-46c6-8a8d-2066c8239309", "writing", "Band 1"),
+    (14, "8f1d6d81-7bae-496c-89b8-4f4bc77f6e64", "writing", "Band 2"),
+    (15, "fbb21441-4173-404e-907d-aeb71d7ec50c", "writing", "Band 3"),
+    (16, "45b8781a-eda2-46f7-90c2-f51315815ed6", "writing", "Band 4"),
+    (17, "56c39503-702b-49d5-8f44-4f35961d354d", "writing", "Band 5"),
+    (18, "a29aa0ea-0ffc-4c3d-a278-18fb1bbe4e87", "writing", "Band 5+"),
+    
+    # SPEAKING
     (19, "23aee447-379f-4f81-99f7-bd9bf3cf1e30", "speaking", "Band 1"),
     (20, "4312d051-bf8d-4ec9-954a-53a746ba001c", "speaking", "Band 2"),
     (21, "798fbce8-500d-4662-8aa6-bde3d4ee6d4f", "speaking", "Band 3"),
@@ -341,6 +364,8 @@ def run_evaluation():
         no_rag_times.append(nr_time)
         full_rag_times.append(fr_time)
         
+        # Hallucination detection for all components including Speaking
+        # A feedback is hallucinated if it contains fewer than 2 MUET related words
         if nr_muet_count < 2:
             no_rag_hallucinations += 1
         if fr_muet_count < 2:

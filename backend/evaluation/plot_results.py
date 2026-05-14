@@ -28,7 +28,7 @@ CLUSTER_COLORS = {
 # RAG EVALUATION CHART
 # ============================================================
 
-RAG_CSV_PATH = os.path.join(BASE, "rag_eval_results_1.csv")
+RAG_CSV_PATH = os.path.join(BASE, "rag_eval_results_2.csv")
 
 def calculate_rag_metrics():
     with open(RAG_CSV_PATH, 'r') as f:
