@@ -22,7 +22,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 # Model config
 EMBEDDING_MODEL = "gemini-embedding-001"
 EMBEDDING_DIM = 3072
-LLM_MODEL = "gemini-3.1-flash-lite-preview"
+LLM_MODEL = "gemini-3.1-flash-lite"
 STT_MODEL = "whisper-large-v3"
 
 # Supabase client

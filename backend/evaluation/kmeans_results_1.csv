@@ -1,0 +1,11 @@
+metric,value
+total_students,31
+num_clusters,4
+silhouette_score,0.5425
+interpretation,Good cluster separation
+
+cluster_type,count,percentage
+Balanced Performer,10,32.3%
+Foundation Needed,10,32.3%
+Good Expressive Skills,6,19.4%
+Good Understanding Skills,5,16.1%
